@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "description": "GED Math Master — AI-powered GED Math practice app",
+  "engines": {
+    "node": ">=22.5.0"
+  },
   "scripts": {
     "start": "node --experimental-sqlite server/index.js",
     "dev": "node --watch --experimental-sqlite server/index.js"
