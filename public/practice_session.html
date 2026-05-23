@@ -134,6 +134,7 @@
         <h2 class="text-headline-md font-headline-md mt-2">Session Complete</h2>
         <p id="resultScore" class="text-metric-display font-metric-display mt-4"></p>
         <p id="resultPercent" class="text-body-lg text-on-surface-variant"></p>
+        <p id="encouragementResult" class="mt-4 text-body-md text-primary font-bold italic"></p>
         <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
           <button id="saveBtn" class="h-12 px-5 rounded-lg bg-primary text-on-primary font-bold text-label-md hover:opacity-90">Save & Return to Dashboard</button>
           <button id="retryBtn" class="h-12 px-5 rounded-lg ring-1 ring-outline-variant text-on-surface font-bold text-label-md hover:bg-surface-container-low">Try Again</button>
@@ -146,6 +147,7 @@
   import { renderShell } from '/js/layout.js';
   import { apiJson, apiFetch, isGuest, getAccessToken } from '/js/auth.js';
   import { formatMathDeep } from '/js/math-format.js';
+  import { randomEncouragement } from '/js/encouragement.js';
 
   const guest = isGuest() && !getAccessToken();
   let guestBar = null;
@@ -430,6 +432,7 @@
     $('feedback').innerHTML = '';
     $('submitBtn').classList.remove('hidden');
     $('submitBtn').disabled = false;
+    $('submitBtn').textContent = 'Submit Answer';
     $('nextBtn').classList.add('hidden');
     $('hintBtn').classList.add('hidden');
     $('revealBtn').classList.remove('hidden');
@@ -516,16 +519,77 @@
     if (answered) return;
     const q = session.questions[session.currentIndex];
     if (!q) return;
+
+    // Mark the question as answered + incorrect, but stay on the SAME screen
+    // so the user can study the question alongside the steps.
     answered = true;
-    $('submitBtn').disabled = true;
-    const result = {
+    session.answers.push({
+      userAnswer: '(revealed)',
       isCorrect: false,
-      explanation: `You revealed the answer, so this question is marked incorrect. The correct answer was ${q.correctAnswer}.`,
-      steps: q.steps || [],
-      encouragement: 'Take a minute to study the steps — you\'ll catch the next one.'
-    };
-    session.answers.push({ userAnswer: '(revealed)', isCorrect: false, ...result });
-    renderFeedback(q, '(revealed)', result);
+      explanation: `You revealed the answer. The correct answer was ${q.correctAnswer}.`,
+      steps: q.steps || []
+    });
+
+    // Highlight the correct option in green (same treatment as a wrong submit)
+    if (q.type === 'multiple_choice') {
+      document.querySelectorAll('.option').forEach(el => {
+        const letter = el.dataset.letter;
+        if (letter === q.correctAnswer) el.classList.add('ring-2', 'ring-[#10b981]', 'bg-[#ecfdf5]');
+        // Lock all radio inputs so the user can't toggle them after reveal
+        const input = el.querySelector('input[type="radio"]');
+        if (input) input.disabled = true;
+      });
+    } else {
+      const freeIn = document.getElementById('freeInput');
+      if (freeIn) { freeIn.disabled = true; freeIn.value = q.correctAnswer; }
+    }
+
+    // Render the step-by-step solution inline (uses the same #feedback panel
+    // for layout consistency, but with a "revealed" heading instead of correct/wrong).
+    const steps = (q.steps && q.steps.length) ? q.steps : [];
+    const pageNum = Number(q.studyGuidePage)
+                  || Number(q.studyGuideReference?.match(/Page\s+(\d+)/i)?.[1])
+                  || TOPICS.find(t => t.slug === session.topic)?.firstPage
+                  || 1;
+    const stepsBlock = steps.length
+      ? `<div class="bg-surface-container-low rounded-lg p-4 border border-outline-variant/40">
+          <p class="text-label-md font-bold text-on-surface mb-3 flex items-center gap-1.5">
+            <span class="material-symbols-outlined" style="font-size:18px">checklist</span>
+            Step-by-step solution
+          </p>
+          <div class="space-y-2 text-body-md text-on-surface leading-relaxed">
+            ${steps.map(s => `<p>${escape(s)}</p>`).join('')}
+          </div>
+        </div>` : '';
+
+    $('feedback').innerHTML = `
+      <div class="flex items-center gap-2 text-primary">
+        <span class="material-symbols-outlined" style="font-size:24px">visibility</span>
+        <p class="text-headline-sm font-headline-sm">Answer revealed</p>
+      </div>
+      <p class="text-body-md text-on-surface-variant">The correct answer was <strong>${escape(q.correctAnswer)}</strong>. This question is marked incorrect — study the steps and try the next one.</p>
+      ${stepsBlock}
+      ${q.studyGuideReference ? `<div class="p-3 bg-surface-container-low border border-outline-variant rounded-lg flex flex-col sm:flex-row sm:items-center gap-3">
+        <div class="flex items-start gap-2 flex-1 min-w-0">
+          <span class="material-symbols-outlined text-primary" style="font-size:18px">menu_book</span>
+          <p class="text-label-md text-on-surface-variant min-w-0"><span class="font-bold text-primary">From your study guide:</span> ${escape(q.studyGuideReference)}</p>
+        </div>
+        <a href="/study-guide.pdf#page=${pageNum}" target="_blank" rel="noopener" class="shrink-0 inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-lg bg-primary text-on-primary text-label-md font-bold hover:opacity-90">
+          <span class="material-symbols-outlined" style="font-size:18px">auto_stories</span>
+          Review Study Guide
+        </a>
+      </div>` : ''}
+    `;
+    $('feedback').classList.remove('hidden');
+
+    // Submit button stays VISIBLE but disabled with a clarifying label so the
+    // user knows the question is locked. Next button appears beside it.
+    $('submitBtn').disabled = true;
+    $('submitBtn').textContent = 'Answer revealed';
+    $('hintBtn').classList.add('hidden');
+    $('revealBtn').classList.add('hidden');
+    $('nextBtn').classList.remove('hidden');
+    $('nextBtn').textContent = session.currentIndex + 1 >= QUESTIONS_PER_SESSION ? 'See Results' : 'Next Question';
   });
 
   $('submitBtn').addEventListener('click', async () => {
@@ -622,14 +686,17 @@
         const steps = (result.steps && result.steps.length) ? result.steps
                     : (q.steps && q.steps.length) ? q.steps : null;
         if (!steps) return '';
+        // Render as stacked paragraphs. The AI already prefixes each step
+        // with "Step 1:", "Step 2:", etc., so an ordered list would just
+        // duplicate the numbering.
         return `<div class="bg-surface-container-low rounded-lg p-4 border border-outline-variant/40">
-          <p class="text-label-md font-bold text-on-surface mb-2 flex items-center gap-1.5">
+          <p class="text-label-md font-bold text-on-surface mb-3 flex items-center gap-1.5">
             <span class="material-symbols-outlined" style="font-size:18px">checklist</span>
             Step-by-step solution
           </p>
-          <ol class="list-decimal list-outside ml-5 space-y-1.5 text-body-md text-on-surface">
-            ${steps.map(s => `<li>${escape(s)}</li>`).join('')}
-          </ol>
+          <div class="space-y-2 text-body-md text-on-surface leading-relaxed">
+            ${steps.map(s => `<p>${escape(s)}</p>`).join('')}
+          </div>
         </div>`;
       })()}
       ${calcBlock}
@@ -658,6 +725,13 @@
     $('sessionBar').classList.add('hidden');
     setGuestBar(true);
     $('results').classList.remove('hidden');
+    // Drop in a personalized encouragement under the score.
+    const encEl = document.getElementById('encouragementResult');
+    if (encEl) {
+      let user = null;
+      try { user = JSON.parse(localStorage.getItem('ged_user') || 'null'); } catch {}
+      encEl.textContent = randomEncouragement(user?.firstName);
+    }
     const pct = Math.round((session.score / QUESTIONS_PER_SESSION) * 100);
     $('resultScore').textContent = `${session.score} / ${QUESTIONS_PER_SESSION}`;
     $('resultScore').className = `text-metric-display font-metric-display mt-4 ${pct >= 80 ? 'text-[#10b981]' : pct >= 60 ? 'text-[#f59e0b]' : 'text-error'}`;

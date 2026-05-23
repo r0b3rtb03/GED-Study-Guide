@@ -17,6 +17,12 @@
       <header class="mb-8">
         <h1 class="text-headline-lg font-headline-lg" id="welcomeHeader">Welcome back</h1>
         <p class="text-body-md text-on-surface-variant mt-1">Here's a snapshot of your GED Math progress.</p>
+        <div id="encouragement" class="mt-4 hidden p-4 bg-primary-container/10 border-l-4 border-primary rounded-r-lg">
+          <p class="text-body-md text-on-surface flex items-start gap-2">
+            <span class="material-symbols-outlined text-primary shrink-0" style="font-size:22px">favorite</span>
+            <span id="encouragementText"></span>
+          </p>
+        </div>
       </header>
 
       <section id="statsGrid" class="grid grid-cols-2 md:grid-cols-4 gap-gutter mb-8">
@@ -46,6 +52,7 @@
 <script type="module">
   import { renderShell } from '/js/layout.js';
   import { apiJson, getUser } from '/js/auth.js';
+  import { randomEncouragement } from '/js/encouragement.js';
 
   renderShell({ active: 'dashboard' });
 
@@ -59,6 +66,14 @@
 
   const user = getUser();
   if (user?.firstName) document.getElementById('welcomeHeader').textContent = `Welcome back, ${user.firstName}`;
+
+  // Random encouragement message — runs once per dashboard load.
+  const encEl = document.getElementById('encouragement');
+  const encText = document.getElementById('encouragementText');
+  if (encEl && encText) {
+    encText.textContent = randomEncouragement(user?.firstName);
+    encEl.classList.remove('hidden');
+  }
 
   function scoreColor(pct) {
     if (pct >= 80) return 'text-[#10b981]';
