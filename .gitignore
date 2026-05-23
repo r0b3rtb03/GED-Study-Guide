@@ -4,6 +4,9 @@ node_modules/
 *.db
 *.sqlite
 *.sqlite3
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite-journal
 .DS_Store
 dist/
 build/
