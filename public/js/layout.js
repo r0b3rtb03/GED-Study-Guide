@@ -69,6 +69,12 @@ function injectCollapseStyles() {
 
       /* The practice page's sticky session bar also rides the sidebar offset. */
       html[data-sidebar="collapsed"] header#sessionBar.md\\:left-64 { left: 4rem; }
+
+      /* Collapse toggle: a small chip that "straddles" the sidebar's right
+         edge, sitting just outside the sidebar so it's never obscured by the
+         brand text. Centered on the border by translating -50% on x. */
+      button#ged-collapse-btn { left: 16rem; transition: left 0.18s ease; }
+      html[data-sidebar="collapsed"] button#ged-collapse-btn { left: 4rem; }
     }
   `;
   document.head.appendChild(style);
@@ -103,9 +109,6 @@ export function renderShell({ active } = {}) {
           <p class="text-[17px] font-bold text-primary leading-tight whitespace-nowrap">GED Study Guide</p>
           <p class="text-label-md font-label-md text-on-surface-variant whitespace-nowrap">Academic Confidence</p>
         </div>
-        <button id="ged-collapse-btn" class="shrink-0 w-8 h-8 rounded-full hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant" aria-label="Collapse sidebar">
-          <span class="material-symbols-outlined" id="ged-collapse-icon" style="font-size:18px">${collapsed ? 'chevron_right' : 'chevron_left'}</span>
-        </button>
       </div>
       <div class="mt-4 flex items-center gap-3 sidebar-user">
         <div class="w-9 h-9 shrink-0 rounded-full bg-primary text-on-primary flex items-center justify-center text-label-md font-bold">${initials.toUpperCase()}</div>
@@ -169,11 +172,20 @@ export function renderShell({ active } = {}) {
     </a>`;
   }).join('');
 
+  // Collapse toggle — floats outside the sidebar so it can't be covered
+  // by the brand text or labels. Sits at the sidebar's right edge,
+  // translated -50% on x so it visually straddles the border.
+  const collapseBtn = document.createElement('button');
+  collapseBtn.id = 'ged-collapse-btn';
+  collapseBtn.className = 'hidden md:flex fixed top-6 z-40 w-8 h-8 rounded-full bg-surface-container-lowest border border-outline-variant items-center justify-center text-on-surface-variant hover:bg-surface-container shadow-sm';
+  collapseBtn.style.transform = 'translateX(-50%)';
+  collapseBtn.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
+  collapseBtn.innerHTML = `<span class="material-symbols-outlined" id="ged-collapse-icon" style="font-size:18px">${collapsed ? 'chevron_right' : 'chevron_left'}</span>`;
+
   document.body.prepend(sideNav, topBar, bottomNav);
+  document.body.appendChild(collapseBtn);
   document.getElementById('ged-logout-btn').addEventListener('click', logout);
 
-  // Collapse toggle
-  const collapseBtn  = document.getElementById('ged-collapse-btn');
   const collapseIcon = document.getElementById('ged-collapse-icon');
   collapseBtn.addEventListener('click', () => {
     const next = sideNav.getAttribute('data-collapsed') !== 'true';
@@ -181,6 +193,7 @@ export function renderShell({ active } = {}) {
     setCollapsed(next);
     syncMainPadding(next);
     collapseIcon.textContent = next ? 'chevron_right' : 'chevron_left';
+    collapseBtn.setAttribute('aria-label', next ? 'Expand sidebar' : 'Collapse sidebar');
   });
 
   // Dark mode toggle
