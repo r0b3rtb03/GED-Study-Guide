@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta content="width=device-width, initial-scale=1.0" name="viewport" />
+<title>Study Guide — GED Math Master</title>
+<link href="https://fonts.googleapis.com" rel="preconnect" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="/js/theme.js"></script>
+<style>body{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}</style>
+</head>
+<body class="bg-background text-on-surface h-screen overflow-hidden">
+  <!-- The layout shell (side nav + mobile bars) is injected here; the viewer below sits to the right. -->
+  <main id="viewerHost" class="h-screen flex flex-col pt-16 md:pt-0 md:pl-64">
+    <!-- Toolbar -->
+    <header class="shrink-0 h-12 bg-surface-container-lowest border-b border-outline-variant flex items-center justify-between gap-3 px-4">
+      <div class="flex items-center gap-2 min-w-0">
+        <span class="material-symbols-outlined text-primary" style="font-size:20px">auto_stories</span>
+        <p class="text-label-md font-bold text-on-surface truncate">GED Math Study Guide</p>
+      </div>
+      <div class="flex items-center gap-1">
+        <a href="/study-guide.pdf" download class="hidden sm:inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-label-md font-bold text-on-surface-variant hover:bg-surface-container-low">
+          <span class="material-symbols-outlined" style="font-size:18px">download</span>
+          Download
+        </a>
+        <a href="/study-guide.pdf" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-label-md font-bold text-on-surface-variant hover:bg-surface-container-low" aria-label="Open in new tab">
+          <span class="material-symbols-outlined" style="font-size:18px">open_in_new</span>
+          <span class="hidden sm:inline">Open in tab</span>
+        </a>
+      </div>
+    </header>
+    <!-- PDF iframe — fills the rest of the viewport -->
+    <iframe id="pdfFrame" src="/study-guide.pdf#toolbar=1&navpanes=1&view=FitH" title="GED Math Study Guide" class="flex-1 w-full border-0 bg-white"></iframe>
+  </main>
+
+<script type="module">
+  import { renderShell } from '/js/layout.js';
+  renderShell({ active: 'study_guide' });
+</script>
+</body>
+</html>
