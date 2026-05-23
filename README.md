@@ -1,4 +1,4 @@
-# GED Math Master
+# GED Study Guide
 
 AI-powered GED Mathematical Reasoning practice app. Generates problems with Claude,
 checks answers with step-by-step explanations, tracks progress over time.

@@ -30,7 +30,7 @@ export async function sendPasswordResetEmail(to, firstName, resetUrl) {
   const html = `
     <div style="font-family: Inter, Arial, sans-serif; max-width: 480px; margin: auto; padding: 32px;">
       <h2 style="color:#005bbf; margin-bottom:8px;">Hi ${firstName},</h2>
-      <p style="color:#414754;">We got a request to reset your GED Math Master password. Click the button below to set a new one. The link expires in <strong>30 minutes</strong>.</p>
+      <p style="color:#414754;">We got a request to reset your GED Study Guide password. Click the button below to set a new one. The link expires in <strong>30 minutes</strong>.</p>
       <p style="text-align:center; padding: 24px 0;">
         <a href="${resetUrl}" style="display:inline-block; padding: 14px 28px; background:#005bbf; color:#ffffff; text-decoration:none; border-radius:8px; font-weight:700;">Reset password</a>
       </p>
@@ -46,12 +46,12 @@ export async function sendPasswordResetEmail(to, firstName, resetUrl) {
     return { devFallback: true, resetUrl };
   }
 
-  const from = process.env.RESEND_FROM || process.env.SMTP_FROM || 'GED Math Master <noreply@example.com>';
+  const from = process.env.RESEND_FROM || process.env.SMTP_FROM || 'GED Study Guide <noreply@example.com>';
 
   try {
     const result = await withTimeout(c.emails.send({
       from, to,
-      subject: 'Reset your GED Math Master password',
+      subject: 'Reset your GED Study Guide password',
       html
     }), SEND_TIMEOUT_MS);
     if (result?.error) {
@@ -70,7 +70,7 @@ export async function sendVerificationEmail(to, firstName, code) {
   const html = `
     <div style="font-family: Inter, Arial, sans-serif; max-width: 480px; margin: auto; padding: 32px;">
       <h2 style="color:#005bbf; margin-bottom:8px;">Hi ${firstName},</h2>
-      <p style="color:#414754;">Your verification code for GED Math Master is:</p>
+      <p style="color:#414754;">Your verification code for GED Study Guide is:</p>
       <div style="font-size:40px; font-weight:800; letter-spacing:12px; color:#181c20; text-align:center; padding:24px 0;">
         ${code}
       </div>
@@ -85,13 +85,13 @@ export async function sendVerificationEmail(to, firstName, code) {
     return { devFallback: true, code };
   }
 
-  const from = process.env.RESEND_FROM || process.env.SMTP_FROM || 'GED Math Master <noreply@example.com>';
+  const from = process.env.RESEND_FROM || process.env.SMTP_FROM || 'GED Study Guide <noreply@example.com>';
 
   try {
     const result = await withTimeout(c.emails.send({
       from,
       to,
-      subject: 'Verify your GED Math Master account',
+      subject: 'Verify your GED Study Guide account',
       html
     }), SEND_TIMEOUT_MS);
 

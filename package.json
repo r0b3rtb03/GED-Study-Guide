@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "GED Math Master — AI-powered GED Math practice app",
+  "description": "GED Study Guide — AI-powered GED Math practice app",
   "engines": {
     "node": ">=22.5.0"
   },

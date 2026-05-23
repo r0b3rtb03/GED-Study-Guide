@@ -75,7 +75,7 @@ const port = process.env.PORT || 3000;
 (async () => {
   await loadAllStudyGuides();
   app.listen(port, () => {
-    console.log(`\nGED Math Master running on http://localhost:${port}`);
+    console.log(`\nGED Study Guide running on http://localhost:${port}`);
     console.log(`  Anthropic key: ${isAiEnabled() ? 'present (AI on)' : 'missing (mock mode)'}`);
   });
 })();

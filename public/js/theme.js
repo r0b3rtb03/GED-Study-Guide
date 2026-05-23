@@ -12,11 +12,12 @@
   }
 
   // ---- Step 1: apply stored theme preference BEFORE body paints ----
+  // Default is LIGHT mode. We only switch to dark if the user has explicitly
+  // toggled to dark (saved in localStorage). We intentionally do NOT follow
+  // prefers-color-scheme by default — many users on macOS run system-dark and
+  // wouldn't expect their study app to pick that up unprompted.
   const stored = (() => { try { return localStorage.getItem('ged_theme'); } catch { return null; } })();
-  const prefersDark = stored
-    ? stored === 'dark'
-    : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  if (prefersDark) document.documentElement.classList.add('dark');
+  if (stored === 'dark') document.documentElement.classList.add('dark');
 
   // ---- Step 2: inject CSS variables ----
   const style = document.createElement('style');
