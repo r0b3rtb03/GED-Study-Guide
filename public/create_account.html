@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta content="width=device-width, initial-scale=1.0" name="viewport" />
+<title>Create Account — GED Math Master</title>
+<link href="https://fonts.googleapis.com" rel="preconnect" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="/js/theme.js"></script>
+<style>
+  body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+  .shadow-level-1 { box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+</style>
+</head>
+<body class="bg-background text-on-surface min-h-screen flex items-center justify-center p-margin-mobile md:p-margin-desktop">
+  <main class="w-full max-w-[520px] bg-surface-container-lowest rounded-xl shadow-level-1 p-8 md:p-10">
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary-container/10 mb-4">
+        <span class="material-symbols-outlined text-primary" style="font-size:28px">menu_book</span>
+      </div>
+      <h1 class="text-headline-lg font-headline-lg text-primary mb-2">Create your account</h1>
+      <p class="text-body-md text-on-surface-variant">Start your GED Math journey in under a minute.</p>
+    </div>
+
+    <form id="registerForm" class="space-y-4" novalidate>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="space-y-2">
+          <label for="firstName" class="text-label-md font-label-md">First Name</label>
+          <input id="firstName" type="text" required class="w-full px-4 py-3 bg-surface rounded-lg text-body-md outline-none ring-1 ring-outline-variant focus:ring-2 focus:ring-primary transition" />
+        </div>
+        <div class="space-y-2">
+          <label for="lastName" class="text-label-md font-label-md">Last Name</label>
+          <input id="lastName" type="text" required class="w-full px-4 py-3 bg-surface rounded-lg text-body-md outline-none ring-1 ring-outline-variant focus:ring-2 focus:ring-primary transition" />
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <label for="email" class="text-label-md font-label-md">Email Address</label>
+        <input id="email" type="email" autocomplete="email" required class="w-full px-4 py-3 bg-surface rounded-lg text-body-md outline-none ring-1 ring-outline-variant focus:ring-2 focus:ring-primary transition" />
+      </div>
+
+      <div class="space-y-2">
+        <label for="password" class="text-label-md font-label-md">Password</label>
+        <input id="password" type="password" autocomplete="new-password" required class="w-full px-4 py-3 bg-surface rounded-lg text-body-md outline-none ring-1 ring-outline-variant focus:ring-2 focus:ring-primary transition" />
+        <div id="strengthBar" class="grid grid-cols-4 gap-1 mt-2">
+          <div class="h-1 rounded bg-surface-container"></div>
+          <div class="h-1 rounded bg-surface-container"></div>
+          <div class="h-1 rounded bg-surface-container"></div>
+          <div class="h-1 rounded bg-surface-container"></div>
+        </div>
+        <p id="strengthLabel" class="text-[12px] text-on-surface-variant">Use at least 8 characters with a letter and a number.</p>
+      </div>
+
+      <div class="space-y-2">
+        <label for="confirmPassword" class="text-label-md font-label-md">Confirm Password</label>
+        <input id="confirmPassword" type="password" autocomplete="new-password" required class="w-full px-4 py-3 bg-surface rounded-lg text-body-md outline-none ring-1 ring-outline-variant focus:ring-2 focus:ring-primary transition" />
+      </div>
+
+      <label class="flex items-start gap-2 text-label-md text-on-surface-variant">
+        <input id="terms" type="checkbox" required class="mt-0.5 rounded text-primary focus:ring-primary" />
+        <span>
+          I agree to the
+          <a class="text-primary font-bold hover:underline" href="/terms.html" target="_blank">Terms of Service</a>
+          and
+          <a class="text-primary font-bold hover:underline" href="/privacy.html" target="_blank">Privacy Policy</a>.
+          I confirm this is my own email address.
+        </span>
+      </label>
+
+      <div id="errorMsg" class="text-error text-label-md hidden"></div>
+
+      <button id="submitBtn" type="submit"
+              class="w-full min-h-[48px] bg-primary text-on-primary rounded-lg text-label-md font-bold flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.99] transition disabled:opacity-60">
+        <span id="submitLabel">Create Account</span>
+        <span class="material-symbols-outlined" style="font-size:20px">arrow_forward</span>
+      </button>
+    </form>
+
+    <div class="flex items-center gap-3 my-4">
+      <div class="flex-1 h-px bg-outline-variant"></div>
+      <span class="text-label-md text-on-surface-variant">or</span>
+      <div class="flex-1 h-px bg-outline-variant"></div>
+    </div>
+
+    <button id="guestBtn"
+            class="w-full h-12 border border-outline-variant rounded-lg text-on-surface-variant font-bold text-label-md hover:bg-surface-container-low active:scale-[0.99] transition flex items-center justify-center gap-2">
+      <span class="material-symbols-outlined" style="font-size:20px">person_outline</span>
+      Continue as Guest
+    </button>
+    <p class="text-center text-label-md text-on-surface-variant mt-3">
+      No account needed — jump straight into practice. Sign up anytime to save your progress.
+    </p>
+
+    <div class="mt-8 text-center text-body-md text-on-surface-variant border-t border-surface-variant pt-6">
+      Already have an account?
+      <a class="text-primary font-bold hover:underline ml-1" href="/login.html">Sign in</a>
+    </div>
+  </main>
+
+<script type="module">
+  import { setSession, getAccessToken } from '/js/auth.js';
+  if (getAccessToken()) window.location.href = '/dashboard.html';
+
+  const $ = id => document.getElementById(id);
+  const showErr = m => { const e = $('errorMsg'); e.textContent = m; e.classList.remove('hidden'); };
+  const clearErr = () => $('errorMsg').classList.add('hidden');
+
+  function scorePassword(p) {
+    let s = 0;
+    if (p.length >= 8) s++;
+    if (/[A-Z]/.test(p)) s++;
+    if (/\d/.test(p)) s++;
+    if (/[^A-Za-z0-9]/.test(p)) s++;
+    return s;
+  }
+  const colors = ['bg-error', 'bg-[#f59e0b]', 'bg-[#f59e0b]', 'bg-[#10b981]'];
+  const labels = ['Too weak', 'Weak', 'Good', 'Strong'];
+  $('password').addEventListener('input', e => {
+    const s = scorePassword(e.target.value);
+    const bars = $('strengthBar').children;
+    for (let i = 0; i < 4; i++) {
+      bars[i].className = `h-1 rounded ${i < s ? colors[s - 1] : 'bg-surface-container'}`;
+    }
+    $('strengthLabel').textContent = e.target.value ? labels[Math.max(0, s - 1)] : 'Use at least 8 characters with a letter and a number.';
+  });
+
+  document.getElementById('guestBtn').addEventListener('click', () => {
+    sessionStorage.setItem('ged_guest', 'true');
+    window.location.href = '/practice_session.html';
+  });
+
+  $('registerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearErr();
+    const firstName = $('firstName').value.trim();
+    const lastName  = $('lastName').value.trim();
+    const email     = $('email').value.trim();
+    const password  = $('password').value;
+    const confirm   = $('confirmPassword').value;
+    const terms     = $('terms').checked;
+
+    if (!firstName || !lastName || !email || !password) return showErr('Please fill in all fields.');
+    if (!/\S+@\S+\.\S+/.test(email)) return showErr('Invalid email address.');
+    if (password.length < 8 || !/[A-Za-z]/.test(password) || !/\d/.test(password)) {
+      return showErr('Password must be at least 8 characters and include a letter and a number.');
+    }
+    if (password !== confirm) return showErr('Passwords do not match.');
+    if (!terms) return showErr('You must agree to the Terms of Service.');
+
+    const btn = $('submitBtn');
+    btn.disabled = true;
+    $('submitLabel').textContent = 'Creating...';
+
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ firstName, lastName, email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Registration failed.');
+      // Email verification required before login
+      sessionStorage.setItem('ged_pending_email', data.email || email);
+      if (data.devCode) sessionStorage.setItem('ged_dev_code', data.devCode);
+      window.location.href = '/verify_email.html';
+    } catch (e) {
+      showErr(e.message);
+    } finally {
+      btn.disabled = false;
+      $('submitLabel').textContent = 'Create Account';
+    }
+  });
+</script>
+</body>
+</html>
