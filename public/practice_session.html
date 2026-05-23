@@ -119,6 +119,9 @@
   let guestBar = null;
   if (!guest) renderShell({ active: 'practice_session' });
   else {
+    // Guests have no sidebar — strip the sidebar offset so content can center properly.
+    document.querySelector('main')?.classList.remove('md:pl-64');
+    document.getElementById('sessionBar')?.classList.remove('md:pl-64');
     // Minimal guest top bar (shown on chooser + results, hidden during session)
     guestBar = document.createElement('header');
     guestBar.id = 'guestBar';
