@@ -3,28 +3,54 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { randomUUID } from 'node:crypto';
 
-// Pick the DB path:
-//   1. DATABASE_FILE env var wins (use this on Railway: /data/ged_math.sqlite)
-//   2. If a /data directory exists (Railway Volume), use /data/ged_math.sqlite
-//   3. Otherwise fall back to ./server/data/ged_math.sqlite (local dev)
+// Pick the DB path. We aggressively prefer /data when it exists because the
+// Railway Volume mount is the only durable storage in production. A common
+// failure mode is DATABASE_FILE having been left as a relative path in env
+// vars from before the volume was attached — that would silently send writes
+// back to the ephemeral container disk. So the precedence is:
+//   1. /data exists and is writable  → /data/<dbname>.sqlite (ALWAYS, even if
+//      DATABASE_FILE points elsewhere — we override and log the override)
+//   2. DATABASE_FILE is an ABSOLUTE path → honor it
+//   3. DATABASE_FILE is relative or unset → ./server/data/ged_math.sqlite
+function canWrite(dir) {
+  try {
+    fs.accessSync(dir, fs.constants.W_OK);
+    return true;
+  } catch { return false; }
+}
+
 function resolveDbFile() {
-  if (process.env.DATABASE_FILE) return process.env.DATABASE_FILE;
-  if (fs.existsSync('/data') && fs.statSync('/data').isDirectory()) {
-    return '/data/ged_math.sqlite';
+  const envPath = process.env.DATABASE_FILE;
+  const dataExists = fs.existsSync('/data') && fs.statSync('/data').isDirectory() && canWrite('/data');
+
+  if (dataExists) {
+    const volumePath = '/data/ged_math.sqlite';
+    if (envPath && path.resolve(envPath) !== volumePath) {
+      console.warn(`[db] ⚠️  DATABASE_FILE is set to "${envPath}" but /data volume is mounted.`);
+      console.warn(`[db]     Overriding to ${volumePath} so data survives deployments.`);
+      console.warn(`[db]     Remove the DATABASE_FILE env var on Railway (or set it to ${volumePath}) to silence this warning.\n`);
+    }
+    return volumePath;
   }
+
+  if (envPath && path.isAbsolute(envPath)) return envPath;
   return path.resolve('server/data/ged_math.sqlite');
 }
 
 const dbFile = resolveDbFile();
 fs.mkdirSync(path.dirname(dbFile), { recursive: true });
 
-if (process.env.NODE_ENV === 'production' && !dbFile.startsWith('/data')) {
+const onVolume = dbFile.startsWith('/data');
+if (process.env.NODE_ENV === 'production' && !onVolume) {
   console.warn('\n[db] ⚠️  WARNING: running in production but DB is on EPHEMERAL container storage.');
   console.warn('[db]     Every redeploy will wipe all users and sessions.');
-  console.warn('[db]     Fix: attach a Railway Volume mounted at /data and set DATABASE_FILE=/data/ged_math.sqlite');
+  console.warn('[db]     Fix: attach a Railway Volume mounted at /data — the app will auto-detect it.');
   console.warn('[db]     Current path: ' + dbFile + '\n');
+} else if (onVolume) {
+  console.log('[db] ✓ using persistent volume:', dbFile);
+} else {
+  console.log('[db] using', dbFile, '(local dev)');
 }
-console.log('[db] using', dbFile);
 
 export const db = new DatabaseSync(dbFile);
 db.exec(`PRAGMA journal_mode = WAL;`);
