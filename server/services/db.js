@@ -3,8 +3,28 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { randomUUID } from 'node:crypto';
 
-const dbFile = process.env.DATABASE_FILE || path.resolve('server/data/ged_math.sqlite');
+// Pick the DB path:
+//   1. DATABASE_FILE env var wins (use this on Railway: /data/ged_math.sqlite)
+//   2. If a /data directory exists (Railway Volume), use /data/ged_math.sqlite
+//   3. Otherwise fall back to ./server/data/ged_math.sqlite (local dev)
+function resolveDbFile() {
+  if (process.env.DATABASE_FILE) return process.env.DATABASE_FILE;
+  if (fs.existsSync('/data') && fs.statSync('/data').isDirectory()) {
+    return '/data/ged_math.sqlite';
+  }
+  return path.resolve('server/data/ged_math.sqlite');
+}
+
+const dbFile = resolveDbFile();
 fs.mkdirSync(path.dirname(dbFile), { recursive: true });
+
+if (process.env.NODE_ENV === 'production' && !dbFile.startsWith('/data')) {
+  console.warn('\n[db] ⚠️  WARNING: running in production but DB is on EPHEMERAL container storage.');
+  console.warn('[db]     Every redeploy will wipe all users and sessions.');
+  console.warn('[db]     Fix: attach a Railway Volume mounted at /data and set DATABASE_FILE=/data/ged_math.sqlite');
+  console.warn('[db]     Current path: ' + dbFile + '\n');
+}
+console.log('[db] using', dbFile);
 
 export const db = new DatabaseSync(dbFile);
 db.exec(`PRAGMA journal_mode = WAL;`);

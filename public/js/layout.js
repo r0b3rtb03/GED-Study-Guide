@@ -4,14 +4,14 @@ import { getUser, logout, requireLogin } from './auth.js';
 const NAV_ITEMS = [
   { href: '/dashboard',        label: 'Dashboard',         icon: 'dashboard',     mobile: 'Home',     mobileIcon: 'home' },
   { href: '/study_notes',      label: 'Study Notes',       icon: 'menu_book',     mobile: 'Notes',    mobileIcon: 'menu_book' },
+  { href: '/study-guide.pdf',  label: 'Study Guide',       icon: 'auto_stories',  mobile: 'Guide',    mobileIcon: 'auto_stories', external: true },
   { href: '/practice_session', label: 'Practice Sessions', icon: 'edit_square',   mobile: 'Practice', mobileIcon: 'edit_square' },
   { href: '/growth_history',   label: 'History',           icon: 'history',       mobile: 'History',  mobileIcon: 'history' }
 ];
 
 const FOOTER_ITEMS = [
-  { href: '/study-guide.pdf',  label: 'Study Guide', icon: 'auto_stories', external: true },
-  { href: '/account_settings', label: 'Settings',    icon: 'settings' },
-  { href: '#',                 label: 'Help',        icon: 'help_outline' }
+  { href: '/account_settings', label: 'Settings', icon: 'settings' },
+  { href: '#',                 label: 'Help',     icon: 'help_outline' }
 ];
 
 function isActive(href) {
@@ -48,7 +48,8 @@ export function renderShell({ active } = {}) {
     <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
       ${NAV_ITEMS.map(n => {
         const a = active ? n.href.includes(active) : isActive(n.href);
-        return `<a href="${n.href}" class="flex items-center gap-3 h-11 px-3 rounded-lg ${a ? 'text-primary font-bold bg-primary-container/10 border-r-4 border-primary' : 'text-on-surface-variant hover:bg-surface-container-low'}">
+        const ext = n.external ? ' target="_blank" rel="noopener"' : '';
+        return `<a href="${n.href}"${ext} class="flex items-center gap-3 h-11 px-3 rounded-lg ${a ? 'text-primary font-bold bg-primary-container/10 border-r-4 border-primary' : 'text-on-surface-variant hover:bg-surface-container-low'}">
           <span class="material-symbols-outlined" style="font-size:22px">${n.icon}</span>
           <span class="text-label-md font-label-md">${n.label}</span>
         </a>`;
@@ -88,9 +89,13 @@ export function renderShell({ active } = {}) {
   // MOBILE BOTTOM NAV
   const bottomNav = document.createElement('nav');
   bottomNav.className = 'md:hidden fixed bottom-0 inset-x-0 h-16 bg-white border-t border-outline-variant grid grid-cols-4 z-30';
-  bottomNav.innerHTML = NAV_ITEMS.map(n => {
+  // Mobile bottom nav: only 5 slots, exclude History to keep it 5-wide and add Guide.
+  const MOBILE_BOTTOM = NAV_ITEMS.filter(n => n.label !== 'History');
+  bottomNav.className = 'md:hidden fixed bottom-0 inset-x-0 h-16 bg-white border-t border-outline-variant grid grid-cols-5 z-30';
+  bottomNav.innerHTML = MOBILE_BOTTOM.map(n => {
     const a = active ? n.href.includes(active) : isActive(n.href);
-    return `<a href="${n.href}" class="flex flex-col items-center justify-center gap-0.5 ${a ? 'text-primary font-bold' : 'text-on-surface-variant'}">
+    const ext = n.external ? ' target="_blank" rel="noopener"' : '';
+    return `<a href="${n.href}"${ext} class="flex flex-col items-center justify-center gap-0.5 ${a ? 'text-primary font-bold' : 'text-on-surface-variant'}">
       <span class="material-symbols-outlined" style="font-size:22px; font-variation-settings: 'FILL' ${a ? 1 : 0}">${n.mobileIcon}</span>
       <span class="text-[11px]">${n.mobile}</span>
     </a>`;
