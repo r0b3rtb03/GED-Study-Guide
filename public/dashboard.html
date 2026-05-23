@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta content="width=device-width, initial-scale=1.0" name="viewport" />
+<title>Dashboard — GED Math Master</title>
+<link href="https://fonts.googleapis.com" rel="preconnect" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="/js/theme.js"></script>
+<style>body{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}</style>
+</head>
+<body class="bg-background text-on-surface min-h-screen">
+  <main class="md:pl-64 pt-16 md:pt-0 pb-20 md:pb-0">
+    <div class="max-w-[1200px] mx-auto p-margin-mobile md:p-margin-desktop">
+      <header class="mb-8">
+        <h1 class="text-headline-lg font-headline-lg" id="welcomeHeader">Welcome back</h1>
+        <p class="text-body-md text-on-surface-variant mt-1">Here's a snapshot of your GED Math progress.</p>
+      </header>
+
+      <section id="statsGrid" class="grid grid-cols-2 md:grid-cols-4 gap-gutter mb-8">
+        <!-- stat cards injected here -->
+      </section>
+
+      <section class="mb-8">
+        <h2 class="text-headline-md font-headline-md mb-4">Topic Progress</h2>
+        <div id="topicProgress" class="space-y-3 bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/40"></div>
+      </section>
+
+      <section>
+        <h2 class="text-headline-md font-headline-md mb-4">Quick Start</h2>
+        <div id="quickStart" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-gutter"></div>
+      </section>
+    </div>
+  </main>
+
+<script type="module">
+  import { renderShell } from '/js/layout.js';
+  import { apiJson, getUser } from '/js/auth.js';
+
+  renderShell({ active: 'dashboard' });
+
+  const TOPICS = [
+    { slug: 'algebra',          name: 'Algebra',                         icon: 'function' },
+    { slug: 'linear-equations', name: 'Linear Equations & Graphs',       icon: 'show_chart' },
+    { slug: 'fractions',        name: 'Fractions, Decimals & Percents',  icon: 'percent' },
+    { slug: 'geometry',         name: 'Geometry Basics',                 icon: 'square_foot' },
+    { slug: 'stats',            name: 'Statistics & Data',               icon: 'bar_chart' }
+  ];
+
+  const user = getUser();
+  if (user?.firstName) document.getElementById('welcomeHeader').textContent = `Welcome back, ${user.firstName}`;
+
+  function scoreColor(pct) {
+    if (pct >= 80) return 'text-[#10b981]';
+    if (pct >= 60) return 'text-[#f59e0b]';
+    if (pct > 0)   return 'text-error';
+    return 'text-on-surface-variant';
+  }
+  function barColor(pct) {
+    if (pct >= 80) return 'bg-[#10b981]';
+    if (pct >= 60) return 'bg-[#f59e0b]';
+    if (pct > 0)   return 'bg-error';
+    return 'bg-outline-variant';
+  }
+
+  function statCard(label, value, suffix, icon, color = 'text-primary') {
+    return `<div class="bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/40">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-label-md text-on-surface-variant">${label}</span>
+        <span class="material-symbols-outlined ${color}" style="font-size:22px">${icon}</span>
+      </div>
+      <div class="flex items-baseline gap-1">
+        <span class="text-metric-display font-metric-display ${color}">${value}</span>
+        <span class="text-body-md text-on-surface-variant">${suffix || ''}</span>
+      </div>
+    </div>`;
+  }
+
+  function renderTopicProgress(byTopic) {
+    return TOPICS.map(t => {
+      const data = byTopic[t.slug] || { percent: 0, sessions: 0 };
+      return `<div class="flex items-center gap-4">
+        <div class="w-10 h-10 rounded-lg bg-primary-container/10 flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-primary" style="font-size:22px">${t.icon}</span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between mb-1">
+            <p class="text-label-md font-label-md truncate">${t.name}</p>
+            <p class="text-label-md font-bold ${scoreColor(data.percent)}">${data.percent}%</p>
+          </div>
+          <div class="w-full h-2 bg-surface-container rounded-full overflow-hidden">
+            <div class="h-full ${barColor(data.percent)} transition-all" style="width:${data.percent}%"></div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function renderQuickStart() {
+    return TOPICS.map(t => `
+      <a href="/practice_session.html?topic=${t.slug}" class="group bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/40 hover:border-primary hover:shadow-md transition flex flex-col gap-3">
+        <div class="w-12 h-12 rounded-lg bg-primary-container/10 flex items-center justify-center">
+          <span class="material-symbols-outlined text-primary" style="font-size:26px">${t.icon}</span>
+        </div>
+        <div>
+          <p class="text-headline-sm font-headline-sm">${t.name}</p>
+          <p class="text-label-md text-on-surface-variant mt-1">Start a 10-question session.</p>
+        </div>
+        <div class="mt-auto text-primary text-label-md font-bold flex items-center gap-1 group-hover:gap-2 transition-all">
+          Practice now <span class="material-symbols-outlined" style="font-size:18px">arrow_forward</span>
+        </div>
+      </a>`).join('');
+  }
+
+  (async () => {
+    try {
+      const stats = await apiJson('/api/user/stats');
+      const overallColor = stats.overallScore >= 80 ? 'text-[#10b981]' : stats.overallScore >= 60 ? 'text-[#f59e0b]' : 'text-primary';
+      document.getElementById('statsGrid').innerHTML = [
+        statCard('Overall Score', stats.overallScore, '%', 'school', overallColor),
+        statCard('Time Studied', stats.totalTimeMinutes, 'min', 'schedule'),
+        statCard('Sessions', stats.sessionsCompleted, '', 'edit_square'),
+        statCard('Current Streak', stats.streakDays, 'days', 'local_fire_department', 'text-[#f59e0b]')
+      ].join('');
+      document.getElementById('topicProgress').innerHTML = renderTopicProgress(stats.byTopic || {});
+    } catch (e) {
+      document.getElementById('statsGrid').innerHTML = `<div class="col-span-full text-error text-label-md">${e.message}</div>`;
+      document.getElementById('topicProgress').innerHTML = '';
+    }
+    document.getElementById('quickStart').innerHTML = renderQuickStart();
+  })();
+</script>
+</body>
+</html>
