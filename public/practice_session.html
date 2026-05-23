@@ -145,6 +145,7 @@
 <script type="module">
   import { renderShell } from '/js/layout.js';
   import { apiJson, apiFetch, isGuest, getAccessToken } from '/js/auth.js';
+  import { formatMathDeep } from '/js/math-format.js';
 
   const guest = isGuest() && !getAccessToken();
   let guestBar = null;
@@ -189,11 +190,11 @@
   }
 
   const TOPICS = [
-    { slug: 'algebra',          name: 'Algebra',                         icon: 'function' },
-    { slug: 'linear-equations', name: 'Linear Equations & Graphs',       icon: 'show_chart' },
-    { slug: 'fractions',        name: 'Fractions, Decimals & Percents',  icon: 'percent' },
-    { slug: 'geometry',         name: 'Geometry Basics',                 icon: 'square_foot' },
-    { slug: 'stats',            name: 'Statistics & Data',               icon: 'bar_chart' }
+    { slug: 'algebra',          name: 'Algebra',                         icon: 'function',     firstPage: 22 },
+    { slug: 'linear-equations', name: 'Linear Equations & Graphs',       icon: 'show_chart',   firstPage: 33 },
+    { slug: 'fractions',        name: 'Fractions, Decimals & Percents',  icon: 'percent',      firstPage: 3 },
+    { slug: 'geometry',         name: 'Geometry Basics',                 icon: 'square_foot',  firstPage: 13 },
+    { slug: 'stats',            name: 'Statistics & Data',               icon: 'bar_chart',    firstPage: 18 }
   ];
 
   const QUESTIONS_PER_SESSION = 10;
@@ -458,8 +459,9 @@
           })
         });
       }
-      session.questions.push(data.question);
-      renderQuestion(data.question);
+      const q = formatMathDeep(data.question);
+      session.questions.push(q);
+      renderQuestion(q);
 
       // Kick off prefetch for the question AFTER this one, unless we're on the last.
       if (session.currentIndex + 1 < QUESTIONS_PER_SESSION) startPrefetch();
@@ -558,9 +560,10 @@
           topic: session.topic
         })
       });
-      session.answers.push({ userAnswer, isCorrect: result.isCorrect, ...result });
-      if (result.isCorrect) session.score++;
-      renderFeedback(q, userAnswer, result);
+      const cleaned = formatMathDeep(result);
+      session.answers.push({ userAnswer, isCorrect: cleaned.isCorrect, ...cleaned });
+      if (cleaned.isCorrect) session.score++;
+      renderFeedback(q, userAnswer, cleaned);
     } catch (e) {
       $('feedback').innerHTML = `<p class="text-error">${e.message}</p>`;
       $('submitBtn').disabled = false;
@@ -585,10 +588,14 @@
           <span class="material-symbols-outlined ${q.calculatorAllowed ? 'text-[#047857]' : 'text-[#92400e]'}" style="font-size:18px">${q.calculatorAllowed ? 'calculate' : 'do_not_disturb'}</span>
           <p class="text-label-md text-on-surface-variant"><span class="font-bold ${q.calculatorAllowed ? 'text-[#047857]' : 'text-[#92400e]'}">${q.calculatorAllowed ? 'Calculator allowed on test:' : 'No calculator on test:'}</span> ${escape(q.calculatorReasoning)}</p>
         </div>` : '';
-    // Page number for "Review Study Guide" button — prefer the structured
-    // studyGuidePage field, fall back to parsing "Page N" out of the reference.
-    const pageMatch = q.studyGuidePage || (q.studyGuideReference?.match(/Page\s+(\d+)/i)?.[1]);
-    const pdfHref = pageMatch ? `/study-guide.pdf#page=${pageMatch}` : '/study-guide.pdf';
+    // Page number for "Review Study Guide" button. Three-tier fallback:
+    //   1) the structured studyGuidePage field Gemini returns
+    //   2) parse "Page N" out of studyGuideReference
+    //   3) the topic's section first page (so the button never lands on page 1)
+    const topicFirstPage = TOPICS.find(t => t.slug === session.topic)?.firstPage;
+    const refPageNum = q.studyGuideReference?.match(/Page\s+(\d+)/i)?.[1];
+    const pageNum = Number(q.studyGuidePage) || Number(refPageNum) || topicFirstPage || 1;
+    const pdfHref = `/study-guide.pdf#page=${pageNum}`;
 
     const refBlock = q.studyGuideReference
       ? `<div class="p-3 bg-surface-container-low border border-outline-variant rounded-lg flex flex-col sm:flex-row sm:items-center gap-3">
@@ -608,7 +615,23 @@
         <p class="text-headline-sm font-headline-sm">${result.isCorrect ? 'Correct!' : 'Not quite.'}</p>
       </div>
       <p class="text-body-md text-on-surface-variant">${escape(result.explanation || '')}</p>
-      ${result.steps?.length ? `<ol class="list-decimal list-inside space-y-1 text-body-md">${result.steps.map(s => `<li>${escape(s)}</li>`).join('')}</ol>` : ''}
+      ${(() => {
+        // Always show a step-by-step breakdown. Prefer the checker's steps;
+        // fall back to the question's own pre-generated steps if the checker
+        // didn't return any (e.g. when the user clicked Show Answer).
+        const steps = (result.steps && result.steps.length) ? result.steps
+                    : (q.steps && q.steps.length) ? q.steps : null;
+        if (!steps) return '';
+        return `<div class="bg-surface-container-low rounded-lg p-4 border border-outline-variant/40">
+          <p class="text-label-md font-bold text-on-surface mb-2 flex items-center gap-1.5">
+            <span class="material-symbols-outlined" style="font-size:18px">checklist</span>
+            Step-by-step solution
+          </p>
+          <ol class="list-decimal list-outside ml-5 space-y-1.5 text-body-md text-on-surface">
+            ${steps.map(s => `<li>${escape(s)}</li>`).join('')}
+          </ol>
+        </div>`;
+      })()}
       ${calcBlock}
       ${refBlock}
       ${result.encouragement ? `<p class="text-label-md italic text-on-surface-variant">${escape(result.encouragement)}</p>` : ''}
