@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta content="width=device-width, initial-scale=1.0" name="viewport" />
+<title>Account Settings — GED Math Master</title>
+<link href="https://fonts.googleapis.com" rel="preconnect" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="/js/theme.js"></script>
+<style>body{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}</style>
+</head>
+<body class="bg-background text-on-surface min-h-screen">
+  <main class="md:pl-64 pt-16 md:pt-0 pb-20 md:pb-0">
+    <div class="max-w-[820px] mx-auto p-margin-mobile md:p-margin-desktop space-y-gutter">
+
+      <header>
+        <h1 class="text-headline-lg font-headline-lg">Account Settings</h1>
+        <p class="text-body-md text-on-surface-variant mt-1">Manage your profile, security, and notification preferences.</p>
+      </header>
+
+      <!-- Personal Information -->
+      <section class="bg-surface-container-lowest rounded-xl border border-outline-variant/40 p-6">
+        <h2 class="text-headline-sm font-headline-sm mb-4">Personal Information</h2>
+        <form id="profileForm" class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="space-y-2">
+              <label for="firstName" class="text-label-md font-label-md">First Name</label>
+              <input id="firstName" type="text" class="w-full px-4 py-3 bg-surface rounded-lg outline-none ring-1 ring-outline-variant focus:ring-2 focus:ring-primary text-body-md" />
+            </div>
+            <div class="space-y-2">
+              <label for="lastName" class="text-label-md font-label-md">Last Name</label>
+              <input id="lastName" type="text" class="w-full px-4 py-3 bg-surface rounded-lg outline-none ring-1 ring-outline-variant focus:ring-2 focus:ring-primary text-body-md" />
+            </div>
+          </div>
+          <div class="space-y-2">
+            <label for="email" class="text-label-md font-label-md">Email</label>
+            <input id="email" type="email" class="w-full px-4 py-3 bg-surface rounded-lg outline-none ring-1 ring-outline-variant focus:ring-2 focus:ring-primary text-body-md" />
+          </div>
+          <div class="flex items-center justify-between">
+            <p id="profileMsg" class="text-label-md"></p>
+            <button type="submit" class="h-11 px-5 bg-primary text-on-primary rounded-lg font-bold text-label-md hover:opacity-90">Save Changes</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Password -->
+      <section class="bg-surface-container-lowest rounded-xl border border-outline-variant/40 p-6">
+        <h2 class="text-headline-sm font-headline-sm mb-4">Account Security</h2>
+        <form id="passwordForm" class="space-y-4">
+          <div class="space-y-2">
+            <label for="currentPassword" class="text-label-md font-label-md">Current Password</label>
+            <input id="currentPassword" type="password" autocomplete="current-password" class="w-full px-4 py-3 bg-surface rounded-lg outline-none ring-1 ring-outline-variant focus:ring-2 focus:ring-primary text-body-md" />
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="space-y-2">
+              <label for="newPassword" class="text-label-md font-label-md">New Password</label>
+              <input id="newPassword" type="password" autocomplete="new-password" class="w-full px-4 py-3 bg-surface rounded-lg outline-none ring-1 ring-outline-variant focus:ring-2 focus:ring-primary text-body-md" />
+            </div>
+            <div class="space-y-2">
+              <label for="confirmPassword" class="text-label-md font-label-md">Confirm Password</label>
+              <input id="confirmPassword" type="password" autocomplete="new-password" class="w-full px-4 py-3 bg-surface rounded-lg outline-none ring-1 ring-outline-variant focus:ring-2 focus:ring-primary text-body-md" />
+            </div>
+          </div>
+          <div class="p-3 bg-surface-container-low rounded-lg text-label-md text-on-surface-variant">
+            Passwords must be at least 8 characters, with one letter and one number.
+          </div>
+          <div class="flex items-center justify-between">
+            <p id="passwordMsg" class="text-label-md"></p>
+            <button type="submit" class="h-11 px-5 bg-primary text-on-primary rounded-lg font-bold text-label-md hover:opacity-90">Update Password</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Preferences -->
+      <section class="bg-surface-container-lowest rounded-xl border border-outline-variant/40 p-6">
+        <h2 class="text-headline-sm font-headline-sm mb-4">Preferences</h2>
+        <form id="prefsForm" class="space-y-3">
+          <label class="flex items-center justify-between gap-3 p-3 bg-surface-container-low rounded-lg cursor-pointer">
+            <div>
+              <p class="text-label-md font-bold">Study Reminders</p>
+              <p class="text-label-md text-on-surface-variant">Daily email nudges to keep your streak going.</p>
+            </div>
+            <input id="studyReminders" type="checkbox" class="h-5 w-5 rounded text-primary focus:ring-primary" />
+          </label>
+          <label class="flex items-center justify-between gap-3 p-3 bg-surface-container-low rounded-lg cursor-pointer">
+            <div>
+              <p class="text-label-md font-bold">Weekly Progress Report</p>
+              <p class="text-label-md text-on-surface-variant">A summary of your progress every Monday.</p>
+            </div>
+            <input id="weeklyReport" type="checkbox" class="h-5 w-5 rounded text-primary focus:ring-primary" />
+          </label>
+          <label class="flex items-center justify-between gap-3 p-3 bg-surface-container-low rounded-lg cursor-pointer">
+            <div>
+              <p class="text-label-md font-bold">Curriculum Updates</p>
+              <p class="text-label-md text-on-surface-variant">Hear when new topics or content are added.</p>
+            </div>
+            <input id="curriculumUpdates" type="checkbox" class="h-5 w-5 rounded text-primary focus:ring-primary" />
+          </label>
+          <div class="flex items-center justify-between">
+            <p id="prefsMsg" class="text-label-md"></p>
+            <button type="submit" class="h-11 px-5 bg-primary text-on-primary rounded-lg font-bold text-label-md hover:opacity-90">Save Preferences</button>
+          </div>
+        </form>
+      </section>
+
+    </div>
+  </main>
+
+<script type="module">
+  import { renderShell } from '/js/layout.js';
+  import { apiJson, getUser, setSession } from '/js/auth.js';
+  renderShell({ active: 'account_settings' });
+
+  const $ = id => document.getElementById(id);
+
+  function flash(el, msg, ok = true) {
+    el.textContent = msg;
+    el.className = `text-label-md ${ok ? 'text-[#10b981]' : 'text-error'}`;
+    setTimeout(() => { el.textContent = ''; }, 3500);
+  }
+
+  (async () => {
+    try {
+      const { user } = await apiJson('/api/user/me');
+      setSession({ user });
+      $('firstName').value = user.firstName || '';
+      $('lastName').value  = user.lastName || '';
+      $('email').value     = user.email || '';
+      const prefs = user.preferences || {};
+      $('studyReminders').checked    = !!prefs.studyReminders;
+      $('weeklyReport').checked      = !!prefs.weeklyReport;
+      $('curriculumUpdates').checked = !!prefs.curriculumUpdates;
+    } catch (e) {
+      flash($('profileMsg'), e.message, false);
+    }
+  })();
+
+  $('profileForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+      const { user } = await apiJson('/api/user/profile', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          firstName: $('firstName').value.trim(),
+          lastName:  $('lastName').value.trim(),
+          email:     $('email').value.trim()
+        })
+      });
+      setSession({ user });
+      flash($('profileMsg'), 'Profile saved.');
+    } catch (err) { flash($('profileMsg'), err.message, false); }
+  });
+
+  $('passwordForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const np = $('newPassword').value;
+    const cp = $('confirmPassword').value;
+    if (np !== cp) return flash($('passwordMsg'), 'New passwords do not match.', false);
+    try {
+      await apiJson('/api/user/password', {
+        method: 'PATCH',
+        body: JSON.stringify({ currentPassword: $('currentPassword').value, newPassword: np })
+      });
+      $('currentPassword').value = $('newPassword').value = $('confirmPassword').value = '';
+      flash($('passwordMsg'), 'Password updated.');
+    } catch (err) { flash($('passwordMsg'), err.message, false); }
+  });
+
+  $('prefsForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+      await apiJson('/api/user/preferences', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          preferences: {
+            studyReminders:    $('studyReminders').checked,
+            weeklyReport:      $('weeklyReport').checked,
+            curriculumUpdates: $('curriculumUpdates').checked
+          }
+        })
+      });
+      flash($('prefsMsg'), 'Preferences saved.');
+    } catch (err) { flash($('prefsMsg'), err.message, false); }
+  });
+</script>
+</body>
+</html>
