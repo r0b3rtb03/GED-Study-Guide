@@ -114,11 +114,24 @@
     // Render one block per subject, each with its topics inside.
     const subjects = Object.values(bySubject || {});
     if (!subjects.length) return '<p class="text-on-surface-variant text-label-md">No subjects configured.</p>';
+
+    // Per-difficulty pill — shows score/total for that difficulty, or
+    // "not attempted" in muted text when the user hasn't tried that level.
+    const diffPill = (label, d) => {
+      const attempted = d.total > 0;
+      const cls = attempted
+        ? scoreColor(d.percent).replace('text-', 'text-') + ' bg-surface-container'
+        : 'text-on-surface-variant/60 bg-surface-container/50';
+      const txt = attempted ? `${d.score}/${d.total}` : 'not attempted';
+      return `<span class="inline-flex items-center gap-1 px-2 h-5 rounded-full text-[11px] font-bold ${cls}">${label} ${txt}</span>`;
+    };
+
     return subjects.map(sub => {
       const topicRows = Object.entries(sub.topics).map(([slug, data]) => {
         const icon = TOPIC_ICONS[slug] || 'category';
-        return `<div class="flex items-center gap-4">
-          <div class="w-9 h-9 rounded-lg bg-primary-container/10 flex items-center justify-center shrink-0">
+        const bd = data.byDifficulty || { easy:{total:0}, medium:{total:0}, hard:{total:0} };
+        return `<div class="flex items-start gap-4">
+          <div class="w-9 h-9 rounded-lg bg-primary-container/10 flex items-center justify-center shrink-0 mt-0.5">
             <span class="material-symbols-outlined text-primary" style="font-size:20px">${icon}</span>
           </div>
           <div class="flex-1 min-w-0">
@@ -128,6 +141,11 @@
             </div>
             <div class="w-full h-2 bg-surface-container rounded-full overflow-hidden">
               <div class="h-full ${barColor(data.percent)} transition-all" style="width:${data.percent}%"></div>
+            </div>
+            <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
+              ${diffPill('Easy',   bd.easy)}
+              ${diffPill('Medium', bd.medium)}
+              ${diffPill('Hard',   bd.hard)}
             </div>
           </div>
         </div>`;
@@ -142,7 +160,7 @@
           </div>
           <p class="text-label-md font-bold ${scoreColor(sub.percent)}">${sub.percent}% overall</p>
         </header>
-        <div class="space-y-3">${topicRows}</div>
+        <div class="space-y-4">${topicRows}</div>
       </section>`;
     }).join('');
   }

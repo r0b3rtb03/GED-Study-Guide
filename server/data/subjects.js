@@ -14,7 +14,18 @@ export const SUBJECTS = {
     icon: 'function',
     pdfPath: '/study-guide.pdf',
     cacheKey: 'math',
-    description: 'Algebra, geometry, fractions, statistics, and more.'
+    description: 'Algebra, geometry, fractions, statistics, and more.',
+    intro: {
+      title: 'Before you start',
+      lead: "You'll be asked to:",
+      bullets: [
+        'Solve real-world problems using whole numbers, fractions, decimals, and percents',
+        'Work with algebraic expressions, linear equations, and basic functions',
+        'Compute area, perimeter, volume, and surface area of common shapes',
+        'Read and interpret graphs, tables, and statistical data',
+        'Identify whether each question is calculator-allowed (the badge on the card will tell you)'
+      ]
+    }
   },
   'social-studies': {
     slug: 'social-studies',
@@ -23,7 +34,17 @@ export const SUBJECTS = {
     icon: 'public',
     pdfPath: '/social-studies-guide.pdf',
     cacheKey: 'social-studies',
-    description: 'Civics, government, US history, economics, and geography.'
+    description: 'Civics, government, US history, economics, and geography.',
+    intro: {
+      title: 'Before you start',
+      lead: "You'll be asked to:",
+      bullets: [
+        'Analyze cause-and-effect relationships',
+        'Describe the connections between people, places, environments, processes, and events',
+        'Put events in order and understand the steps in a process (for example, how a bill becomes a law)',
+        'Analyze the relationship of events, processes, and/or ideas — for example, whether earlier events actually caused later ones or simply occurred before them'
+      ]
+    }
   }
 };
 

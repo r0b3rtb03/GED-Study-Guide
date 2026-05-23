@@ -85,6 +85,32 @@
       </div>
     </section>
 
+    <!-- Pre-session intro: skills the user will be tested on -->
+    <section id="intro"
+             class="hidden flex flex-col items-center justify-center px-4 md:px-6 py-8"
+             style="min-height: calc(100vh - 64px);">
+      <div class="w-full max-w-2xl mx-auto bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm p-6 md:p-8">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 rounded-lg bg-primary-container/10 flex items-center justify-center">
+            <span class="material-symbols-outlined text-primary" style="font-size:22px">info</span>
+          </div>
+          <h2 id="introTitle" class="text-headline-md font-headline-md">Before you start</h2>
+        </div>
+        <p id="introContext" class="text-body-md text-on-surface-variant mb-2"></p>
+        <p id="introLead" class="text-body-md font-bold text-on-surface mt-4 mb-2">You'll be asked to:</p>
+        <ul id="introBullets" class="list-disc list-outside ml-5 space-y-2 text-body-md text-on-surface"></ul>
+        <div class="mt-6 pt-4 border-t border-outline-variant/40 flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
+          <button id="introBackBtn" class="h-10 px-4 rounded-lg text-label-md font-bold text-on-surface-variant hover:bg-surface-container-low">
+            Back
+          </button>
+          <button id="introStartBtn" class="h-11 px-6 rounded-lg bg-primary text-on-primary font-bold text-label-md hover:opacity-90 inline-flex items-center justify-center gap-2">
+            Start practice
+            <span class="material-symbols-outlined" style="font-size:20px">arrow_forward</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
     <!-- Active session -->
     <section id="session"
              class="hidden flex flex-col items-center justify-center px-4 md:px-6 pt-20 md:pt-24 pb-8"
@@ -417,15 +443,47 @@
     setStepEnabled(session.difficulty ? 'topic' : 'difficulty');
   });
 
-  // Topic click → start the session
+  // Topic click → show the intro screen first (skills the user will be tested on)
   document.addEventListener('click', (e) => {
     const b = e.target.closest('#topicGrid [data-topic]');
     if (!b) return;
     if (!session.subject || !session.difficulty) return; // gated
     session.topic = b.dataset.topic;
+    // Prefetch the first question NOW (in the background) so by the time the
+    // user finishes reading the intro and clicks Start, Q1 is ready.
     prefetchPromise = null;
     session.questions = [];
     startPrefetch();
+    showIntro();
+  });
+
+  function showIntro() {
+    const subj  = (CATALOG || []).find(s => s.slug === session.subject);
+    const intro = subj?.intro;
+    // If a subject has no intro defined, skip straight into the session.
+    if (!intro) return startSession();
+
+    const topic = TOPICS.find(t => t.slug === session.topic);
+    $('chooser').classList.add('hidden');
+    $('session').classList.add('hidden');
+    $('results').classList.add('hidden');
+    $('sessionBar').classList.add('hidden');
+    setGuestBar(true);
+    $('intro').classList.remove('hidden');
+
+    $('introTitle').textContent  = intro.title || 'Before you start';
+    $('introLead').textContent   = intro.lead  || "You'll be asked to:";
+    $('introContext').textContent = `${subj.fullName} · ${topic?.name || session.topic} · ${session.difficulty}`;
+    $('introBullets').innerHTML  = (intro.bullets || []).map(b => `<li>${escape(b)}</li>`).join('');
+  }
+
+  $('introBackBtn').addEventListener('click', () => {
+    $('intro').classList.add('hidden');
+    prefetchPromise = null;          // cancel the in-flight prefetch if the user backs out
+    showChooser();
+  });
+  $('introStartBtn').addEventListener('click', () => {
+    $('intro').classList.add('hidden');
     startSession();
   });
 

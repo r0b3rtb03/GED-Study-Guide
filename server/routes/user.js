@@ -21,6 +21,7 @@ router.get('/catalog', (req, res) => {
     icon: s.icon,
     pdfPath: s.pdfPath,
     description: s.description,
+    intro: s.intro || null,
     topics: Object.entries(TOPICS_BY_SUBJECT[s.slug] || {}).map(([slug, t]) => ({
       slug,
       name: t.name,
@@ -41,52 +42,92 @@ router.get('/me', requireAuth, (req, res) => {
 router.get('/stats', requireAuth, (req, res) => {
   const userId = req.user.sub;
   const sessions = db.prepare(
-    'SELECT subject, topic, score, total, time_spent, created_at FROM practice_sessions WHERE user_id = ? ORDER BY created_at DESC'
+    'SELECT subject, topic, difficulty, score, total, time_spent, created_at FROM practice_sessions WHERE user_id = ? ORDER BY created_at DESC'
   ).all(userId);
+
+  // Difficulty weights. Mastery of hard questions counts more toward a
+  // topic's overall percent than easy questions, so getting 10/10 easy
+  // doesn't read as "100% on this topic" the way it used to.
+  const WEIGHT = { easy: 1, medium: 2, hard: 3 };
+  const w = d => WEIGHT[d] || 2;
 
   const totalCorrect = sessions.reduce((s, r) => s + r.score, 0);
   const totalQuestions = sessions.reduce((s, r) => s + r.total, 0);
   const totalTimeSec = sessions.reduce((s, r) => s + r.time_spent, 0);
-  const overallScore = totalQuestions ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
+  // Overall is also weighted now.
+  let overallWeightedScore = 0, overallWeightedTotal = 0;
+  for (const s of sessions) {
+    overallWeightedScore += s.score * w(s.difficulty);
+    overallWeightedTotal += s.total * w(s.difficulty);
+  }
+  const overallScore = overallWeightedTotal
+    ? Math.round((overallWeightedScore / overallWeightedTotal) * 100)
+    : 0;
 
-  // Per-subject → per-topic breakdown. Each known subject is pre-seeded
-  // with all its topics at 0/0 so the dashboard can render even empty bars.
+  // Per-subject → per-topic breakdown. Each topic tracks BOTH raw
+  // score/total and a weighted score/total + per-difficulty buckets.
+  function freshTopicBucket(name) {
+    return {
+      name,
+      score: 0, total: 0,
+      weightedScore: 0, weightedTotal: 0,
+      percent: 0, sessions: 0,
+      byDifficulty: {
+        easy:   { score: 0, total: 0, percent: 0 },
+        medium: { score: 0, total: 0, percent: 0 },
+        hard:   { score: 0, total: 0, percent: 0 }
+      }
+    };
+  }
   const bySubject = {};
   for (const sub of SUBJECT_SLUGS) {
     const topics = {};
     for (const slug of Object.keys(TOPICS_BY_SUBJECT[sub] || {})) {
-      topics[slug] = { score: 0, total: 0, percent: 0, sessions: 0, name: TOPICS_BY_SUBJECT[sub][slug].name };
+      topics[slug] = freshTopicBucket(TOPICS_BY_SUBJECT[sub][slug].name);
     }
     bySubject[sub] = {
       slug: sub,
       name: SUBJECTS[sub].name,
       pdfPath: SUBJECTS[sub].pdfPath,
       icon: SUBJECTS[sub].icon,
-      score: 0, total: 0, percent: 0, sessions: 0, timeSec: 0,
+      score: 0, total: 0,
+      weightedScore: 0, weightedTotal: 0,
+      percent: 0, sessions: 0, timeSec: 0,
       topics
     };
   }
   for (const s of sessions) {
     const subj = s.subject || 'math';
     if (!bySubject[subj]) {
-      bySubject[subj] = { slug: subj, name: subj, topics: {}, score: 0, total: 0, percent: 0, sessions: 0, timeSec: 0 };
+      bySubject[subj] = { slug: subj, name: subj, topics: {}, score: 0, total: 0, weightedScore: 0, weightedTotal: 0, percent: 0, sessions: 0, timeSec: 0 };
     }
-    bySubject[subj].score    += s.score;
-    bySubject[subj].total    += s.total;
-    bySubject[subj].sessions += 1;
-    bySubject[subj].timeSec  += s.time_spent;
+    const wt = w(s.difficulty);
+    bySubject[subj].score          += s.score;
+    bySubject[subj].total          += s.total;
+    bySubject[subj].weightedScore  += s.score * wt;
+    bySubject[subj].weightedTotal  += s.total * wt;
+    bySubject[subj].sessions       += 1;
+    bySubject[subj].timeSec        += s.time_spent;
 
-    const topicBucket = bySubject[subj].topics[s.topic] || { score: 0, total: 0, percent: 0, sessions: 0, name: s.topic };
-    topicBucket.score    += s.score;
-    topicBucket.total    += s.total;
-    topicBucket.sessions += 1;
-    bySubject[subj].topics[s.topic] = topicBucket;
+    const t = bySubject[subj].topics[s.topic] || freshTopicBucket(s.topic);
+    t.score         += s.score;
+    t.total         += s.total;
+    t.weightedScore += s.score * wt;
+    t.weightedTotal += s.total * wt;
+    t.sessions      += 1;
+    const d = s.difficulty in t.byDifficulty ? s.difficulty : 'medium';
+    t.byDifficulty[d].score += s.score;
+    t.byDifficulty[d].total += s.total;
+    bySubject[subj].topics[s.topic] = t;
   }
-  // Compute percents
+  // Compute weighted percents.
   for (const sub of Object.values(bySubject)) {
-    sub.percent = sub.total ? Math.round((sub.score / sub.total) * 100) : 0;
+    sub.percent = sub.weightedTotal ? Math.round((sub.weightedScore / sub.weightedTotal) * 100) : 0;
     for (const t of Object.values(sub.topics)) {
-      t.percent = t.total ? Math.round((t.score / t.total) * 100) : 0;
+      t.percent = t.weightedTotal ? Math.round((t.weightedScore / t.weightedTotal) * 100) : 0;
+      for (const d of Object.values(t.byDifficulty)) {
+        d.percent = d.total ? Math.round((d.score / d.total) * 100) : 0;
+      }
     }
   }
 
