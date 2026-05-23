@@ -105,7 +105,10 @@ CREATE TABLE IF NOT EXISTS practice_sessions (
 );
 
 CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON practice_sessions(user_id);
-CREATE INDEX IF NOT EXISTS idx_sessions_subject ON practice_sessions(subject);
+-- idx_sessions_subject is created by ensureSessionColumns() after the column
+-- is guaranteed to exist (the column is added via ALTER on legacy databases
+-- where CREATE TABLE IF NOT EXISTS is a no-op and the column would otherwise
+-- be missing). Creating the index here would crash on first boot.
 CREATE INDEX IF NOT EXISTS idx_sessions_topic ON practice_sessions(topic);
 CREATE INDEX IF NOT EXISTS idx_sessions_created_at ON practice_sessions(created_at);
 `);
