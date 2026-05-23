@@ -50,8 +50,8 @@
           <span class="material-symbols-outlined text-outline-variant absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">lock</span>
           <input id="passwordInput" type="password" autocomplete="current-password" placeholder="••••••••" required
                  class="w-full pl-11 pr-12 py-3 bg-surface rounded-lg text-body-md text-on-surface placeholder:text-outline outline-none ring-1 ring-outline-variant focus:ring-2 focus:ring-primary transition" />
-          <button type="button" id="togglePw" class="absolute inset-y-0 right-0 pr-4 flex items-center text-outline-variant hover:text-on-surface-variant" aria-label="Show password">
-            <span class="material-symbols-outlined">visibility</span>
+          <button type="button" data-pw-toggle="passwordInput" class="absolute inset-y-0 right-0 pr-4 flex items-center text-outline-variant hover:text-on-surface-variant" aria-label="Show password">
+            <span class="material-symbols-outlined pw-icon">visibility</span>
           </button>
         </div>
       </div>
@@ -103,9 +103,17 @@
   const err = (msg) => { const e = $('errorMsg'); e.textContent = msg; e.classList.remove('hidden'); };
   const clearErr = () => $('errorMsg').classList.add('hidden');
 
-  $('togglePw').addEventListener('click', () => {
-    const i = $('passwordInput');
-    i.type = i.type === 'password' ? 'text' : 'password';
+  // Generic show/hide for any input wired via data-pw-toggle="<inputId>"
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-pw-toggle]');
+    if (!btn) return;
+    const input = document.getElementById(btn.dataset.pwToggle);
+    const icon  = btn.querySelector('.pw-icon');
+    if (!input) return;
+    const showing = input.type === 'text';
+    input.type = showing ? 'password' : 'text';
+    if (icon) icon.textContent = showing ? 'visibility' : 'visibility_off';
+    btn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
   });
 
   document.getElementById('guestBtn').addEventListener('click', () => {
