@@ -58,6 +58,10 @@ export function renderShell({ active } = {}) {
         <span class="material-symbols-outlined" style="font-size:20px">${n.icon}</span>
         <span class="text-label-md font-label-md">${n.label}</span>
       </a>`).join('')}
+      <button id="ged-theme-btn" class="w-full flex items-center gap-3 h-10 px-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low text-left">
+        <span class="material-symbols-outlined" style="font-size:20px" id="ged-theme-icon">dark_mode</span>
+        <span class="text-label-md font-label-md" id="ged-theme-label">Dark mode</span>
+      </button>
       <button id="ged-logout-btn" class="w-full flex items-center gap-3 h-10 px-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low text-left">
         <span class="material-symbols-outlined" style="font-size:20px">logout</span>
         <span class="text-label-md font-label-md">Sign Out</span>
@@ -93,4 +97,17 @@ export function renderShell({ active } = {}) {
 
   document.body.prepend(sideNav, topBar, bottomNav);
   document.getElementById('ged-logout-btn').addEventListener('click', logout);
+
+  // Dark mode toggle
+  const themeBtn = document.getElementById('ged-theme-btn');
+  const themeIcon = document.getElementById('ged-theme-icon');
+  const themeLabel = document.getElementById('ged-theme-label');
+  function syncThemeBtn() {
+    const dark = window.GedTheme?.isDark();
+    themeIcon.textContent = dark ? 'light_mode' : 'dark_mode';
+    themeLabel.textContent = dark ? 'Light mode' : 'Dark mode';
+  }
+  syncThemeBtn();
+  themeBtn.addEventListener('click', () => { window.GedTheme?.toggle(); });
+  window.addEventListener('ged-theme-change', syncThemeBtn);
 }
