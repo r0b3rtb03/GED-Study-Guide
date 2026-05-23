@@ -43,8 +43,19 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', ai: isAiEnabled() });
 });
 
-app.use(express.static(publicDir));
-app.get('/', (req, res) => res.redirect('/index.html'));
+// Canonical clean URLs: /foo.html → /foo (301)
+app.use((req, res, next) => {
+  if (req.method === 'GET' && req.path.endsWith('.html')) {
+    const clean = req.path.slice(0, -5) || '/';
+    const qs = req.url.slice(req.path.length);
+    return res.redirect(301, (clean === '/index' ? '/' : clean) + qs);
+  }
+  next();
+});
+
+// Serve /foo.html when the URL is /foo (no extension needed in links)
+app.use(express.static(publicDir, { extensions: ['html'] }));
+app.get('/', (req, res) => res.sendFile(path.join(publicDir, 'index.html')));
 
 // Multer / generic error handler (must come AFTER routes)
 app.use((err, req, res, next) => {

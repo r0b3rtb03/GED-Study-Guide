@@ -27,13 +27,13 @@
     </div>
 
     <div class="space-y-3">
-      <button onclick="window.location.href='/login.html'"
+      <button onclick="window.location.href='/login'"
               class="w-full h-12 bg-primary text-on-primary rounded-lg font-bold text-label-md flex items-center justify-center gap-2 hover:opacity-90">
         Sign In
         <span class="material-symbols-outlined" style="font-size:20px">arrow_forward</span>
       </button>
 
-      <button onclick="window.location.href='/create_account.html'"
+      <button onclick="window.location.href='/create_account'"
               class="w-full h-12 bg-surface-container-low text-on-surface rounded-lg font-bold text-label-md hover:bg-surface-container">
         Create Account
       </button>
@@ -56,9 +56,9 @@
 <script>
   document.getElementById('guestBtn').addEventListener('click', () => {
     sessionStorage.setItem('ged_guest', 'true');
-    window.location.href = '/practice_session.html';
+    window.location.href = '/practice_session';
   });
-  if (localStorage.getItem('ged_access_token')) window.location.href = '/dashboard.html';
+  if (localStorage.getItem('ged_access_token')) window.location.href = '/dashboard';
 </script>
 </body>
 </html>

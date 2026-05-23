@@ -106,12 +106,12 @@
     guestBar.id = 'guestBar';
     guestBar.className = 'fixed top-0 inset-x-0 h-14 bg-surface-container-lowest border-b border-outline-variant z-30 flex items-center justify-between px-margin-mobile md:px-margin-desktop';
     guestBar.innerHTML = `
-      <a href="/index.html" class="flex items-center gap-2 text-primary font-bold text-headline-sm">
+      <a href="/index" class="flex items-center gap-2 text-primary font-bold text-headline-sm">
         <span class="material-symbols-outlined" style="font-size:22px">menu_book</span>GED Math Master
       </a>
       <div class="flex items-center gap-2">
         <span class="hidden sm:inline text-label-md text-on-surface-variant">Guest mode</span>
-        <a href="/create_account.html" class="h-9 px-3 rounded-lg bg-primary text-on-primary text-label-md font-bold flex items-center">Sign Up Free</a>
+        <a href="/create_account" class="h-9 px-3 rounded-lg bg-primary text-on-primary text-label-md font-bold flex items-center">Sign Up Free</a>
       </div>`;
     document.body.prepend(guestBar);
   }
@@ -174,7 +174,7 @@
           <button id="nudgeClose" class="w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center" aria-label="Dismiss">
             <span class="material-symbols-outlined" style="font-size:20px">close</span>
           </button>
-          <a href="/create_account.html" class="h-9 px-3 rounded-lg bg-on-primary text-primary text-label-md font-bold flex items-center">Sign Up Free</a>
+          <a href="/create_account" class="h-9 px-3 rounded-lg bg-on-primary text-primary text-label-md font-bold flex items-center">Sign Up Free</a>
         </div>`;
       document.body.appendChild(el);
       el.querySelector('#nudgeClose').addEventListener('click', () => el.remove());
@@ -444,12 +444,12 @@
     $('resultPercent').textContent = `${pct}% correct`;
     if (guest) {
       $('saveBtn').textContent = 'Sign Up to Save Progress';
-      $('saveBtn').onclick = () => { window.location.href = '/create_account.html'; };
+      $('saveBtn').onclick = () => { window.location.href = '/create_account'; };
     }
   }
 
   $('saveBtn').addEventListener('click', async () => {
-    if (guest) { window.location.href = '/create_account.html'; return; }
+    if (guest) { window.location.href = '/create_account'; return; }
     $('saveBtn').disabled = true;
     try {
       await apiJson('/api/practice/save-session', {
@@ -469,7 +469,7 @@
           }))
         })
       });
-      window.location.href = '/dashboard.html';
+      window.location.href = '/dashboard';
     } catch (e) {
       alert(e.message);
       $('saveBtn').disabled = false;

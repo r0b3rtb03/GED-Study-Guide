@@ -62,9 +62,9 @@
         <input id="terms" type="checkbox" required class="mt-0.5 rounded text-primary focus:ring-primary" />
         <span>
           I agree to the
-          <a class="text-primary font-bold hover:underline" href="/terms.html" target="_blank">Terms of Service</a>
+          <a class="text-primary font-bold hover:underline" href="/terms" target="_blank">Terms of Service</a>
           and
-          <a class="text-primary font-bold hover:underline" href="/privacy.html" target="_blank">Privacy Policy</a>.
+          <a class="text-primary font-bold hover:underline" href="/privacy" target="_blank">Privacy Policy</a>.
           I confirm this is my own email address.
         </span>
       </label>
@@ -95,13 +95,13 @@
 
     <div class="mt-8 text-center text-body-md text-on-surface-variant border-t border-surface-variant pt-6">
       Already have an account?
-      <a class="text-primary font-bold hover:underline ml-1" href="/login.html">Sign in</a>
+      <a class="text-primary font-bold hover:underline ml-1" href="/login">Sign in</a>
     </div>
   </main>
 
 <script type="module">
   import { setSession, getAccessToken } from '/js/auth.js';
-  if (getAccessToken()) window.location.href = '/dashboard.html';
+  if (getAccessToken()) window.location.href = '/dashboard';
 
   const $ = id => document.getElementById(id);
   const showErr = m => { const e = $('errorMsg'); e.textContent = m; e.classList.remove('hidden'); };
@@ -128,7 +128,7 @@
 
   document.getElementById('guestBtn').addEventListener('click', () => {
     sessionStorage.setItem('ged_guest', 'true');
-    window.location.href = '/practice_session.html';
+    window.location.href = '/practice_session';
   });
 
   $('registerForm').addEventListener('submit', async (e) => {
@@ -164,7 +164,7 @@
       // Email verification required before login
       sessionStorage.setItem('ged_pending_email', data.email || email);
       if (data.devCode) sessionStorage.setItem('ged_dev_code', data.devCode);
-      window.location.href = '/verify_email.html';
+      window.location.href = '/verify_email';
     } catch (e) {
       showErr(e.message);
     } finally {

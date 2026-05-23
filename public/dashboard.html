@@ -100,7 +100,7 @@
 
   function renderQuickStart() {
     return TOPICS.map(t => `
-      <a href="/practice_session.html?topic=${t.slug}" class="group bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/40 hover:border-primary hover:shadow-md transition flex flex-col gap-3">
+      <a href="/practice_session?topic=${t.slug}" class="group bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/40 hover:border-primary hover:shadow-md transition flex flex-col gap-3">
         <div class="w-12 h-12 rounded-lg bg-primary-container/10 flex items-center justify-center">
           <span class="material-symbols-outlined text-primary" style="font-size:26px">${t.icon}</span>
         </div>

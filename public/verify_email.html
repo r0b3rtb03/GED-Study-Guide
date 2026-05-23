@@ -49,9 +49,9 @@
     </p>
 
     <p class="text-center text-label-md text-on-surface-variant mt-6">
-      <a href="/privacy.html" target="_blank" class="hover:underline">Privacy Policy</a>
+      <a href="/privacy" target="_blank" class="hover:underline">Privacy Policy</a>
       &nbsp;·&nbsp;
-      <a href="/terms.html" target="_blank" class="hover:underline">Terms of Service</a>
+      <a href="/terms" target="_blank" class="hover:underline">Terms of Service</a>
     </p>
   </main>
 
@@ -62,7 +62,7 @@
   const inputs = document.querySelectorAll('#codeInputs input');
   const email = sessionStorage.getItem('ged_pending_email');
 
-  if (!email) { window.location.href = '/login.html'; }
+  if (!email) { window.location.href = '/login'; }
   $('emailDisplay').textContent = email;
 
   function showError(m)   { $('successMsg').classList.add('hidden'); $('errorMsg').textContent = m; $('errorMsg').classList.remove('hidden'); }
@@ -109,7 +109,7 @@
       if (!res.ok) return showError(data.message);
       setSession(data);
       sessionStorage.removeItem('ged_pending_email');
-      window.location.href = '/dashboard.html';
+      window.location.href = '/dashboard';
     } catch (e) { showError(e.message); }
     finally { $('verifyBtn').disabled = false; }
   }

@@ -84,19 +84,19 @@
 
     <div class="mt-8 text-center text-body-md text-on-surface-variant border-t border-surface-variant pt-6">
       Don't have an account?
-      <a class="text-primary font-bold text-label-md hover:underline ml-1" href="/create_account.html">Create an account</a>
+      <a class="text-primary font-bold text-label-md hover:underline ml-1" href="/create_account">Create an account</a>
     </div>
 
     <p class="text-center text-label-md text-on-surface-variant mt-6">
       By signing in you agree to our
-      <a href="/terms.html" target="_blank" class="text-primary hover:underline">Terms of Service</a> and
-      <a href="/privacy.html" target="_blank" class="text-primary hover:underline">Privacy Policy</a>.
+      <a href="/terms" target="_blank" class="text-primary hover:underline">Terms of Service</a> and
+      <a href="/privacy" target="_blank" class="text-primary hover:underline">Privacy Policy</a>.
     </p>
   </main>
 
 <script type="module">
   import { setSession, getAccessToken } from '/js/auth.js';
-  if (getAccessToken()) window.location.href = '/dashboard.html';
+  if (getAccessToken()) window.location.href = '/dashboard';
 
   const $ = id => document.getElementById(id);
   const err = (msg) => { const e = $('errorMsg'); e.textContent = msg; e.classList.remove('hidden'); };
@@ -109,7 +109,7 @@
 
   document.getElementById('guestBtn').addEventListener('click', () => {
     sessionStorage.setItem('ged_guest', 'true');
-    window.location.href = '/practice_session.html';
+    window.location.href = '/practice_session';
   });
 
   $('resendVerifyBtn').addEventListener('click', async () => {
@@ -123,7 +123,7 @@
       const data = await res.json();
       if (!res.ok) return err(data.message);
       sessionStorage.setItem('ged_pending_email', email);
-      window.location.href = '/verify_email.html';
+      window.location.href = '/verify_email';
     } catch (e) { err(e.message); }
   });
 
@@ -154,7 +154,7 @@
         throw new Error(data.message || 'Login failed.');
       }
       setSession(data);
-      window.location.href = '/dashboard.html';
+      window.location.href = '/dashboard';
     } catch (e) {
       err(e.message);
     } finally {
