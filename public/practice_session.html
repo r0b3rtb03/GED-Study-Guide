@@ -12,70 +12,85 @@
 <style>body{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}</style>
 </head>
 <body class="bg-background text-on-surface min-h-screen">
-  <main class="md:pl-64 pt-16 md:pt-0 pb-20 md:pb-0">
-    <div class="max-w-[900px] mx-auto p-margin-mobile md:p-margin-desktop">
-
-      <!-- Pre-session topic chooser -->
-      <section id="chooser" class="hidden">
-        <h1 class="text-headline-lg font-headline-lg mb-2">Start a Practice Session</h1>
-        <p class="text-body-md text-on-surface-variant mb-6">Pick a topic. We'll generate 10 GED-style questions tailored to it.</p>
-        <div id="topicGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-gutter"></div>
-      </section>
-
-      <!-- Active session -->
-      <section id="session" class="hidden">
-        <header class="flex flex-wrap items-center justify-between gap-3 mb-4">
-          <div class="flex items-center gap-2">
-            <span id="topicBadge" class="inline-flex items-center gap-1 px-3 h-8 rounded-full bg-primary-container/10 text-primary text-label-md font-bold"></span>
-            <span id="timer" class="text-label-md text-on-surface-variant">0:00</span>
-          </div>
-          <div id="difficultyGroup" class="inline-flex rounded-lg bg-surface-container p-1 text-label-md">
-            <button data-diff="easy"   class="h-8 px-3 rounded">Easy</button>
-            <button data-diff="medium" class="h-8 px-3 rounded">Medium</button>
-            <button data-diff="hard"   class="h-8 px-3 rounded">Hard</button>
-          </div>
-          <p id="qCounter" class="text-label-md text-on-surface-variant">Question 1 of 10</p>
-        </header>
-
-        <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/40 p-6">
-          <div id="questionArea" class="space-y-6">
-            <div id="skeleton" class="animate-pulse space-y-3">
-              <div class="h-5 w-2/3 bg-surface-container rounded"></div>
-              <div class="h-4 w-full bg-surface-container rounded"></div>
-              <div class="h-10 w-full bg-surface-container rounded"></div>
-              <div class="h-10 w-full bg-surface-container rounded"></div>
-            </div>
-          </div>
-
-          <div id="feedback" class="hidden mt-6 pt-6 border-t border-outline-variant/40 space-y-3"></div>
-
-          <div class="mt-6 flex items-center justify-between">
-            <button id="hintBtn" class="h-10 px-4 rounded-lg text-label-md font-bold text-primary hover:bg-primary-container/10 hidden">
-              <span class="material-symbols-outlined align-middle" style="font-size:18px">lightbulb</span> Hint
-            </button>
-            <div class="ml-auto flex gap-2">
-              <button id="submitBtn" class="h-11 px-5 rounded-lg bg-primary text-on-primary font-bold text-label-md hover:opacity-90 disabled:opacity-50">Submit Answer</button>
-              <button id="nextBtn"   class="h-11 px-5 rounded-lg bg-primary text-on-primary font-bold text-label-md hover:opacity-90 hidden">Next Question</button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Results -->
-      <section id="results" class="hidden">
-        <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/40 p-6 text-center">
-          <span class="material-symbols-outlined text-primary" style="font-size:48px">emoji_events</span>
-          <h2 class="text-headline-md font-headline-md mt-2">Session Complete</h2>
-          <p id="resultScore" class="text-metric-display font-metric-display mt-4"></p>
-          <p id="resultPercent" class="text-body-lg text-on-surface-variant"></p>
-          <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
-            <button id="saveBtn" class="h-12 px-5 rounded-lg bg-primary text-on-primary font-bold text-label-md hover:opacity-90">Save & Return to Dashboard</button>
-            <button id="retryBtn" class="h-12 px-5 rounded-lg ring-1 ring-outline-variant text-on-surface font-bold text-label-md hover:bg-surface-container-low">Try Again</button>
-          </div>
-        </div>
-      </section>
-
+  <!-- Sticky session bar — visible only during an active session -->
+  <header id="sessionBar" class="hidden fixed top-0 inset-x-0 z-40 md:pl-64 bg-surface-container-lowest border-b border-outline-variant">
+    <div class="max-w-3xl mx-auto h-14 px-4 md:px-6 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3 min-w-0">
+        <span id="topicBadge" class="inline-flex items-center gap-1 px-3 h-8 rounded-full bg-primary-container/10 text-primary text-label-md font-bold whitespace-nowrap"></span>
+        <span id="timer" class="text-label-md text-on-surface-variant tabular-nums">0:00</span>
+      </div>
+      <div id="difficultyGroup" class="hidden sm:inline-flex rounded-full bg-surface-container p-1 text-label-md">
+        <button data-diff="easy"   class="h-7 px-3 rounded-full">Easy</button>
+        <button data-diff="medium" class="h-7 px-3 rounded-full">Medium</button>
+        <button data-diff="hard"   class="h-7 px-3 rounded-full">Hard</button>
+      </div>
+      <p id="qCounter" class="text-label-md text-on-surface-variant whitespace-nowrap">Question 1 of 10</p>
     </div>
+  </header>
+
+  <main class="min-h-screen md:pl-64 pt-16 md:pt-0 pb-24 md:pb-12 flex flex-col items-center justify-start">
+    <!-- Pre-session topic chooser -->
+    <section id="chooser" class="hidden w-full max-w-2xl px-4 md:px-8 py-10 md:py-14">
+      <div class="text-center mb-8">
+        <h1 class="text-headline-lg font-headline-lg">Start a Practice Session</h1>
+        <p class="text-body-md text-on-surface-variant mt-2">Pick a topic. We'll generate 10 GED-style questions tailored to it.</p>
+      </div>
+      <div id="topicGridTop" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4"></div>
+      <div id="topicGridBottom" class="flex justify-center"></div>
+    </section>
+
+    <!-- Active session -->
+    <section id="session" class="hidden w-full max-w-xl px-4 md:px-6 pt-20 md:pt-24 pb-4 min-h-screen flex flex-col justify-center">
+      <div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm p-6 md:p-8">
+        <div id="questionArea" class="space-y-5">
+          <div id="skeleton" class="animate-pulse space-y-3">
+            <div class="h-5 w-2/3 bg-surface-container rounded"></div>
+            <div class="h-4 w-full bg-surface-container rounded"></div>
+            <div class="h-10 w-full bg-surface-container rounded"></div>
+            <div class="h-10 w-full bg-surface-container rounded"></div>
+          </div>
+        </div>
+
+        <div id="feedback" class="hidden mt-6 pt-6 border-t border-outline-variant/50 space-y-3"></div>
+
+        <div class="mt-6 pt-4 border-t border-outline-variant/50 flex items-center justify-between gap-3">
+          <button id="hintBtn" class="h-10 px-3 rounded-lg text-label-md font-bold text-primary hover:bg-primary-container/10 hidden inline-flex items-center gap-1.5">
+            <span class="material-symbols-outlined" style="font-size:18px">lightbulb</span> Hint
+          </button>
+          <div class="ml-auto flex gap-2">
+            <button id="submitBtn" class="h-11 px-6 rounded-lg bg-primary text-on-primary font-bold text-label-md hover:opacity-90 disabled:opacity-50 active:scale-[0.98] transition">Submit Answer</button>
+            <button id="nextBtn"   class="h-11 px-6 rounded-lg bg-primary text-on-primary font-bold text-label-md hover:opacity-90 hidden active:scale-[0.98] transition">Next Question</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile difficulty toggle (hidden on sm+, shown on small screens) -->
+      <div id="difficultyMobile" class="sm:hidden mt-4 inline-flex rounded-full bg-surface-container p-1 text-label-md self-center"></div>
+
+      <!-- Progress bar -->
+      <div class="mt-6">
+        <div class="w-full h-1.5 bg-surface-container rounded-full overflow-hidden">
+          <div id="progressBar" class="h-full bg-primary rounded-full transition-all duration-500" style="width:10%"></div>
+        </div>
+        <p class="text-center text-label-md text-on-surface-variant mt-2">
+          <span id="progressLabel">1 of 10 questions</span>
+        </p>
+      </div>
+    </section>
+
+    <!-- Results -->
+    <section id="results" class="hidden w-full max-w-xl px-4 md:px-6 py-10 md:py-14">
+      <div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm p-8 text-center">
+        <span class="material-symbols-outlined text-primary" style="font-size:48px">emoji_events</span>
+        <h2 class="text-headline-md font-headline-md mt-2">Session Complete</h2>
+        <p id="resultScore" class="text-metric-display font-metric-display mt-4"></p>
+        <p id="resultPercent" class="text-body-lg text-on-surface-variant"></p>
+        <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
+          <button id="saveBtn" class="h-12 px-5 rounded-lg bg-primary text-on-primary font-bold text-label-md hover:opacity-90">Save & Return to Dashboard</button>
+          <button id="retryBtn" class="h-12 px-5 rounded-lg ring-1 ring-outline-variant text-on-surface font-bold text-label-md hover:bg-surface-container-low">Try Again</button>
+        </div>
+      </div>
+    </section>
   </main>
 
 <script type="module">
@@ -83,12 +98,14 @@
   import { apiJson, apiFetch, isGuest, getAccessToken } from '/js/auth.js';
 
   const guest = isGuest() && !getAccessToken();
+  let guestBar = null;
   if (!guest) renderShell({ active: 'practice_session' });
   else {
-    // Minimal guest top bar
-    const bar = document.createElement('header');
-    bar.className = 'fixed top-0 inset-x-0 h-14 bg-surface-container-lowest border-b border-outline-variant z-30 flex items-center justify-between px-margin-mobile md:px-margin-desktop';
-    bar.innerHTML = `
+    // Minimal guest top bar (shown on chooser + results, hidden during session)
+    guestBar = document.createElement('header');
+    guestBar.id = 'guestBar';
+    guestBar.className = 'fixed top-0 inset-x-0 h-14 bg-surface-container-lowest border-b border-outline-variant z-30 flex items-center justify-between px-margin-mobile md:px-margin-desktop';
+    guestBar.innerHTML = `
       <a href="/index.html" class="flex items-center gap-2 text-primary font-bold text-headline-sm">
         <span class="material-symbols-outlined" style="font-size:22px">menu_book</span>GED Math Master
       </a>
@@ -96,8 +113,11 @@
         <span class="hidden sm:inline text-label-md text-on-surface-variant">Guest mode</span>
         <a href="/create_account.html" class="h-9 px-3 rounded-lg bg-primary text-on-primary text-label-md font-bold flex items-center">Sign Up Free</a>
       </div>`;
-    document.body.prepend(bar);
-    document.querySelector('main').classList.add('pt-16');
+    document.body.prepend(guestBar);
+  }
+  function setGuestBar(visible) {
+    if (!guestBar) return;
+    guestBar.classList.toggle('hidden', !visible);
   }
 
   const TOPICS = [
@@ -167,29 +187,49 @@
   const $ = id => document.getElementById(id);
   const escape = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
+  function topicCard(t) {
+    return `<button data-slug="${t.slug}" class="text-left bg-surface-container-lowest rounded-xl border border-outline-variant p-6 hover:border-primary hover:shadow-sm transition group w-full">
+      <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+        <span class="material-symbols-outlined text-primary" style="font-size:22px">${t.icon}</span>
+      </div>
+      <p class="text-headline-sm font-headline-sm">${t.name}</p>
+      <p class="text-label-md text-on-surface-variant mt-1">10 questions · ~10 min</p>
+    </button>`;
+  }
+
   function showChooser() {
     $('chooser').classList.remove('hidden');
     $('session').classList.add('hidden');
     $('results').classList.add('hidden');
-    $('topicGrid').innerHTML = TOPICS.map(t => `
-      <button data-slug="${t.slug}" class="text-left bg-surface-container-lowest rounded-xl border border-outline-variant/40 p-5 hover:border-primary hover:shadow-md transition">
-        <div class="w-12 h-12 rounded-lg bg-primary-container/10 flex items-center justify-center mb-3">
-          <span class="material-symbols-outlined text-primary" style="font-size:26px">${t.icon}</span>
-        </div>
-        <p class="text-headline-sm font-headline-sm">${t.name}</p>
-        <p class="text-label-md text-on-surface-variant mt-1">10 questions · ~10 min</p>
-      </button>`).join('');
-    $('topicGrid').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+    $('sessionBar').classList.add('hidden');
+    setGuestBar(true);
+
+    const topFour = TOPICS.slice(0, 4);
+    const last    = TOPICS[4];
+    $('topicGridTop').innerHTML = topFour.map(topicCard).join('');
+    $('topicGridBottom').innerHTML = `<div class="w-full sm:w-[calc(50%-8px)]">${topicCard(last)}</div>`;
+
+    document.querySelectorAll('[data-slug]').forEach(b => b.addEventListener('click', () => {
       session.topic = b.dataset.slug;
       startSession();
     }));
   }
+
+  // Mirror desktop difficulty pills to mobile container
+  function buildDifficultyHTML() {
+    return ['easy', 'medium', 'hard'].map(d =>
+      `<button data-diff="${d}" class="h-7 px-3 rounded-full">${d[0].toUpperCase()}${d.slice(1)}</button>`
+    ).join('');
+  }
+  $('difficultyMobile').innerHTML = buildDifficultyHTML();
 
   function startSession() {
     Object.assign(session, { questions: [], answers: [], currentIndex: 0, score: 0, startTime: Date.now() });
     $('chooser').classList.add('hidden');
     $('results').classList.add('hidden');
     $('session').classList.remove('hidden');
+    $('sessionBar').classList.remove('hidden');
+    setGuestBar(false);
     const t = TOPICS.find(t => t.slug === session.topic);
     $('topicBadge').innerHTML = `<span class="material-symbols-outlined" style="font-size:16px">${t.icon}</span>${t.name}`;
     renderDifficulty();
@@ -198,17 +238,26 @@
   }
 
   function renderDifficulty() {
-    $('difficultyGroup').querySelectorAll('button').forEach(b => {
+    document.querySelectorAll('#difficultyGroup button, #difficultyMobile button').forEach(b => {
       const a = b.dataset.diff === session.difficulty;
-      b.className = `h-8 px-3 rounded ${a ? 'bg-primary text-on-primary font-bold' : 'text-on-surface-variant'}`;
+      b.className = `h-7 px-3 rounded-full text-label-md transition ${a ? 'bg-primary text-on-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container-high'}`;
     });
   }
-  $('difficultyGroup').addEventListener('click', (e) => {
-    const b = e.target.closest('button');
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('#difficultyGroup button, #difficultyMobile button');
     if (!b) return;
     session.difficulty = b.dataset.diff;
     renderDifficulty();
   });
+
+  function updateProgress() {
+    const idx = session.currentIndex + 1;
+    const pct = (idx / QUESTIONS_PER_SESSION) * 100;
+    const pb = document.getElementById('progressBar');
+    const pl = document.getElementById('progressLabel');
+    if (pb) pb.style.width = pct + '%';
+    if (pl) pl.textContent = `${idx} of ${QUESTIONS_PER_SESSION} questions`;
+  }
 
   function startTimer() {
     clearInterval(timerInterval);
@@ -228,6 +277,7 @@
     $('nextBtn').classList.add('hidden');
     $('hintBtn').classList.add('hidden');
     $('qCounter').textContent = `Question ${session.currentIndex + 1} of ${QUESTIONS_PER_SESSION}`;
+    updateProgress();
     $('questionArea').innerHTML = `<div id="skeleton" class="animate-pulse space-y-3">
       <div class="h-5 w-2/3 bg-surface-container rounded"></div>
       <div class="h-4 w-full bg-surface-container rounded"></div>
@@ -385,6 +435,8 @@
   function finishSession() {
     clearInterval(timerInterval);
     $('session').classList.add('hidden');
+    $('sessionBar').classList.add('hidden');
+    setGuestBar(true);
     $('results').classList.remove('hidden');
     const pct = Math.round((session.score / QUESTIONS_PER_SESSION) * 100);
     $('resultScore').textContent = `${session.score} / ${QUESTIONS_PER_SESSION}`;
