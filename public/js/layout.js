@@ -49,7 +49,11 @@ export function renderShell({ active } = {}) {
       ${NAV_ITEMS.map(n => {
         const a = active ? n.href.includes(active) : isActive(n.href);
         const ext = n.external ? ' target="_blank" rel="noopener"' : '';
-        return `<a href="${n.href}"${ext} class="flex items-center gap-3 h-11 px-3 rounded-lg ${a ? 'text-primary font-bold bg-primary-container/10 border-r-4 border-primary' : 'text-on-surface-variant hover:bg-surface-container-low'}">
+        // Active state is a single pill — no protruding right border.
+        // A small left-edge accent bar inside the pill replaces the old border-r-4
+        // so the indicator stays within the rounded shape.
+        return `<a href="${n.href}"${ext} class="relative flex items-center gap-3 h-11 pl-4 pr-3 rounded-lg ${a ? 'text-primary font-bold bg-primary-container/10' : 'text-on-surface-variant hover:bg-surface-container-low'}">
+          ${a ? '<span class="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-primary"></span>' : ''}
           <span class="material-symbols-outlined" style="font-size:22px">${n.icon}</span>
           <span class="text-label-md font-label-md">${n.label}</span>
         </a>`;
