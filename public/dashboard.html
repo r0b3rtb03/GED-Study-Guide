@@ -23,6 +23,14 @@
         <!-- stat cards injected here -->
       </section>
 
+      <section id="recommendedReviewSection" class="mb-8 hidden">
+        <h2 class="text-headline-md font-headline-md mb-4 flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary" style="font-size:24px">auto_stories</span>
+          Recommended Review
+        </h2>
+        <div id="recommendedReview" class="space-y-3"></div>
+      </section>
+
       <section class="mb-8">
         <h2 class="text-headline-md font-headline-md mb-4">Topic Progress</h2>
         <div id="topicProgress" class="space-y-3 bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/40"></div>
@@ -98,6 +106,35 @@
     }).join('');
   }
 
+  function renderRecommendedReview(weakTopics) {
+    const section = document.getElementById('recommendedReviewSection');
+    const container = document.getElementById('recommendedReview');
+    if (!weakTopics.length) { section.classList.add('hidden'); return; }
+    section.classList.remove('hidden');
+    container.innerHTML = weakTopics.map(w => `
+      <article class="bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/40 flex flex-col md:flex-row md:items-center gap-4">
+        <div class="w-12 h-12 rounded-lg bg-error-container/60 flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-error" style="font-size:24px">priority_high</span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-headline-sm font-headline-sm">${w.name}</p>
+          <p class="text-body-md text-on-surface-variant mt-1">${w.recommendation}</p>
+          <p class="text-label-md text-on-surface-variant mt-1">Current accuracy: <span class="font-bold text-error">${w.percent}%</span> across ${w.attempts} questions</p>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-2 shrink-0">
+          <a href="${w.pdfHref}" target="_blank" rel="noopener" class="inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-lg bg-primary text-on-primary font-bold text-label-md hover:opacity-90">
+            <span class="material-symbols-outlined" style="font-size:18px">auto_stories</span>
+            Open Study Guide
+          </a>
+          <a href="/practice_session?topic=${w.slug}" class="inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-lg ring-1 ring-outline-variant text-on-surface font-bold text-label-md hover:bg-surface-container-low">
+            <span class="material-symbols-outlined" style="font-size:18px">edit_square</span>
+            Practice
+          </a>
+        </div>
+      </article>
+    `).join('');
+  }
+
   function renderQuickStart() {
     return TOPICS.map(t => `
       <a href="/practice_session?topic=${t.slug}" class="group bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/40 hover:border-primary hover:shadow-md transition flex flex-col gap-3">
@@ -125,6 +162,7 @@
         statCard('Current Streak', stats.streakDays, 'days', 'local_fire_department', 'text-[#f59e0b]')
       ].join('');
       document.getElementById('topicProgress').innerHTML = renderTopicProgress(stats.byTopic || {});
+      renderRecommendedReview(stats.weakTopics || []);
     } catch (e) {
       document.getElementById('statsGrid').innerHTML = `<div class="col-span-full text-error text-label-md">${e.message}</div>`;
       document.getElementById('topicProgress').innerHTML = '';

@@ -2,7 +2,7 @@ import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { db, rowToUser } from '../services/db.js';
-import { GED_TOPIC_SLUGS } from '../data/gedTopicGuides.js';
+import { GED_TOPIC_SLUGS, GED_TOPIC_GUIDES } from '../data/gedTopicGuides.js';
 
 const router = Router();
 
@@ -52,12 +52,36 @@ router.get('/stats', requireAuth, (req, res) => {
     else break;
   }
 
+  // Recommended Review: topics with ≥3 attempts AND <70% accuracy, sorted worst-first,
+  // each enriched with the page range to study from the official PDF.
+  const weakTopics = Object.entries(byTopic)
+    .filter(([_, t]) => t.total >= 3 && t.percent < 70)
+    .map(([slug, t]) => {
+      const guide = GED_TOPIC_GUIDES[slug] || {};
+      const [first, last] = guide.pageRange || [null, null];
+      return {
+        slug,
+        name: guide.name || slug,
+        percent: t.percent,
+        attempts: t.total,
+        sectionName: guide.sectionName || '',
+        pageRange: guide.pageRange || null,
+        pdfHref: first ? `/study-guide.pdf#page=${first}` : '/study-guide.pdf',
+        recommendation: first
+          ? `You're struggling with ${guide.name}. We recommend reviewing pages ${first}–${last} in the Study Guide.`
+          : `You're struggling with ${guide.name}. Review it in the Study Guide.`
+      };
+    })
+    .sort((a, b) => a.percent - b.percent)
+    .slice(0, 3);
+
   res.json({
     overallScore,
     totalTimeMinutes: Math.round(totalTimeSec / 60),
     sessionsCompleted: sessions.length,
     streakDays: streak,
-    byTopic
+    byTopic,
+    weakTopics
   });
 });
 
