@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta content="width=device-width, initial-scale=1.0" name="viewport" />
+<title>Study Notes — GED Math Master</title>
+<link href="https://fonts.googleapis.com" rel="preconnect" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="/js/theme.js"></script>
+<style>body{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}</style>
+</head>
+<body class="bg-background text-on-surface min-h-screen">
+  <main class="md:pl-64 pt-16 md:pt-0 pb-20 md:pb-0">
+    <div class="max-w-[1200px] mx-auto p-margin-mobile md:p-margin-desktop">
+      <header class="mb-6">
+        <h1 class="text-headline-lg font-headline-lg">Study Notes</h1>
+        <p class="text-body-md text-on-surface-variant mt-1">Learn from official GED Math content, then practice what you've read.</p>
+      </header>
+
+      <div class="grid md:grid-cols-[260px_1fr] gap-gutter">
+        <!-- Topic tabs -->
+        <aside class="bg-surface-container-lowest rounded-xl border border-outline-variant/40 p-3 h-fit md:sticky md:top-4">
+          <nav id="topicTabs" class="flex md:flex-col gap-1 overflow-x-auto md:overflow-visible"></nav>
+          <div class="mt-3 pt-3 border-t border-outline-variant/40 hidden md:block">
+            <label class="block text-label-md font-label-md mb-2">Upload your own</label>
+            <input id="fileInput" type="file" accept=".pdf,.txt,.md" class="hidden" />
+            <button id="uploadBtn" class="w-full h-10 rounded-lg border border-dashed border-outline-variant text-label-md text-on-surface-variant hover:border-primary hover:text-primary flex items-center justify-center gap-2">
+              <span class="material-symbols-outlined" style="font-size:18px">upload_file</span>
+              Choose file
+            </button>
+            <p class="text-[11px] text-on-surface-variant mt-2">PDF, TXT, or MD up to 8MB.</p>
+          </div>
+        </aside>
+
+        <!-- Notes panel -->
+        <section class="bg-surface-container-lowest rounded-xl border border-outline-variant/40 p-6 min-h-[60vh]">
+          <div id="notesBody">
+            <div class="animate-pulse space-y-3">
+              <div class="h-6 w-1/3 bg-surface-container rounded"></div>
+              <div class="h-4 w-2/3 bg-surface-container rounded"></div>
+              <div class="h-4 w-full bg-surface-container rounded"></div>
+              <div class="h-4 w-5/6 bg-surface-container rounded"></div>
+            </div>
+          </div>
+          <div class="mt-6 pt-6 border-t border-outline-variant/40 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+            <p class="text-label-md text-on-surface-variant">Ready to test what you learned?</p>
+            <a id="practiceCta" href="/practice_session.html" class="inline-flex items-center justify-center gap-2 h-12 px-5 bg-primary text-on-primary rounded-lg font-bold text-label-md hover:opacity-90">
+              <span class="material-symbols-outlined" style="font-size:20px">edit_square</span>
+              Generate Practice Problems
+            </a>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+<script type="module">
+  import { renderShell } from '/js/layout.js';
+  import { apiJson, apiFetch } from '/js/auth.js';
+  renderShell({ active: 'study_notes' });
+
+  const TOPICS = [
+    { slug: 'algebra',          name: 'Algebra' },
+    { slug: 'linear-equations', name: 'Linear Equations & Graphs' },
+    { slug: 'fractions',        name: 'Fractions, Decimals & Percents' },
+    { slug: 'geometry',         name: 'Geometry Basics' },
+    { slug: 'stats',            name: 'Statistics & Data' }
+  ];
+
+  const params = new URLSearchParams(location.search);
+  let activeSlug = TOPICS.find(t => t.slug === params.get('topic'))?.slug || 'algebra';
+
+  const tabsEl = document.getElementById('topicTabs');
+  const bodyEl = document.getElementById('notesBody');
+  const ctaEl  = document.getElementById('practiceCta');
+
+  function renderTabs() {
+    tabsEl.innerHTML = TOPICS.map(t => {
+      const a = t.slug === activeSlug;
+      return `<button data-slug="${t.slug}" class="text-left whitespace-nowrap px-3 h-10 rounded-lg text-label-md font-label-md ${a ? 'bg-primary-container/10 text-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container-low'}">${t.name}</button>`;
+    }).join('');
+    tabsEl.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { activeSlug = b.dataset.slug; renderTabs(); loadNotes(); }));
+  }
+
+  function renderNotes(data) {
+    const sections = (data.sections || []).map(s => `
+      <section class="mb-6">
+        <h3 class="text-headline-sm font-headline-sm mb-2">${s.heading || ''}</h3>
+        <div class="text-body-md text-on-surface-variant whitespace-pre-wrap">${(s.content || '').replace(/</g, '&lt;')}</div>
+        ${s.keyFormulas?.length ? `<div class="mt-3 p-3 bg-surface-container-low rounded-lg">
+          <p class="text-label-md font-bold mb-1">Key Formulas</p>
+          <ul class="list-disc list-inside text-body-md">${s.keyFormulas.map(f => `<li>${f}</li>`).join('')}</ul>
+        </div>` : ''}
+        ${s.tips?.length ? `<div class="mt-3 p-3 bg-secondary-container/40 rounded-lg">
+          <p class="text-label-md font-bold mb-1 text-on-secondary-container">Tips</p>
+          <ul class="list-disc list-inside text-body-md text-on-secondary-container">${s.tips.map(t => `<li>${t}</li>`).join('')}</ul>
+        </div>` : ''}
+      </section>
+    `).join('');
+    bodyEl.innerHTML = `<h2 class="text-headline-md font-headline-md mb-4">${data.title || ''}</h2>${sections}`;
+  }
+
+  async function loadNotes() {
+    ctaEl.href = `/practice_session.html?topic=${activeSlug}`;
+    bodyEl.innerHTML = `<div class="animate-pulse space-y-3"><div class="h-6 w-1/3 bg-surface-container rounded"></div><div class="h-4 w-2/3 bg-surface-container rounded"></div><div class="h-4 w-full bg-surface-container rounded"></div></div>`;
+    try {
+      const data = await apiJson(`/api/notes/${activeSlug}`);
+      renderNotes(data);
+    } catch (e) {
+      bodyEl.innerHTML = `<p class="text-error">${e.message}</p>`;
+    }
+  }
+
+  // File upload
+  document.getElementById('uploadBtn').addEventListener('click', () => document.getElementById('fileInput').click());
+  document.getElementById('fileInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    bodyEl.innerHTML = `<div class="animate-pulse text-on-surface-variant">Processing ${file.name}...</div>`;
+    const form = new FormData();
+    form.append('file', file);
+    try {
+      const res = await apiFetch('/api/notes/upload', { method: 'POST', body: form });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Upload failed.');
+      renderNotes(data);
+    } catch (err) {
+      bodyEl.innerHTML = `<p class="text-error">${err.message}</p>`;
+    }
+  });
+
+  renderTabs();
+  loadNotes();
+</script>
+</body>
+</html>
