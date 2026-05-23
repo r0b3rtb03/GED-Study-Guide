@@ -293,6 +293,9 @@
 
   const $ = id => document.getElementById(id);
   const escape = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  // Wrap the leading "Step N:" label in <strong> for scannability.
+  // Safe to call on already-escaped text — we only inject one <strong> tag.
+  const boldStepLabel = s => escape(s).replace(/^(Step\s+\d+:)/i, '<strong class="font-bold text-on-surface">$1</strong>');
 
   function topicCard(t) {
     return `<button data-slug="${t.slug}" class="text-left bg-surface-container-lowest rounded-xl border border-outline-variant p-6 hover:border-primary hover:shadow-sm transition group w-full">
@@ -558,7 +561,7 @@
             Step-by-step solution
           </p>
           <div class="space-y-2 text-body-md text-on-surface leading-relaxed">
-            ${steps.map(s => `<p>${escape(s)}</p>`).join('')}
+            ${steps.map(s => `<p>${boldStepLabel(s)}</p>`).join('')}
           </div>
         </div>` : '';
 
@@ -695,7 +698,7 @@
             Step-by-step solution
           </p>
           <div class="space-y-2 text-body-md text-on-surface leading-relaxed">
-            ${steps.map(s => `<p>${escape(s)}</p>`).join('')}
+            ${steps.map(s => `<p>${boldStepLabel(s)}</p>`).join('')}
           </div>
         </div>`;
       })()}
