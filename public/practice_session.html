@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta content="width=device-width, initial-scale=1.0" name="viewport" />
+<title>Practice — GED Math Master</title>
+<link href="https://fonts.googleapis.com" rel="preconnect" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="/js/theme.js"></script>
+<style>body{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}</style>
+</head>
+<body class="bg-background text-on-surface min-h-screen">
+  <main class="md:pl-64 pt-16 md:pt-0 pb-20 md:pb-0">
+    <div class="max-w-[900px] mx-auto p-margin-mobile md:p-margin-desktop">
+
+      <!-- Pre-session topic chooser -->
+      <section id="chooser" class="hidden">
+        <h1 class="text-headline-lg font-headline-lg mb-2">Start a Practice Session</h1>
+        <p class="text-body-md text-on-surface-variant mb-6">Pick a topic. We'll generate 10 GED-style questions tailored to it.</p>
+        <div id="topicGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-gutter"></div>
+      </section>
+
+      <!-- Active session -->
+      <section id="session" class="hidden">
+        <header class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div class="flex items-center gap-2">
+            <span id="topicBadge" class="inline-flex items-center gap-1 px-3 h-8 rounded-full bg-primary-container/10 text-primary text-label-md font-bold"></span>
+            <span id="timer" class="text-label-md text-on-surface-variant">0:00</span>
+          </div>
+          <div id="difficultyGroup" class="inline-flex rounded-lg bg-surface-container p-1 text-label-md">
+            <button data-diff="easy"   class="h-8 px-3 rounded">Easy</button>
+            <button data-diff="medium" class="h-8 px-3 rounded">Medium</button>
+            <button data-diff="hard"   class="h-8 px-3 rounded">Hard</button>
+          </div>
+          <p id="qCounter" class="text-label-md text-on-surface-variant">Question 1 of 10</p>
+        </header>
+
+        <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/40 p-6">
+          <div id="questionArea" class="space-y-6">
+            <div id="skeleton" class="animate-pulse space-y-3">
+              <div class="h-5 w-2/3 bg-surface-container rounded"></div>
+              <div class="h-4 w-full bg-surface-container rounded"></div>
+              <div class="h-10 w-full bg-surface-container rounded"></div>
+              <div class="h-10 w-full bg-surface-container rounded"></div>
+            </div>
+          </div>
+
+          <div id="feedback" class="hidden mt-6 pt-6 border-t border-outline-variant/40 space-y-3"></div>
+
+          <div class="mt-6 flex items-center justify-between">
+            <button id="hintBtn" class="h-10 px-4 rounded-lg text-label-md font-bold text-primary hover:bg-primary-container/10 hidden">
+              <span class="material-symbols-outlined align-middle" style="font-size:18px">lightbulb</span> Hint
+            </button>
+            <div class="ml-auto flex gap-2">
+              <button id="submitBtn" class="h-11 px-5 rounded-lg bg-primary text-on-primary font-bold text-label-md hover:opacity-90 disabled:opacity-50">Submit Answer</button>
+              <button id="nextBtn"   class="h-11 px-5 rounded-lg bg-primary text-on-primary font-bold text-label-md hover:opacity-90 hidden">Next Question</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Results -->
+      <section id="results" class="hidden">
+        <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/40 p-6 text-center">
+          <span class="material-symbols-outlined text-primary" style="font-size:48px">emoji_events</span>
+          <h2 class="text-headline-md font-headline-md mt-2">Session Complete</h2>
+          <p id="resultScore" class="text-metric-display font-metric-display mt-4"></p>
+          <p id="resultPercent" class="text-body-lg text-on-surface-variant"></p>
+          <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <button id="saveBtn" class="h-12 px-5 rounded-lg bg-primary text-on-primary font-bold text-label-md hover:opacity-90">Save & Return to Dashboard</button>
+            <button id="retryBtn" class="h-12 px-5 rounded-lg ring-1 ring-outline-variant text-on-surface font-bold text-label-md hover:bg-surface-container-low">Try Again</button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+<script type="module">
+  import { renderShell } from '/js/layout.js';
+  import { apiJson, apiFetch, isGuest, getAccessToken } from '/js/auth.js';
+
+  const guest = isGuest() && !getAccessToken();
+  if (!guest) renderShell({ active: 'practice_session' });
+  else {
+    // Minimal guest top bar
+    const bar = document.createElement('header');
+    bar.className = 'fixed top-0 inset-x-0 h-14 bg-surface-container-lowest border-b border-outline-variant z-30 flex items-center justify-between px-margin-mobile md:px-margin-desktop';
+    bar.innerHTML = `
+      <a href="/index.html" class="flex items-center gap-2 text-primary font-bold text-headline-sm">
+        <span class="material-symbols-outlined" style="font-size:22px">menu_book</span>GED Math Master
+      </a>
+      <div class="flex items-center gap-2">
+        <span class="hidden sm:inline text-label-md text-on-surface-variant">Guest mode</span>
+        <a href="/create_account.html" class="h-9 px-3 rounded-lg bg-primary text-on-primary text-label-md font-bold flex items-center">Sign Up Free</a>
+      </div>`;
+    document.body.prepend(bar);
+    document.querySelector('main').classList.add('pt-16');
+  }
+
+  const TOPICS = [
+    { slug: 'algebra',          name: 'Algebra',                         icon: 'function' },
+    { slug: 'linear-equations', name: 'Linear Equations & Graphs',       icon: 'show_chart' },
+    { slug: 'fractions',        name: 'Fractions, Decimals & Percents',  icon: 'percent' },
+    { slug: 'geometry',         name: 'Geometry Basics',                 icon: 'square_foot' },
+    { slug: 'stats',            name: 'Statistics & Data',               icon: 'bar_chart' }
+  ];
+
+  const QUESTIONS_PER_SESSION = 10;
+  const params = new URLSearchParams(location.search);
+  const initialTopic = TOPICS.find(t => t.slug === params.get('topic'))?.slug || null;
+
+  const session = {
+    topic: initialTopic,
+    difficulty: 'medium',
+    questions: [],          // { question, options, correctAnswer, ... }
+    answers: [],            // { userAnswer, isCorrect, steps, explanation }
+    currentIndex: 0,
+    score: 0,
+    startTime: Date.now()
+  };
+  let timerInterval = null;
+  let answered = false;
+  let selectedAnswer = null;
+
+  async function callApi(url, options) {
+    if (guest) {
+      const res = await fetch(url, {
+        ...options,
+        headers: { 'Content-Type': 'application/json', ...(options.headers || {}) }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || `Request failed (${res.status})`);
+      return data;
+    }
+    return apiJson(url, options);
+  }
+
+  function showGuestNudge() {
+    if (!guest) return;
+    let el = document.getElementById('guestNudge');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'guestNudge';
+      el.className = 'fixed bottom-6 left-4 right-4 md:left-auto md:right-6 md:max-w-md p-4 bg-primary text-on-primary rounded-xl shadow-lg flex items-center justify-between gap-3 z-50';
+      el.innerHTML = `
+        <div class="min-w-0">
+          <p class="text-label-md font-bold">Enjoying GED Math Master?</p>
+          <p class="text-label-md opacity-90">Create a free account to save progress & unlock all features.</p>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <button id="nudgeClose" class="w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center" aria-label="Dismiss">
+            <span class="material-symbols-outlined" style="font-size:20px">close</span>
+          </button>
+          <a href="/create_account.html" class="h-9 px-3 rounded-lg bg-on-primary text-primary text-label-md font-bold flex items-center">Sign Up Free</a>
+        </div>`;
+      document.body.appendChild(el);
+      el.querySelector('#nudgeClose').addEventListener('click', () => el.remove());
+    }
+    el.classList.remove('hidden');
+    clearTimeout(showGuestNudge._t);
+    showGuestNudge._t = setTimeout(() => el?.classList.add('hidden'), 8000);
+  }
+
+  const $ = id => document.getElementById(id);
+  const escape = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  function showChooser() {
+    $('chooser').classList.remove('hidden');
+    $('session').classList.add('hidden');
+    $('results').classList.add('hidden');
+    $('topicGrid').innerHTML = TOPICS.map(t => `
+      <button data-slug="${t.slug}" class="text-left bg-surface-container-lowest rounded-xl border border-outline-variant/40 p-5 hover:border-primary hover:shadow-md transition">
+        <div class="w-12 h-12 rounded-lg bg-primary-container/10 flex items-center justify-center mb-3">
+          <span class="material-symbols-outlined text-primary" style="font-size:26px">${t.icon}</span>
+        </div>
+        <p class="text-headline-sm font-headline-sm">${t.name}</p>
+        <p class="text-label-md text-on-surface-variant mt-1">10 questions · ~10 min</p>
+      </button>`).join('');
+    $('topicGrid').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+      session.topic = b.dataset.slug;
+      startSession();
+    }));
+  }
+
+  function startSession() {
+    Object.assign(session, { questions: [], answers: [], currentIndex: 0, score: 0, startTime: Date.now() });
+    $('chooser').classList.add('hidden');
+    $('results').classList.add('hidden');
+    $('session').classList.remove('hidden');
+    const t = TOPICS.find(t => t.slug === session.topic);
+    $('topicBadge').innerHTML = `<span class="material-symbols-outlined" style="font-size:16px">${t.icon}</span>${t.name}`;
+    renderDifficulty();
+    startTimer();
+    loadNextQuestion();
+  }
+
+  function renderDifficulty() {
+    $('difficultyGroup').querySelectorAll('button').forEach(b => {
+      const a = b.dataset.diff === session.difficulty;
+      b.className = `h-8 px-3 rounded ${a ? 'bg-primary text-on-primary font-bold' : 'text-on-surface-variant'}`;
+    });
+  }
+  $('difficultyGroup').addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    session.difficulty = b.dataset.diff;
+    renderDifficulty();
+  });
+
+  function startTimer() {
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      const sec = Math.floor((Date.now() - session.startTime) / 1000);
+      const m = Math.floor(sec / 60), s = sec % 60;
+      $('timer').textContent = `${m}:${String(s).padStart(2, '0')}`;
+    }, 500);
+  }
+
+  async function loadNextQuestion() {
+    answered = false;
+    selectedAnswer = null;
+    $('feedback').classList.add('hidden');
+    $('feedback').innerHTML = '';
+    $('submitBtn').classList.remove('hidden');
+    $('nextBtn').classList.add('hidden');
+    $('hintBtn').classList.add('hidden');
+    $('qCounter').textContent = `Question ${session.currentIndex + 1} of ${QUESTIONS_PER_SESSION}`;
+    $('questionArea').innerHTML = `<div id="skeleton" class="animate-pulse space-y-3">
+      <div class="h-5 w-2/3 bg-surface-container rounded"></div>
+      <div class="h-4 w-full bg-surface-container rounded"></div>
+      <div class="h-10 w-full bg-surface-container rounded"></div>
+      <div class="h-10 w-full bg-surface-container rounded"></div>
+    </div>`;
+
+    try {
+      const endpoint = guest ? '/api/practice/generate-guest' : '/api/practice/generate';
+      const data = await callApi(endpoint, {
+        method: 'POST',
+        body: JSON.stringify({
+          topic: session.topic,
+          difficulty: session.difficulty,
+          previousQuestions: session.questions.map(q => q.question)
+        })
+      });
+      session.questions.push(data.question);
+      renderQuestion(data.question);
+    } catch (e) {
+      $('questionArea').innerHTML = `<p class="text-error">${e.message}</p>`;
+    }
+  }
+
+  function calcBadge(q) {
+    if (q.calculatorAllowed === undefined || q.calculatorAllowed === null) return '';
+    return q.calculatorAllowed
+      ? `<div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#ecfdf5] text-[#047857] text-label-md font-bold" title="${escape(q.calculatorReasoning || '')}">
+          <span class="material-symbols-outlined" style="font-size:16px">calculate</span>Calculator allowed
+        </div>`
+      : `<div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#fef3c7] text-[#92400e] text-label-md font-bold" title="${escape(q.calculatorReasoning || '')}">
+          <span class="material-symbols-outlined" style="font-size:16px">do_not_disturb</span>No calculator
+        </div>`;
+  }
+
+  function renderQuestion(q) {
+    const isMC = q.type === 'multiple_choice' && Array.isArray(q.options);
+    const body = `
+      ${calcBadge(q)}
+      <p class="text-body-lg font-body-lg leading-relaxed">${escape(q.question)}</p>
+      ${isMC
+        ? `<div id="optionList" class="space-y-2">${q.options.map((opt, i) => {
+            const letter = opt.match(/^[A-D]\)/) ? opt[0] : String.fromCharCode(65 + i);
+            return `<label class="option flex items-center gap-3 p-3 rounded-lg ring-1 ring-outline-variant cursor-pointer hover:bg-surface-container-low transition" data-letter="${letter}">
+              <input type="radio" name="opt" value="${letter}" class="text-primary focus:ring-primary" />
+              <span class="text-body-md">${escape(opt)}</span>
+            </label>`;
+          }).join('')}</div>`
+        : `<input id="freeInput" type="text" placeholder="Type your answer" class="w-full px-4 py-3 bg-surface rounded-lg outline-none ring-1 ring-outline-variant focus:ring-2 focus:ring-primary text-body-md" />`}
+    `;
+    $('questionArea').innerHTML = body;
+    if (q.hint) $('hintBtn').classList.remove('hidden');
+  }
+
+  $('hintBtn').addEventListener('click', () => {
+    const q = session.questions[session.currentIndex];
+    if (!q?.hint) return;
+    let hintEl = document.getElementById('hintBox');
+    if (hintEl) return;
+    hintEl = document.createElement('div');
+    hintEl.id = 'hintBox';
+    hintEl.className = 'p-3 rounded-lg bg-secondary-container/40 text-on-secondary-container text-label-md';
+    hintEl.innerHTML = `<strong>Hint:</strong> ${escape(q.hint)}`;
+    $('questionArea').appendChild(hintEl);
+  });
+
+  $('submitBtn').addEventListener('click', async () => {
+    if (answered) return;
+    const q = session.questions[session.currentIndex];
+    const isMC = q.type === 'multiple_choice' && Array.isArray(q.options);
+    let userAnswer;
+    if (isMC) {
+      const checked = document.querySelector('input[name="opt"]:checked');
+      if (!checked) return;
+      userAnswer = checked.value;
+      selectedAnswer = userAnswer;
+    } else {
+      const v = document.getElementById('freeInput')?.value.trim();
+      if (!v) return;
+      userAnswer = v;
+    }
+
+    answered = true;
+    $('submitBtn').disabled = true;
+    $('feedback').classList.remove('hidden');
+    $('feedback').innerHTML = `<div class="animate-pulse text-on-surface-variant">Checking your answer...</div>`;
+
+    try {
+      const checkEndpoint = guest ? '/api/practice/check-guest' : '/api/practice/check';
+      const result = await callApi(checkEndpoint, {
+        method: 'POST',
+        body: JSON.stringify({
+          question: q.question,
+          correctAnswer: q.correctAnswer,
+          userAnswer,
+          topic: session.topic
+        })
+      });
+      session.answers.push({ userAnswer, isCorrect: result.isCorrect, ...result });
+      if (result.isCorrect) session.score++;
+      renderFeedback(q, userAnswer, result);
+    } catch (e) {
+      $('feedback').innerHTML = `<p class="text-error">${e.message}</p>`;
+      $('submitBtn').disabled = false;
+      answered = false;
+    }
+  });
+
+  function renderFeedback(q, userAnswer, result) {
+    // Mark options
+    if (q.type === 'multiple_choice') {
+      document.querySelectorAll('.option').forEach(el => {
+        const letter = el.dataset.letter;
+        if (letter === q.correctAnswer) el.classList.add('ring-2', 'ring-[#10b981]', 'bg-[#ecfdf5]');
+        else if (letter === userAnswer && !result.isCorrect) el.classList.add('ring-2', 'ring-[#ef4444]', 'bg-[#fef2f2]');
+      });
+    }
+    const okIcon = result.isCorrect
+      ? `<span class="material-symbols-outlined text-[#10b981]" style="font-size:24px">check_circle</span>`
+      : `<span class="material-symbols-outlined text-[#ef4444]" style="font-size:24px">cancel</span>`;
+    const calcBlock = q.calculatorReasoning
+      ? `<div class="p-3 bg-surface-container-low border border-outline-variant rounded-lg flex items-start gap-2">
+          <span class="material-symbols-outlined ${q.calculatorAllowed ? 'text-[#047857]' : 'text-[#92400e]'}" style="font-size:18px">${q.calculatorAllowed ? 'calculate' : 'do_not_disturb'}</span>
+          <p class="text-label-md text-on-surface-variant"><span class="font-bold ${q.calculatorAllowed ? 'text-[#047857]' : 'text-[#92400e]'}">${q.calculatorAllowed ? 'Calculator allowed on test:' : 'No calculator on test:'}</span> ${escape(q.calculatorReasoning)}</p>
+        </div>` : '';
+    const refBlock = q.studyGuideReference
+      ? `<div class="p-3 bg-surface-container-low border border-outline-variant rounded-lg flex items-start gap-2">
+          <span class="material-symbols-outlined text-primary" style="font-size:18px">menu_book</span>
+          <p class="text-label-md text-on-surface-variant"><span class="font-bold text-primary">From your study guide:</span> ${escape(q.studyGuideReference)}</p>
+        </div>` : '';
+
+    $('feedback').innerHTML = `
+      <div class="flex items-center gap-2 ${result.isCorrect ? 'text-[#10b981]' : 'text-[#ef4444]'}">
+        ${okIcon}
+        <p class="text-headline-sm font-headline-sm">${result.isCorrect ? 'Correct!' : 'Not quite.'}</p>
+      </div>
+      <p class="text-body-md text-on-surface-variant">${escape(result.explanation || '')}</p>
+      ${result.steps?.length ? `<ol class="list-decimal list-inside space-y-1 text-body-md">${result.steps.map(s => `<li>${escape(s)}</li>`).join('')}</ol>` : ''}
+      ${calcBlock}
+      ${refBlock}
+      ${result.encouragement ? `<p class="text-label-md italic text-on-surface-variant">${escape(result.encouragement)}</p>` : ''}
+    `;
+    $('submitBtn').classList.add('hidden');
+    $('nextBtn').classList.remove('hidden');
+    $('nextBtn').textContent = session.currentIndex + 1 >= QUESTIONS_PER_SESSION ? 'See Results' : 'Next Question';
+  }
+
+  $('nextBtn').addEventListener('click', () => {
+    session.currentIndex++;
+    if (session.currentIndex >= QUESTIONS_PER_SESSION) return finishSession();
+    if (guest && session.currentIndex > 0 && session.currentIndex % 5 === 0) showGuestNudge();
+    loadNextQuestion();
+  });
+
+  function finishSession() {
+    clearInterval(timerInterval);
+    $('session').classList.add('hidden');
+    $('results').classList.remove('hidden');
+    const pct = Math.round((session.score / QUESTIONS_PER_SESSION) * 100);
+    $('resultScore').textContent = `${session.score} / ${QUESTIONS_PER_SESSION}`;
+    $('resultScore').className = `text-metric-display font-metric-display mt-4 ${pct >= 80 ? 'text-[#10b981]' : pct >= 60 ? 'text-[#f59e0b]' : 'text-error'}`;
+    $('resultPercent').textContent = `${pct}% correct`;
+    if (guest) {
+      $('saveBtn').textContent = 'Sign Up to Save Progress';
+      $('saveBtn').onclick = () => { window.location.href = '/create_account.html'; };
+    }
+  }
+
+  $('saveBtn').addEventListener('click', async () => {
+    if (guest) { window.location.href = '/create_account.html'; return; }
+    $('saveBtn').disabled = true;
+    try {
+      await apiJson('/api/practice/save-session', {
+        method: 'POST',
+        body: JSON.stringify({
+          topic: session.topic,
+          difficulty: session.difficulty,
+          score: session.score,
+          total: QUESTIONS_PER_SESSION,
+          timeSpent: Math.floor((Date.now() - session.startTime) / 1000),
+          questions: session.questions.map((q, i) => ({
+            question: q.question,
+            correctAnswer: q.correctAnswer,
+            userAnswer: session.answers[i]?.userAnswer,
+            isCorrect: !!session.answers[i]?.isCorrect,
+            studyGuideReference: q.studyGuideReference || null
+          }))
+        })
+      });
+      window.location.href = '/dashboard.html';
+    } catch (e) {
+      alert(e.message);
+      $('saveBtn').disabled = false;
+    }
+  });
+  $('retryBtn').addEventListener('click', () => startSession());
+
+  if (initialTopic) {
+    session.topic = initialTopic;
+    startSession();
+  } else {
+    showChooser();
+  }
+</script>
+</body>
+</html>
