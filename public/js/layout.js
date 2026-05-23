@@ -33,7 +33,7 @@ export function renderShell({ active } = {}) {
           <span class="material-symbols-outlined text-primary" style="font-size:22px">menu_book</span>
         </div>
         <div class="min-w-0">
-          <p class="text-headline-sm font-headline-sm text-primary leading-tight truncate">GED Math Master</p>
+          <p class="text-headline-sm font-headline-sm text-primary leading-tight truncate">GED Study Guide</p>
           <p class="text-label-md font-label-md text-on-surface-variant">Academic Confidence</p>
         </div>
       </div>
@@ -49,12 +49,10 @@ export function renderShell({ active } = {}) {
       ${NAV_ITEMS.map(n => {
         const a = active ? n.href.includes(active) : isActive(n.href);
         const ext = n.external ? ' target="_blank" rel="noopener"' : '';
-        // Active state is a single pill — no protruding right border.
-        // A small left-edge accent bar inside the pill replaces the old border-r-4
-        // so the indicator stays within the rounded shape.
-        return `<a href="${n.href}"${ext} class="relative flex items-center gap-3 h-11 pl-4 pr-3 rounded-lg ${a ? 'text-primary font-bold bg-primary-container/10' : 'text-on-surface-variant hover:bg-surface-container-low'}">
-          ${a ? '<span class="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-primary"></span>' : ''}
-          <span class="material-symbols-outlined" style="font-size:22px">${n.icon}</span>
+        // Active state: full rounded-pill background with primary text/icon.
+        // No protruding border, no accent bar — the pill itself is the indicator.
+        return `<a href="${n.href}"${ext} class="flex items-center gap-3 h-11 px-4 rounded-full ${a ? 'text-primary font-bold bg-primary-container/15' : 'text-on-surface-variant hover:bg-surface-container-low'}">
+          <span class="material-symbols-outlined" style="font-size:22px; font-variation-settings: 'FILL' ${a ? 1 : 0}">${n.icon}</span>
           <span class="text-label-md font-label-md">${n.label}</span>
         </a>`;
       }).join('')}
@@ -83,7 +81,7 @@ export function renderShell({ active } = {}) {
   const topBar = document.createElement('header');
   topBar.className = 'md:hidden fixed top-0 inset-x-0 h-16 bg-surface-container-low border-b border-outline-variant flex items-center justify-between px-margin-mobile z-30';
   topBar.innerHTML = `
-    <p class="text-headline-sm font-headline-sm text-primary">GED Math Master</p>
+    <p class="text-headline-sm font-headline-sm text-primary">GED Study Guide</p>
     <div class="flex items-center gap-2">
       <button class="w-10 h-10 rounded-full hover:bg-surface-container flex items-center justify-center text-on-surface-variant" aria-label="Notifications"><span class="material-symbols-outlined">notifications</span></button>
       <a href="/account_settings" class="w-9 h-9 rounded-full bg-primary text-on-primary flex items-center justify-center text-label-md font-bold">${initials.toUpperCase()}</a>
