@@ -2,9 +2,9 @@ import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import rateLimit from 'express-rate-limit';
-import { randomInt } from 'node:crypto';
+import { randomInt, randomBytes } from 'node:crypto';
 import { db, newId, rowToUser } from '../services/db.js';
-import { sendVerificationEmail, isMailerConfigured } from '../services/mailer.js';
+import { sendVerificationEmail, sendPasswordResetEmail, isMailerConfigured } from '../services/mailer.js';
 
 const router = Router();
 
@@ -28,6 +28,7 @@ const ACCESS_TTL = '15m';
 const REFRESH_TTL = '7d';
 const REFRESH_EXPIRES_MS = 7 * 24 * 60 * 60 * 1000;
 const VERIFY_EXPIRES_MS  = 15 * 60 * 1000;
+const RESET_EXPIRES_MS   = 30 * 60 * 1000;
 
 function signTokens(user) {
   const payload = { sub: user.id, email: user.email };
@@ -148,6 +149,67 @@ router.post('/resend-verification', resendLimiter, async (req, res) => {
     console.error('[auth/resend] mailer failed:', err);
     res.status(502).json({ message: 'Could not send email. Try again shortly.' });
   }
+});
+
+// ---- Password reset ----
+
+function publicBaseUrl(req) {
+  return process.env.PUBLIC_BASE_URL
+      || process.env.CORS_ORIGIN
+      || `${req.protocol}://${req.get('host')}`;
+}
+
+router.post('/forgot-password', resendLimiter, async (req, res) => {
+  const { email } = req.body || {};
+  // Always respond the same way so we don't leak which emails are registered.
+  const genericResponse = { message: 'If an account exists for that email, a reset link has been sent.' };
+  if (!email || !isEmail(email)) return res.json(genericResponse);
+
+  const row = db.prepare('SELECT id, first_name, email FROM users WHERE email = ?').get(String(email).toLowerCase().trim());
+  if (!row) return res.json(genericResponse);
+
+  // Invalidate any prior unused tokens for this user so only the newest works.
+  db.prepare(`UPDATE password_reset_tokens SET used_at = datetime('now') WHERE user_id = ? AND used_at IS NULL`).run(row.id);
+
+  const token = randomBytes(32).toString('hex');
+  const expires = new Date(Date.now() + RESET_EXPIRES_MS).toISOString();
+  db.prepare('INSERT INTO password_reset_tokens (id, user_id, token, expires_at) VALUES (?, ?, ?, ?)')
+    .run(newId(), row.id, token, expires);
+
+  const resetUrl = `${publicBaseUrl(req)}/reset_password?token=${encodeURIComponent(token)}`;
+
+  try {
+    const sent = await sendPasswordResetEmail(row.email, row.first_name, resetUrl);
+    if (sent.devFallback) return res.json({ ...genericResponse, devResetUrl: resetUrl });
+    res.json(genericResponse);
+  } catch (err) {
+    console.error('[auth/forgot-password] mailer failed:', err);
+    // Still surface a generic message — don't reveal whether the address exists.
+    res.json(genericResponse);
+  }
+});
+
+router.post('/reset-password', authLimiter, async (req, res) => {
+  const { token, newPassword } = req.body || {};
+  if (!token || !newPassword) return res.status(400).json({ message: 'Token and new password are required.' });
+  if (!isStrongPassword(newPassword)) {
+    return res.status(400).json({ message: 'Password must be at least 8 characters and include a letter and a number.' });
+  }
+
+  const row = db.prepare('SELECT * FROM password_reset_tokens WHERE token = ?').get(token);
+  if (!row)       return res.status(400).json({ message: 'Invalid or expired reset link.' });
+  if (row.used_at) return res.status(400).json({ message: 'This reset link has already been used.' });
+  if (new Date(row.expires_at).getTime() < Date.now()) {
+    return res.status(410).json({ message: 'Reset link expired. Request a new one.' });
+  }
+
+  const hash = await bcrypt.hash(newPassword, 12);
+  db.prepare(`UPDATE users SET password_hash = ?, updated_at = datetime('now') WHERE id = ?`).run(hash, row.user_id);
+  db.prepare(`UPDATE password_reset_tokens SET used_at = datetime('now') WHERE id = ?`).run(row.id);
+  // Revoke all existing refresh tokens so any device using the old password is signed out.
+  db.prepare(`DELETE FROM refresh_tokens WHERE user_id = ?`).run(row.user_id);
+
+  res.json({ message: 'Password updated. Please sign in with your new password.' });
 });
 
 router.post('/login', authLimiter, async (req, res) => {

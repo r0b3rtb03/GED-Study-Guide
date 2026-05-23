@@ -26,6 +26,46 @@ function withTimeout(promise, ms) {
   });
 }
 
+export async function sendPasswordResetEmail(to, firstName, resetUrl) {
+  const html = `
+    <div style="font-family: Inter, Arial, sans-serif; max-width: 480px; margin: auto; padding: 32px;">
+      <h2 style="color:#005bbf; margin-bottom:8px;">Hi ${firstName},</h2>
+      <p style="color:#414754;">We got a request to reset your GED Math Master password. Click the button below to set a new one. The link expires in <strong>30 minutes</strong>.</p>
+      <p style="text-align:center; padding: 24px 0;">
+        <a href="${resetUrl}" style="display:inline-block; padding: 14px 28px; background:#005bbf; color:#ffffff; text-decoration:none; border-radius:8px; font-weight:700;">Reset password</a>
+      </p>
+      <p style="color:#414754; font-size:14px;">Or paste this link into your browser:<br>
+        <a href="${resetUrl}" style="color:#005bbf; word-break:break-all;">${resetUrl}</a>
+      </p>
+      <p style="color:#414754; font-size:14px;">If you didn't request this, you can ignore this email — your password won't change.</p>
+    </div>`;
+
+  const c = getClient();
+  if (!c) {
+    console.log(`\n[mailer] (dev fallback) Password reset link for ${to}: ${resetUrl}\n`);
+    return { devFallback: true, resetUrl };
+  }
+
+  const from = process.env.RESEND_FROM || process.env.SMTP_FROM || 'GED Math Master <noreply@example.com>';
+
+  try {
+    const result = await withTimeout(c.emails.send({
+      from, to,
+      subject: 'Reset your GED Math Master password',
+      html
+    }), SEND_TIMEOUT_MS);
+    if (result?.error) {
+      console.error('[mailer] Resend returned error:', result.error);
+      throw new Error(result.error?.message || 'Resend rejected the email.');
+    }
+    console.log(`[mailer] sent reset to ${to} (id: ${result?.data?.id || 'unknown'})`);
+    return { devFallback: false, id: result?.data?.id };
+  } catch (err) {
+    console.error('[mailer] reset send failed:', err.message);
+    throw err;
+  }
+}
+
 export async function sendVerificationEmail(to, firstName, code) {
   const html = `
     <div style="font-family: Inter, Arial, sans-serif; max-width: 480px; margin: auto; padding: 32px;">
