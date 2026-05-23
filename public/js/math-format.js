@@ -58,6 +58,29 @@ export function formatMath(text) {
   return normalizeSpaces(out);
 }
 
+/**
+ * Strip multiple-choice options that an AI sometimes appends to the question
+ * stem (e.g. "...what is the answer? A) foo  B) bar  C) baz  D) qux").
+ * The UI renders the options separately as radio buttons, so leaving them in
+ * the stem creates a duplicated, cluttered render.
+ *
+ * Heuristic: find the first occurrence of a standalone "A)" or "(A)"
+ * preceded by whitespace, and cut from there. We require the "A)" marker
+ * to be FOLLOWED by content that looks option-like (some text plus another
+ * option marker further on, OR a sentence-ending punctuation) so we don't
+ * accidentally truncate questions that legitimately mention "(A) something"
+ * as inline notation.
+ */
+export function stripEmbeddedOptions(text) {
+  if (typeof text !== 'string') return text;
+  // Look for "A)" or "(A)" preceded by whitespace, with a "B)" appearing
+  // somewhere later — the combination is the giveaway that the AI dumped
+  // the options inline.
+  const match = text.match(/\s+\(?A\)\s+[\s\S]+?\(?B\)\s/);
+  if (!match) return text;
+  return text.slice(0, match.index).replace(/\s+$/, '').trim();
+}
+
 // Walks an object/array tree and applies formatMath to every string leaf.
 // Use this on the question object the AI returned before rendering.
 export function formatMathDeep(value) {

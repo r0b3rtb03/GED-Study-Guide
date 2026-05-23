@@ -180,7 +180,7 @@
 <script type="module">
   import { renderShell } from '/js/layout.js';
   import { apiJson, apiFetch, isGuest, getAccessToken } from '/js/auth.js';
-  import { formatMathDeep } from '/js/math-format.js';
+  import { formatMathDeep, stripEmbeddedOptions } from '/js/math-format.js';
   import { randomEncouragement } from '/js/encouragement.js';
 
   const guest = isGuest() && !getAccessToken();
@@ -606,6 +606,9 @@
         });
       }
       const q = formatMathDeep(data.question);
+      // Defensive: strip A/B/C/D options if the AI inlined them in the stem.
+      // The "options" array still drives the radio buttons below.
+      if (q?.question) q.question = stripEmbeddedOptions(q.question);
       session.questions.push(q);
       renderQuestion(q);
 

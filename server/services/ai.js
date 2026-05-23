@@ -320,15 +320,16 @@ ${nonCalcBlock}
 Rules:
 - The question MUST test a concept covered in the study guide / scope above.
 - For multiple_choice, provide EXACTLY 4 options labeled "A) ...", "B) ...", "C) ...", "D) ...".
+- CRITICAL: The "question" field MUST contain ONLY the question stem (any passage/scenario plus the actual question, ending with "?"). NEVER append the A/B/C/D options or any preview of them inside the "question" string. Options belong EXCLUSIVELY in the "options" array — the UI renders them as separate radio buttons below the question, so including them in "question" causes duplicated, cluttered output. A response with options embedded in the question text will be treated as malformed.
 - correctAnswer MUST be one of "A", "B", "C", or "D" for multiple choice (the server shuffles positions later).
 - studyGuidePage MUST be the EXACT page number from the concept-to-page index for the specific concept this question tests. Pick the single most relevant page.
 - studyGuideReference MUST follow the format: "<Concept name from the index> — Page <N>" where N is the same page as studyGuidePage.
 ${previousQuestions.length > 0 ? `- AVOID any of these previously-asked questions:\n${previousQuestions.slice(-15).join('\n')}` : ''}
 
-Return ONLY valid JSON (no markdown):
+Return ONLY valid JSON (no markdown). EXAMPLE shape — note "question" ends at the question mark, the options live ONLY in the options array:
 {
-  "question": "...",
-  "type": "multiple_choice" | "numeric" | "fill_in",
+  "question": "A geographer notices an agricultural practice consistently appears in regions with high rainfall and concludes that rainfall causes the practice to spread. Which best describes a potential flaw in her conclusion?",
+  "type": "multiple_choice",
   "options": ["A) ...", "B) ...", "C) ...", "D) ..."],
   "correctAnswer": "A" | "B" | "C" | "D" | "<value>",
   ${isMath ? `"calculatorAllowed": true,
