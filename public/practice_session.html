@@ -42,12 +42,38 @@
              class="hidden flex flex-col items-center justify-center px-4 md:px-8 py-8"
              style="min-height: calc(100vh - 64px);">
       <div class="w-full max-w-[660px] mx-auto">
-        <div class="text-center mb-8">
+        <div class="text-center mb-6">
           <h1 class="text-headline-lg font-headline-lg">Start a Practice Session</h1>
-          <p class="text-body-md text-on-surface-variant mt-2">Pick a topic. We'll generate 10 GED-style questions tailored to it.</p>
+          <p class="text-body-md text-on-surface-variant mt-2">First, choose a difficulty. Then pick a topic — we'll generate 10 GED-style questions.</p>
         </div>
-        <div id="topicGridTop" class="topic-grid grid grid-cols-2 gap-4 mb-4"></div>
-        <div id="topicGridBottom" class="flex justify-center"></div>
+
+        <!-- Step 1: Difficulty (required) -->
+        <div class="mb-2">
+          <p class="text-center text-label-md font-bold text-on-surface-variant mb-3">
+            <span class="inline-flex items-center gap-1.5">
+              <span class="w-5 h-5 rounded-full bg-primary text-on-primary text-[12px] flex items-center justify-center font-bold">1</span>
+              Choose difficulty
+            </span>
+          </p>
+          <div class="flex justify-center">
+            <div id="difficultyChooser" class="inline-flex rounded-full bg-surface-container p-1 text-label-md">
+              <button data-diff="easy"   class="h-9 px-5 rounded-full">Easy</button>
+              <button data-diff="medium" class="h-9 px-5 rounded-full">Medium</button>
+              <button data-diff="hard"   class="h-9 px-5 rounded-full">Hard</button>
+            </div>
+          </div>
+          <p id="difficultyHint" class="text-center text-label-md text-on-surface-variant mt-3">Pick one to unlock topics ↓</p>
+        </div>
+
+        <!-- Step 2: Topic -->
+        <p id="topicStepLabel" class="text-center text-label-md font-bold text-on-surface-variant mt-6 mb-3 hidden">
+          <span class="inline-flex items-center gap-1.5">
+            <span class="w-5 h-5 rounded-full bg-primary text-on-primary text-[12px] flex items-center justify-center font-bold">2</span>
+            Pick a topic
+          </span>
+        </p>
+        <div id="topicGridTop" class="topic-grid grid grid-cols-2 gap-4 mb-4 opacity-50 pointer-events-none transition"></div>
+        <div id="topicGridBottom" class="flex justify-center opacity-50 pointer-events-none transition"></div>
       </div>
     </section>
 
@@ -69,9 +95,14 @@
         <div id="feedback" class="hidden mt-6 pt-6 border-t border-outline-variant/50 space-y-3"></div>
 
         <div class="mt-6 pt-4 border-t border-outline-variant/50 flex items-center justify-between gap-3">
-          <button id="hintBtn" class="h-10 px-3 rounded-lg text-label-md font-bold text-primary hover:bg-primary-container/10 hidden inline-flex items-center gap-1.5">
-            <span class="material-symbols-outlined" style="font-size:18px">lightbulb</span> Hint
-          </button>
+          <div class="flex items-center gap-1">
+            <button id="hintBtn" class="h-10 px-3 rounded-lg text-label-md font-bold text-primary hover:bg-primary-container/10 hidden inline-flex items-center gap-1.5">
+              <span class="material-symbols-outlined" style="font-size:18px">lightbulb</span> Hint
+            </button>
+            <button id="revealBtn" class="h-10 px-3 rounded-lg text-label-md font-bold text-on-surface-variant hover:bg-surface-container-low inline-flex items-center gap-1.5">
+              <span class="material-symbols-outlined" style="font-size:18px">visibility</span> Show Answer
+            </button>
+          </div>
           <div class="ml-auto flex gap-2">
             <button id="submitBtn" class="h-11 px-6 rounded-lg bg-primary text-on-primary font-bold text-label-md hover:opacity-90 disabled:opacity-50 active:scale-[0.98] transition">Submit Answer</button>
             <button id="nextBtn"   class="h-11 px-6 rounded-lg bg-primary text-on-primary font-bold text-label-md hover:opacity-90 hidden active:scale-[0.98] transition">Next Question</button>
@@ -132,9 +163,18 @@
       </a>
       <div class="flex items-center gap-2">
         <span class="hidden sm:inline text-label-md text-on-surface-variant">Guest mode</span>
+        <button id="guestThemeBtn" class="w-9 h-9 rounded-full hover:bg-surface-container flex items-center justify-center text-on-surface-variant" aria-label="Toggle theme">
+          <span class="material-symbols-outlined" id="guestThemeIcon" style="font-size:20px">dark_mode</span>
+        </button>
         <a href="/create_account" class="h-9 px-3 rounded-lg bg-primary text-on-primary text-label-md font-bold flex items-center">Sign Up Free</a>
       </div>`;
     document.body.prepend(guestBar);
+    const gThemeBtn = document.getElementById('guestThemeBtn');
+    const gThemeIcon = document.getElementById('guestThemeIcon');
+    const syncGuestTheme = () => { gThemeIcon.textContent = window.GedTheme?.isDark() ? 'light_mode' : 'dark_mode'; };
+    syncGuestTheme();
+    gThemeBtn.addEventListener('click', () => window.GedTheme?.toggle());
+    window.addEventListener('ged-theme-change', syncGuestTheme);
   }
   function setGuestBar(visible) {
     if (!guestBar) return;
@@ -155,9 +195,9 @@
 
   const session = {
     topic: initialTopic,
-    difficulty: 'medium',
-    questions: [],          // { question, options, correctAnswer, ... }
-    answers: [],            // { userAnswer, isCorrect, steps, explanation }
+    difficulty: null,            // explicit choice required on the chooser screen
+    questions: [],
+    answers: [],
     currentIndex: 0,
     score: 0,
     startTime: Date.now()
@@ -165,6 +205,42 @@
   let timerInterval = null;
   let answered = false;
   let selectedAnswer = null;
+
+  // Prefetch holder: a promise for the NEXT question that's generated in the background
+  // while the user is reading the current one.
+  let prefetchPromise = null;
+
+  // Idle timeout: route back to chooser after 5 min of no interaction.
+  const IDLE_MS = 5 * 60 * 1000;
+  let idleTimer = null;
+  function resetIdle() {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(handleIdleTimeout, IDLE_MS);
+  }
+  function stopIdle() { clearTimeout(idleTimer); idleTimer = null; }
+  function handleIdleTimeout() {
+    clearInterval(timerInterval);
+    prefetchPromise = null;
+    showToast('Session timed out due to 5 minutes of inactivity.');
+    showChooser();
+  }
+  ['click', 'keydown', 'mousemove', 'touchstart', 'scroll'].forEach(ev =>
+    document.addEventListener(ev, () => { if (idleTimer) resetIdle(); }, { passive: true })
+  );
+
+  function showToast(msg) {
+    let t = document.getElementById('toast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'toast';
+      t.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 px-4 py-3 bg-on-surface text-on-primary rounded-lg shadow-lg z-50 text-label-md max-w-[90vw] text-center';
+      document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.style.opacity = '1';
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .4s'; }, 4000);
+  }
 
   async function callApi(url, options) {
     if (guest) {
@@ -224,6 +300,7 @@
     $('results').classList.add('hidden');
     $('sessionBar').classList.add('hidden');
     setGuestBar(true);
+    renderDifficulty();
 
     const topFour = TOPICS.slice(0, 4);
     const last    = TOPICS[4];
@@ -232,6 +309,11 @@
 
     document.querySelectorAll('[data-slug]').forEach(b => b.addEventListener('click', () => {
       session.topic = b.dataset.slug;
+      // Start the first-question fetch IMMEDIATELY (don't wait for the UI to transition).
+      // By the time the session screen renders, the response is usually already arriving.
+      prefetchPromise = null;
+      session.questions = [];
+      startPrefetch();
       startSession();
     }));
   }
@@ -246,6 +328,7 @@
 
   function startSession() {
     Object.assign(session, { questions: [], answers: [], currentIndex: 0, score: 0, startTime: Date.now() });
+    prefetchPromise = null;
     $('chooser').classList.add('hidden');
     $('results').classList.add('hidden');
     $('session').classList.remove('hidden');
@@ -255,7 +338,22 @@
     $('topicBadge').innerHTML = `<span class="material-symbols-outlined" style="font-size:16px">${t.icon}</span>${t.name}`;
     renderDifficulty();
     startTimer();
+    resetIdle();
     loadNextQuestion();
+  }
+
+  // Fire-and-store: kick off generation for the NEXT question while user reads current.
+  function startPrefetch() {
+    if (prefetchPromise) return;
+    const endpoint = guest ? '/api/practice/generate-guest' : '/api/practice/generate';
+    prefetchPromise = callApi(endpoint, {
+      method: 'POST',
+      body: JSON.stringify({
+        topic: session.topic,
+        difficulty: session.difficulty,
+        previousQuestions: session.questions.map(q => q.question)
+      })
+    }).catch(err => { console.warn('[prefetch] failed:', err.message); prefetchPromise = null; throw err; });
   }
 
   function renderDifficulty() {
@@ -263,12 +361,40 @@
       const a = b.dataset.diff === session.difficulty;
       b.className = `h-7 px-3 rounded-full text-label-md transition ${a ? 'bg-primary text-on-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container-high'}`;
     });
+    document.querySelectorAll('#difficultyChooser button').forEach(b => {
+      const a = b.dataset.diff === session.difficulty;
+      b.className = `h-9 px-5 rounded-full text-label-md transition ${a ? 'bg-primary text-on-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container-high'}`;
+    });
+    // Lock/unlock topic cards based on whether a difficulty has been chosen.
+    const hasDiff = !!session.difficulty;
+    const topTop = document.getElementById('topicGridTop');
+    const topBot = document.getElementById('topicGridBottom');
+    const hint   = document.getElementById('difficultyHint');
+    const step2  = document.getElementById('topicStepLabel');
+    [topTop, topBot].forEach(el => {
+      if (!el) return;
+      el.classList.toggle('opacity-50', !hasDiff);
+      el.classList.toggle('pointer-events-none', !hasDiff);
+    });
+    if (hint)  hint.classList.toggle('hidden', hasDiff);
+    if (step2) step2.classList.toggle('hidden', !hasDiff);
   }
   document.addEventListener('click', (e) => {
-    const b = e.target.closest('#difficultyGroup button, #difficultyMobile button');
+    const b = e.target.closest('#difficultyGroup button, #difficultyMobile button, #difficultyChooser button');
     if (!b) return;
+    const wasNull = !session.difficulty;
     session.difficulty = b.dataset.diff;
     renderDifficulty();
+
+    // If the user arrived with ?topic=... (dashboard quick-start) and just now
+    // picked their difficulty, that's both choices made — start the session.
+    if (wasNull && initialTopic && !$('chooser').classList.contains('hidden')) {
+      session.topic = initialTopic;
+      prefetchPromise = null;
+      session.questions = [];
+      startPrefetch();
+      startSession();
+    }
   });
 
   function updateProgress() {
@@ -295,8 +421,10 @@
     $('feedback').classList.add('hidden');
     $('feedback').innerHTML = '';
     $('submitBtn').classList.remove('hidden');
+    $('submitBtn').disabled = false;
     $('nextBtn').classList.add('hidden');
     $('hintBtn').classList.add('hidden');
+    $('revealBtn').classList.remove('hidden');
     $('qCounter').textContent = `Question ${session.currentIndex + 1} of ${QUESTIONS_PER_SESSION}`;
     updateProgress();
     $('questionArea').innerHTML = `<div id="skeleton" class="animate-pulse space-y-3">
@@ -307,17 +435,27 @@
     </div>`;
 
     try {
-      const endpoint = guest ? '/api/practice/generate-guest' : '/api/practice/generate';
-      const data = await callApi(endpoint, {
-        method: 'POST',
-        body: JSON.stringify({
-          topic: session.topic,
-          difficulty: session.difficulty,
-          previousQuestions: session.questions.map(q => q.question)
-        })
-      });
+      let data;
+      if (prefetchPromise) {
+        // Use the question that was generated in the background while user was reading prev one.
+        data = await prefetchPromise;
+        prefetchPromise = null;
+      } else {
+        const endpoint = guest ? '/api/practice/generate-guest' : '/api/practice/generate';
+        data = await callApi(endpoint, {
+          method: 'POST',
+          body: JSON.stringify({
+            topic: session.topic,
+            difficulty: session.difficulty,
+            previousQuestions: session.questions.map(q => q.question)
+          })
+        });
+      }
       session.questions.push(data.question);
       renderQuestion(data.question);
+
+      // Kick off prefetch for the question AFTER this one, unless we're on the last.
+      if (session.currentIndex + 1 < QUESTIONS_PER_SESSION) startPrefetch();
     } catch (e) {
       $('questionArea').innerHTML = `<p class="text-error">${e.message}</p>`;
     }
@@ -363,6 +501,22 @@
     hintEl.className = 'p-3 rounded-lg bg-secondary-container/40 text-on-secondary-container text-label-md';
     hintEl.innerHTML = `<strong>Hint:</strong> ${escape(q.hint)}`;
     $('questionArea').appendChild(hintEl);
+  });
+
+  $('revealBtn').addEventListener('click', () => {
+    if (answered) return;
+    const q = session.questions[session.currentIndex];
+    if (!q) return;
+    answered = true;
+    $('submitBtn').disabled = true;
+    const result = {
+      isCorrect: false,
+      explanation: `You revealed the answer, so this question is marked incorrect. The correct answer was ${q.correctAnswer}.`,
+      steps: q.steps || [],
+      encouragement: 'Take a minute to study the steps — you\'ll catch the next one.'
+    };
+    session.answers.push({ userAnswer: '(revealed)', isCorrect: false, ...result });
+    renderFeedback(q, '(revealed)', result);
   });
 
   $('submitBtn').addEventListener('click', async () => {
@@ -442,6 +596,8 @@
       ${result.encouragement ? `<p class="text-label-md italic text-on-surface-variant">${escape(result.encouragement)}</p>` : ''}
     `;
     $('submitBtn').classList.add('hidden');
+    $('hintBtn').classList.add('hidden');
+    $('revealBtn').classList.add('hidden');
     $('nextBtn').classList.remove('hidden');
     $('nextBtn').textContent = session.currentIndex + 1 >= QUESTIONS_PER_SESSION ? 'See Results' : 'Next Question';
   }
@@ -455,6 +611,8 @@
 
   function finishSession() {
     clearInterval(timerInterval);
+    stopIdle();
+    prefetchPromise = null;
     $('session').classList.add('hidden');
     $('sessionBar').classList.add('hidden');
     setGuestBar(true);
@@ -499,11 +657,10 @@
   $('retryBtn').addEventListener('click', () => startSession());
 
   if (initialTopic) {
+    // Topic came from a deep link — keep it remembered, but still ask for difficulty.
     session.topic = initialTopic;
-    startSession();
-  } else {
-    showChooser();
   }
+  showChooser();
 </script>
 </body>
 </html>
