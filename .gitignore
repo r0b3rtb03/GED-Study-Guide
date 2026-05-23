@@ -1,0 +1,14 @@
+node_modules/
+.claude
+.env
+*.db
+*.sqlite
+*.sqlite3
+.DS_Store
+dist/
+build/
+.vscode/
+stitch_screens/
+GED_Math_Master_Developer_Prompt.md
+GED_Quick_AddOns_Prompt.md
+``
