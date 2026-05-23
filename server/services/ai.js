@@ -7,7 +7,8 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { randomInt, randomUUID } from 'node:crypto';
-import { GED_TOPIC_GUIDES, topicPageIndex } from '../data/gedTopicGuides.js';
+import { getTopic, topicPageIndex } from '../data/gedTopicGuides.js';
+import { SUBJECTS, isValidSubject } from '../data/subjects.js';
 import { getStudyGuide, getNonCalcTips } from './studyGuideLoader.js';
 
 const CLAUDE_MODEL = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6';
@@ -198,7 +199,37 @@ const MOCK_QUESTIONS = {
   }
 };
 
-function mockQuestion(topic) {
+// Subject → topic → mock. SS mocks added so a no-key dev environment
+// still demos the multi-subject UI.
+const SS_MOCK_QUESTIONS = {
+  'civics-government': {
+    question: 'The U.S. Constitution divides power among three branches of government. Which branch is responsible for interpreting laws?',
+    type: 'multiple_choice',
+    options: ['A) Executive', 'B) Legislative', 'C) Judicial', 'D) Federal Reserve'],
+    correctAnswer: 'C',
+    studyGuideReference: 'Main ideas and details in social studies readings — Page 4',
+    studyGuidePage: 4,
+    hint: 'Think about which branch contains the Supreme Court.',
+    explanation: 'Tests understanding of separation of powers.',
+    steps: ['Step 1: Recall the three branches: executive, legislative, judicial.', 'Step 2: Match each to a function — executive enforces, legislative makes laws, judicial interprets.', 'Step 3: The judicial branch interprets laws — answer is C.']
+  },
+  'us-history': {
+    question: 'Reconstruction (1865–1877) attempted to reintegrate Southern states after the Civil War. Which constitutional amendment ratified during this era granted citizenship to all persons born in the United States?',
+    type: 'multiple_choice',
+    options: ['A) 13th Amendment', 'B) 14th Amendment', 'C) 15th Amendment', 'D) 16th Amendment'],
+    correctAnswer: 'B',
+    studyGuideReference: 'Connections between historical events — Page 14',
+    studyGuidePage: 14,
+    hint: 'The amendment is famous for its citizenship clause and equal-protection clause.',
+    explanation: 'Tests knowledge of Reconstruction-era amendments.',
+    steps: ['Step 1: List the Reconstruction amendments: 13 (abolished slavery), 14 (citizenship + equal protection), 15 (voting rights regardless of race).', 'Step 2: Match the citizenship clause to the 14th.', 'Step 3: Answer is B.']
+  }
+};
+
+function mockQuestion(subject, topic) {
+  if (subject === 'social-studies') {
+    return { ...(SS_MOCK_QUESTIONS[topic] || SS_MOCK_QUESTIONS['civics-government']) };
+  }
   return { ...(MOCK_QUESTIONS[topic] || MOCK_QUESTIONS['algebra']) };
 }
 
@@ -217,26 +248,28 @@ function mockCheck({ correctAnswer, userAnswer }) {
 
 // ---------- Prompt builders ----------
 
-function buildGenerationPrompt({ topic, difficulty, previousQuestions, primer }) {
-  const topicGuide = GED_TOPIC_GUIDES[topic];
-  const studyContent = getStudyGuide(topic);
+function buildGenerationPrompt({ subject, topic, difficulty, previousQuestions, primer }) {
+  const subjectMeta = SUBJECTS[subject];
+  const topicGuide = getTopic(subject, topic);
+  const studyContent = getStudyGuide(subject);
 
   const studyGuideBlock = studyContent
-    ? `Official GED Math study guide for this topic — base the question on concepts in this material:
+    ? `Official ${subjectMeta.fullName} study guide — base the question on concepts in this material:
 
 --- STUDY GUIDE START ---
 ${studyContent}
 --- STUDY GUIDE END ---`
     : `Topic scope reference: ${topicGuide.scope}`;
 
-  // Precise page-numbered concept index for this topic. Required so Gemini
-  // can return a specific page in studyGuideReference (e.g. "Page 16").
   const pageIndex = `
-Concept-to-page index for "${topicGuide.sectionName}" section of the official PDF (pages ${topicGuide.pageRange[0]}–${topicGuide.pageRange[1]}):
-${topicPageIndex(topic)}`;
+Concept-to-page index for "${topicGuide.sectionName}" section of the official ${subjectMeta.fullName} PDF (pages ${topicGuide.pageRange[0]}–${topicGuide.pageRange[1]}):
+${topicPageIndex(subject, topic)}`;
 
+  // Math-only: the calculator-prohibited tips. Other subjects skip this block
+  // and the calculatorAllowed/calculatorReasoning fields entirely.
+  const isMath = subject === 'math';
   const nonCalcTips = getNonCalcTips();
-  const nonCalcBlock = nonCalcTips
+  const nonCalcBlock = (isMath && nonCalcTips)
     ? `Official GED "Tips for the Calculator-Prohibited Section":
 
 --- NON-CALCULATOR TIPS START ---
@@ -248,20 +281,35 @@ Use these rules:
 - Calculator-allowed: multi-step word problems with messy numbers, percent change, geometry with π or non-perfect-square roots, slope/intercepts from raw data, statistics computations.`
     : '';
 
-  return `Generate a single GED Math practice problem for the topic: "${topicGuide.name}".
-Difficulty: ${difficulty} (easy = single step, medium = 2-3 steps, hard = multi-step word problem).
+  const mathOpsBlock = isMath ? '' : `\nNOTE: This is a ${subjectMeta.name} question, not a math question. Do NOT force math operator formatting; use plain prose.`;
 
-VARIETY REQUIREMENTS (CRITICAL — read every word):
+  // Subject-specific variety guidance.
+  const varietyBlock = isMath
+    ? `VARIETY REQUIREMENTS (CRITICAL):
 - Random seed for this generation: ${primer.seed}. Use this to make a problem you have NEVER produced before.
 - Real-world context to incorporate: ${primer.flavor}.
 - Style: ${primer.numberHint}.
 - Do NOT default to canonical textbook examples (no "2x + 5 = 17", no "(1,2) and (4,11) slope", no "6-8-10 triangle", no "25% off $80 jacket").
-- The numbers used should NOT be common GED-prep clichés (e.g., 6,8,10; 3,4,5; multiples of 25%).
+- The numbers used should NOT be common GED-prep clichés (e.g., 6,8,10; 3,4,5; multiples of 25%).`
+    : `VARIETY REQUIREMENTS (CRITICAL):
+- Random seed for this generation: ${primer.seed}. Generate a question you have NEVER produced before.
+- Vary the specific people, events, documents, places, dates, and data sources across questions.
+- Avoid the most over-used GED-prep examples (don't always use the Bill of Rights, the Civil War, or the same handful of charts). Cycle through different content within the topic scope.
+- For reading-comprehension questions, write a SHORT (2-4 sentence) passage in the question itself, then ask about it. Do not assume the student has access to outside material.`;
+
+  // Fields and rules — slightly different shape for math vs. non-math.
+  const mathOnlyFields = isMath
+    ? 'calculatorAllowed (boolean), calculatorReasoning (string), '
+    : '';
+
+  return `Generate a single GED ${subjectMeta.name} practice question for the topic: "${topicGuide.name}".
+Difficulty: ${difficulty} (easy = single step, medium = 2-3 steps, hard = requires interpretation/synthesis).
+
+${varietyBlock}${mathOpsBlock}
 
 CRITICAL: Your JSON response MUST include ALL of these fields:
   question, type, options (if multiple_choice), correctAnswer,
-  calculatorAllowed (boolean), calculatorReasoning (string),
-  studyGuideReference, studyGuidePage (integer), hint, explanation, steps.
+  ${mathOnlyFields}studyGuideReference, studyGuidePage (integer), hint, explanation, steps.
 
 ${studyGuideBlock}
 
@@ -270,9 +318,9 @@ ${pageIndex}
 ${nonCalcBlock}
 
 Rules:
-- The problem MUST test a concept covered in the study guide / scope above.
+- The question MUST test a concept covered in the study guide / scope above.
 - For multiple_choice, provide EXACTLY 4 options labeled "A) ...", "B) ...", "C) ...", "D) ...".
-- correctAnswer MUST be one of "A", "B", "C", or "D" (server shuffles positions later).
+- correctAnswer MUST be one of "A", "B", "C", or "D" for multiple choice (the server shuffles positions later).
 - studyGuidePage MUST be the EXACT page number from the concept-to-page index for the specific concept this question tests. Pick the single most relevant page.
 - studyGuideReference MUST follow the format: "<Concept name from the index> — Page <N>" where N is the same page as studyGuidePage.
 ${previousQuestions.length > 0 ? `- AVOID any of these previously-asked questions:\n${previousQuestions.slice(-15).join('\n')}` : ''}
@@ -282,23 +330,25 @@ Return ONLY valid JSON (no markdown):
   "question": "...",
   "type": "multiple_choice" | "numeric" | "fill_in",
   "options": ["A) ...", "B) ...", "C) ...", "D) ..."],
-  "correctAnswer": "A" | "B" | "C" | "D" | "<numeric value>",
-  "calculatorAllowed": true,
+  "correctAnswer": "A" | "B" | "C" | "D" | "<value>",
+  ${isMath ? `"calculatorAllowed": true,
   "calculatorReasoning": "One sentence on whether this is calculator-prohibited.",
-  "studyGuideReference": "Pythagorean theorem — Page 16",
-  "studyGuidePage": 16,
+  ` : ''}"studyGuideReference": "<Concept name> — Page <N>",
+  "studyGuidePage": <N>,
   "hint": "Short hint without giving away the answer.",
   "explanation": "What concept this tests.",
   "steps": ["Step 1: ...", "Step 2: ...", "Step 3: ..."]
 }`;
 }
 
-function buildCheckPrompt({ question, correctAnswer, userAnswer, topic }) {
-  return `A GED student answered a math question. Evaluate their answer and provide feedback.
+function buildCheckPrompt({ question, correctAnswer, userAnswer, subject, topic }) {
+  const subjectMeta = SUBJECTS[subject] || { name: 'Math' };
+  return `A GED student answered a ${subjectMeta.name} question. Evaluate their answer and provide feedback.
 
 Question: ${question}
 Correct Answer: ${correctAnswer}
 Student's Answer: ${userAnswer}
+Subject: ${subjectMeta.name}
 Topic: ${topic}
 
 Return ONLY valid JSON:
@@ -371,24 +421,27 @@ async function callGemini({ prompt, maxTokens = 2048 }) {
 
 // ---------- Public API ----------
 
-export async function generateQuestion({ topic, difficulty, previousQuestions = [] }) {
-  if (!isAiEnabled()) return shuffleOptions(mockQuestion(topic));
+export async function generateQuestion({ subject = 'math', topic, difficulty, previousQuestions = [] }) {
+  if (!isValidSubject(subject)) throw new Error(`Unknown subject: ${subject}`);
+  if (!getTopic(subject, topic)) throw new Error(`Unknown topic for ${subject}: ${topic}`);
+
+  if (!isAiEnabled()) return shuffleOptions(mockQuestion(subject, topic));
 
   const primer = randomPrimer();
-  const prompt = buildGenerationPrompt({ topic, difficulty, previousQuestions, primer });
+  const prompt = buildGenerationPrompt({ subject, topic, difficulty, previousQuestions, primer });
 
   let question;
   if (getGemini())      question = await callGemini({ prompt });
   else if (getClaude()) question = await callClaude({ prompt });
-  else                  return shuffleOptions(mockQuestion(topic));
+  else                  return shuffleOptions(mockQuestion(subject, topic));
 
   return shuffleOptions(question);
 }
 
-export async function checkAnswer({ question, correctAnswer, userAnswer, topic }) {
+export async function checkAnswer({ question, correctAnswer, userAnswer, subject = 'math', topic }) {
   if (!isAiEnabled()) return mockCheck({ correctAnswer, userAnswer });
 
-  const prompt = buildCheckPrompt({ question, correctAnswer, userAnswer, topic });
+  const prompt = buildCheckPrompt({ question, correctAnswer, userAnswer, subject, topic });
   if (getClaude())      return await callClaude({ prompt });
   if (getGemini())      return await callGemini({ prompt });
   return mockCheck({ correctAnswer, userAnswer });

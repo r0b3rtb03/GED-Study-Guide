@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-<title>Dashboard — GED Math Master</title>
+<title>Dashboard — GED Study Guide</title>
 <link href="https://fonts.googleapis.com" rel="preconnect" />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap" rel="stylesheet" />
@@ -16,7 +16,7 @@
     <div class="max-w-[1200px] mx-auto p-margin-mobile md:p-margin-desktop">
       <header class="mb-8">
         <h1 class="text-headline-lg font-headline-lg" id="welcomeHeader">Welcome back</h1>
-        <p class="text-body-md text-on-surface-variant mt-1">Here's a snapshot of your GED Math progress.</p>
+        <p class="text-body-md text-on-surface-variant mt-1">Here's a snapshot of your GED progress.</p>
         <div id="encouragement" class="mt-4 hidden p-4 bg-primary-container/10 border-l-4 border-primary rounded-r-lg">
           <p class="text-body-md text-on-surface flex items-start gap-2">
             <span class="material-symbols-outlined text-primary shrink-0" style="font-size:22px">favorite</span>
@@ -39,7 +39,7 @@
 
       <section class="mb-8">
         <h2 class="text-headline-md font-headline-md mb-4">Topic Progress</h2>
-        <div id="topicProgress" class="space-y-3 bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/40"></div>
+        <div id="topicProgress" class="space-y-4"></div>
       </section>
 
       <section>
@@ -56,13 +56,22 @@
 
   renderShell({ active: 'dashboard' });
 
-  const TOPICS = [
-    { slug: 'algebra',          name: 'Algebra',                         icon: 'function' },
-    { slug: 'linear-equations', name: 'Linear Equations & Graphs',       icon: 'show_chart' },
-    { slug: 'fractions',        name: 'Fractions, Decimals & Percents',  icon: 'percent' },
-    { slug: 'geometry',         name: 'Geometry Basics',                 icon: 'square_foot' },
-    { slug: 'stats',            name: 'Statistics & Data',               icon: 'bar_chart' }
-  ];
+  // Topic icons by slug (across all subjects). The actual topic list comes
+  // from /api/user/stats → bySubject so the dashboard always reflects the
+  // current backend configuration.
+  const TOPIC_ICONS = {
+    'algebra': 'function',
+    'linear-equations': 'show_chart',
+    'fractions': 'percent',
+    'geometry': 'square_foot',
+    'stats': 'bar_chart',
+    'civics-government': 'gavel',
+    'us-history': 'flag',
+    'economics': 'payments',
+    'geography': 'public',
+    'world-history': 'history_edu'
+  };
+  const SUBJECT_ICONS = { 'math': 'function', 'social-studies': 'public' };
 
   const user = getUser();
   if (user?.firstName) document.getElementById('welcomeHeader').textContent = `Welcome back, ${user.firstName}`;
@@ -101,23 +110,40 @@
     </div>`;
   }
 
-  function renderTopicProgress(byTopic) {
-    return TOPICS.map(t => {
-      const data = byTopic[t.slug] || { percent: 0, sessions: 0 };
-      return `<div class="flex items-center gap-4">
-        <div class="w-10 h-10 rounded-lg bg-primary-container/10 flex items-center justify-center shrink-0">
-          <span class="material-symbols-outlined text-primary" style="font-size:22px">${t.icon}</span>
-        </div>
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center justify-between mb-1">
-            <p class="text-label-md font-label-md truncate">${t.name}</p>
-            <p class="text-label-md font-bold ${scoreColor(data.percent)}">${data.percent}%</p>
+  function renderSubjectProgress(bySubject) {
+    // Render one block per subject, each with its topics inside.
+    const subjects = Object.values(bySubject || {});
+    if (!subjects.length) return '<p class="text-on-surface-variant text-label-md">No subjects configured.</p>';
+    return subjects.map(sub => {
+      const topicRows = Object.entries(sub.topics).map(([slug, data]) => {
+        const icon = TOPIC_ICONS[slug] || 'category';
+        return `<div class="flex items-center gap-4">
+          <div class="w-9 h-9 rounded-lg bg-primary-container/10 flex items-center justify-center shrink-0">
+            <span class="material-symbols-outlined text-primary" style="font-size:20px">${icon}</span>
           </div>
-          <div class="w-full h-2 bg-surface-container rounded-full overflow-hidden">
-            <div class="h-full ${barColor(data.percent)} transition-all" style="width:${data.percent}%"></div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between mb-1">
+              <p class="text-label-md font-label-md truncate">${data.name || slug}</p>
+              <p class="text-label-md font-bold ${scoreColor(data.percent)}">${data.percent}%</p>
+            </div>
+            <div class="w-full h-2 bg-surface-container rounded-full overflow-hidden">
+              <div class="h-full ${barColor(data.percent)} transition-all" style="width:${data.percent}%"></div>
+            </div>
           </div>
-        </div>
-      </div>`;
+        </div>`;
+      }).join('');
+      const subjIcon = SUBJECT_ICONS[sub.slug] || 'school';
+      return `<section class="bg-surface-container-lowest rounded-xl border border-outline-variant/40 p-5">
+        <header class="flex items-center justify-between gap-3 mb-4">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary" style="font-size:22px">${subjIcon}</span>
+            <h3 class="text-headline-sm font-headline-sm">${sub.name}</h3>
+            <span class="text-label-md text-on-surface-variant">· ${sub.sessions} session${sub.sessions === 1 ? '' : 's'}</span>
+          </div>
+          <p class="text-label-md font-bold ${scoreColor(sub.percent)}">${sub.percent}% overall</p>
+        </header>
+        <div class="space-y-3">${topicRows}</div>
+      </section>`;
     }).join('');
   }
 
@@ -132,7 +158,10 @@
           <span class="material-symbols-outlined text-error" style="font-size:24px">priority_high</span>
         </div>
         <div class="flex-1 min-w-0">
-          <p class="text-headline-sm font-headline-sm">${w.name}</p>
+          <div class="flex items-center gap-2 flex-wrap">
+            <p class="text-headline-sm font-headline-sm">${w.name}</p>
+            ${w.subjectName ? `<span class="text-label-md text-on-surface-variant px-2 h-5 rounded-full bg-surface-container">${w.subjectName}</span>` : ''}
+          </div>
           <p class="text-body-md text-on-surface-variant mt-1">${w.recommendation}</p>
           <p class="text-label-md text-on-surface-variant mt-1">Current accuracy: <span class="font-bold text-error">${w.percent}%</span> across ${w.attempts} questions</p>
         </div>
@@ -141,7 +170,7 @@
             <span class="material-symbols-outlined" style="font-size:18px">auto_stories</span>
             Open Study Guide
           </a>
-          <a href="/practice_session?topic=${w.slug}" class="inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-lg ring-1 ring-outline-variant text-on-surface font-bold text-label-md hover:bg-surface-container-low">
+          <a href="/practice_session?subject=${w.subject || 'math'}&topic=${w.slug}" class="inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-lg ring-1 ring-outline-variant text-on-surface font-bold text-label-md hover:bg-surface-container-low">
             <span class="material-symbols-outlined" style="font-size:18px">edit_square</span>
             Practice
           </a>
@@ -150,15 +179,19 @@
     `).join('');
   }
 
-  function renderQuickStart() {
-    return TOPICS.map(t => `
-      <a href="/practice_session?topic=${t.slug}" class="group bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/40 hover:border-primary hover:shadow-md transition flex flex-col gap-3">
+  function renderQuickStart(bySubject) {
+    // Quick start: one card per subject — clicking takes user to the practice
+    // chooser with the subject pre-selected (they still pick difficulty +
+    // topic there).
+    const subjects = Object.values(bySubject || {});
+    return subjects.map(sub => `
+      <a href="/practice_session?subject=${sub.slug}" class="group bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/40 hover:border-primary hover:shadow-md transition flex flex-col gap-3">
         <div class="w-12 h-12 rounded-lg bg-primary-container/10 flex items-center justify-center">
-          <span class="material-symbols-outlined text-primary" style="font-size:26px">${t.icon}</span>
+          <span class="material-symbols-outlined text-primary" style="font-size:26px">${SUBJECT_ICONS[sub.slug] || 'school'}</span>
         </div>
         <div>
-          <p class="text-headline-sm font-headline-sm">${t.name}</p>
-          <p class="text-label-md text-on-surface-variant mt-1">Start a 10-question session.</p>
+          <p class="text-headline-sm font-headline-sm">${sub.name}</p>
+          <p class="text-label-md text-on-surface-variant mt-1">${Object.keys(sub.topics).length} topics · 10 questions per session</p>
         </div>
         <div class="mt-auto text-primary text-label-md font-bold flex items-center gap-1 group-hover:gap-2 transition-all">
           Practice now <span class="material-symbols-outlined" style="font-size:18px">arrow_forward</span>
@@ -176,13 +209,13 @@
         statCard('Sessions', stats.sessionsCompleted, '', 'edit_square'),
         statCard('Current Streak', stats.streakDays, 'days', 'local_fire_department', 'text-[#f59e0b]')
       ].join('');
-      document.getElementById('topicProgress').innerHTML = renderTopicProgress(stats.byTopic || {});
+      document.getElementById('topicProgress').innerHTML = renderSubjectProgress(stats.bySubject || {});
       renderRecommendedReview(stats.weakTopics || []);
+      document.getElementById('quickStart').innerHTML = renderQuickStart(stats.bySubject || {});
     } catch (e) {
       document.getElementById('statsGrid').innerHTML = `<div class="col-span-full text-error text-label-md">${e.message}</div>`;
       document.getElementById('topicProgress').innerHTML = '';
     }
-    document.getElementById('quickStart').innerHTML = renderQuickStart();
   })();
 </script>
 </body>

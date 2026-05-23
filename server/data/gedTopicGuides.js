@@ -1,9 +1,16 @@
-// Each topic maps to a page range in the official GED study guide
-// (data/GED-Study-Guide-Math.pdf, served at /study-guide.pdf).
-// The `concepts` array gives Gemini specific page numbers per concept
-// so it can return a precise `studyGuideReference` like "Pythagorean theorem — Page 16".
+// Subject-aware topic guides.
+//
+// Each subject has a set of topics; each topic has a page range in its
+// study-guide PDF and a concept-to-page index. The concept index is fed
+// to Gemini at generation time so the LLM can return a precise
+// studyGuidePage. See server/services/ai.js > buildGenerationPrompt.
+//
+// Adding a new topic: add an entry under the right subject, give it a
+// pageRange and a concepts array. No other code change is needed —
+// the topic auto-appears in the practice picker, dashboard analytics,
+// and recommended review.
 
-export const GED_TOPIC_GUIDES = {
+const MATH_TOPICS = {
   'algebra': {
     name: 'Algebra',
     pageRange: [22, 32],
@@ -116,11 +123,119 @@ export const GED_TOPIC_GUIDES = {
   }
 };
 
-export const GED_TOPIC_SLUGS = Object.keys(GED_TOPIC_GUIDES);
+// Social Studies. The official PDF is organized by SKILLS (reading,
+// analysis, numbers/graphs), but user-facing topics follow the GED
+// CONTENT domains the test actually covers. Each content topic maps to
+// the most relevant skill pages in the PDF — that's what gets fed to
+// Gemini, and what the Review Study Guide button deep-links to.
+const SOCIAL_STUDIES_TOPICS = {
+  'civics-government': {
+    name: 'Civics & Government',
+    pageRange: [4, 12],
+    sectionName: 'Reading for Meaning in Social Studies',
+    concepts: [
+      { page: 4,  name: 'Main ideas and details in social studies readings' },
+      { page: 6,  name: 'Social studies vocabulary (e.g., "checks and balances", "federalism")' },
+      { page: 8,  name: 'How authors use language in civic documents and speeches' },
+      { page: 10, name: 'Fact versus opinion in political writing' },
+      { page: 11, name: 'Claims and evidence — supported vs. unsupported arguments' }
+    ],
+    scope: `
+- Structure of the U.S. government: branches, separation of powers, federalism
+- The Constitution and Bill of Rights
+- Civic responsibilities, voting rights, civil rights
+- How laws are made; checks and balances
+- Founding documents and political theory (Declaration, Federalist Papers, etc.)`
+  },
+  'us-history': {
+    name: 'U.S. History',
+    pageRange: [13, 17],
+    sectionName: 'Analyzing Historical Events and Arguments',
+    concepts: [
+      { page: 13, name: 'Making inferences from historical evidence' },
+      { page: 14, name: 'Connections between historical events (cause-and-effect, sequence)' },
+      { page: 16, name: 'Effect of different social studies concepts on an argument or point-of-view' },
+      { page: 17, name: 'Identifying bias and propaganda in historical readings' }
+    ],
+    scope: `
+- Colonial era through American Revolution
+- The Constitution and early Republic
+- Civil War, Reconstruction, civil rights movements
+- 20th century: World Wars, Great Depression, Cold War
+- Major political, economic, and social changes
+- Cause-and-effect of major events`
+  },
+  'economics': {
+    name: 'Economics',
+    pageRange: [18, 24],
+    sectionName: 'Using Numbers and Graphs in Social Studies',
+    concepts: [
+      { page: 18, name: 'Data in visual form: maps, charts, graphs, tables' },
+      { page: 20, name: 'Dependent and independent variables in economic data' },
+      { page: 22, name: 'Correlation versus causation in economic trends' },
+      { page: 24, name: 'Statistics (mean, median, mode, range) applied to social data' }
+    ],
+    scope: `
+- Supply and demand
+- Markets, scarcity, opportunity cost
+- Microeconomics vs. macroeconomics basics
+- GDP, inflation, unemployment, recession
+- Reading economic charts and tables
+- Personal finance: budgeting, credit, interest`
+  },
+  'geography': {
+    name: 'Geography',
+    pageRange: [18, 22],
+    sectionName: 'Using Numbers and Graphs in Social Studies',
+    concepts: [
+      { page: 18, name: 'Data in visual form: maps, charts, graphs, tables' },
+      { page: 20, name: 'Dependent and independent variables in geographic data' },
+      { page: 22, name: 'Correlation versus causation in geographic patterns' }
+    ],
+    scope: `
+- Map reading: physical and political maps, latitude/longitude, scale
+- Major regions, climate zones, natural resources
+- Human geography: population, migration, urbanization
+- How geography influences history, economics, culture
+- Environmental issues`
+  },
+  'world-history': {
+    name: 'World History',
+    pageRange: [13, 17],
+    sectionName: 'Analyzing Historical Events and Arguments',
+    concepts: [
+      { page: 13, name: 'Making inferences from historical evidence' },
+      { page: 14, name: 'Connections between events across cultures and time periods' },
+      { page: 16, name: 'Effect of different social studies concepts on a point-of-view' }
+    ],
+    scope: `
+- Major ancient civilizations
+- Medieval and Renaissance Europe
+- Age of exploration and colonization
+- Industrial revolution, World Wars, decolonization
+- Global political and cultural movements
+- Comparing world events to U.S. history`
+  }
+};
 
-// Format the per-concept index for injection into the Gemini prompt.
-export function topicPageIndex(slug) {
-  const t = GED_TOPIC_GUIDES[slug];
+export const TOPICS_BY_SUBJECT = {
+  'math': MATH_TOPICS,
+  'social-studies': SOCIAL_STUDIES_TOPICS
+};
+
+// Legacy export — kept for any callers that haven't been migrated yet.
+// New code should use TOPICS_BY_SUBJECT[subject].
+export const GED_TOPIC_GUIDES = MATH_TOPICS;
+export const GED_TOPIC_SLUGS = Object.keys(MATH_TOPICS);
+
+export function getTopic(subject, slug) {
+  return TOPICS_BY_SUBJECT[subject]?.[slug] || null;
+}
+export function getTopicSlugs(subject) {
+  return Object.keys(TOPICS_BY_SUBJECT[subject] || {});
+}
+export function topicPageIndex(subject, slug) {
+  const t = getTopic(subject, slug);
   if (!t) return '';
   return t.concepts.map(c => `  Page ${c.page}: ${c.name}`).join('\n');
 }

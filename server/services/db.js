@@ -94,6 +94,7 @@ CREATE INDEX IF NOT EXISTS idx_reset_tokens_user ON password_reset_tokens(user_i
 CREATE TABLE IF NOT EXISTS practice_sessions (
   id         TEXT PRIMARY KEY,
   user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  subject    TEXT NOT NULL DEFAULT 'math',
   topic      TEXT NOT NULL,
   difficulty TEXT NOT NULL,
   score      INTEGER NOT NULL,
@@ -104,6 +105,7 @@ CREATE TABLE IF NOT EXISTS practice_sessions (
 );
 
 CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON practice_sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_subject ON practice_sessions(subject);
 CREATE INDEX IF NOT EXISTS idx_sessions_topic ON practice_sessions(topic);
 CREATE INDEX IF NOT EXISTS idx_sessions_created_at ON practice_sessions(created_at);
 `);
@@ -120,6 +122,18 @@ function ensureUserColumns() {
   for (const sql of adds) { try { db.exec(sql); } catch (e) { console.warn('[db] migration skipped:', e.message); } }
 }
 ensureUserColumns();
+
+function ensureSessionColumns() {
+  const cols = db.prepare(`PRAGMA table_info(practice_sessions)`).all().map(r => r.name);
+  if (!cols.includes('subject')) {
+    try {
+      db.exec(`ALTER TABLE practice_sessions ADD COLUMN subject TEXT NOT NULL DEFAULT 'math'`);
+      console.log('[db] migration: added subject column to practice_sessions (defaulted to math for existing rows)');
+    } catch (e) { console.warn('[db] subject migration skipped:', e.message); }
+  }
+  try { db.exec(`CREATE INDEX IF NOT EXISTS idx_sessions_subject ON practice_sessions(subject)`); } catch {}
+}
+ensureSessionColumns();
 
 export const newId = () => randomUUID();
 

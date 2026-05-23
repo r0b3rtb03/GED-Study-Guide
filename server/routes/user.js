@@ -2,13 +2,35 @@ import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { db, rowToUser } from '../services/db.js';
-import { GED_TOPIC_SLUGS, GED_TOPIC_GUIDES } from '../data/gedTopicGuides.js';
+import { TOPICS_BY_SUBJECT, getTopic } from '../data/gedTopicGuides.js';
+import { SUBJECTS, SUBJECT_SLUGS } from '../data/subjects.js';
 
 const router = Router();
 
 function getUserRow(id) {
   return db.prepare('SELECT * FROM users WHERE id = ?').get(id);
 }
+
+// Public catalog of subjects + their topics for the frontend pickers.
+// Open (no auth) so the guest practice flow can use it.
+router.get('/catalog', (req, res) => {
+  const subjects = Object.values(SUBJECTS).map(s => ({
+    slug: s.slug,
+    name: s.name,
+    fullName: s.fullName,
+    icon: s.icon,
+    pdfPath: s.pdfPath,
+    description: s.description,
+    topics: Object.entries(TOPICS_BY_SUBJECT[s.slug] || {}).map(([slug, t]) => ({
+      slug,
+      name: t.name,
+      sectionName: t.sectionName,
+      pageRange: t.pageRange,
+      firstPage: t.pageRange?.[0] || 1
+    }))
+  }));
+  res.json({ subjects });
+});
 
 router.get('/me', requireAuth, (req, res) => {
   const row = getUserRow(req.user.sub);
@@ -18,26 +40,59 @@ router.get('/me', requireAuth, (req, res) => {
 
 router.get('/stats', requireAuth, (req, res) => {
   const userId = req.user.sub;
-  const sessions = db.prepare('SELECT topic, score, total, time_spent, created_at FROM practice_sessions WHERE user_id = ? ORDER BY created_at DESC').all(userId);
+  const sessions = db.prepare(
+    'SELECT subject, topic, score, total, time_spent, created_at FROM practice_sessions WHERE user_id = ? ORDER BY created_at DESC'
+  ).all(userId);
 
   const totalCorrect = sessions.reduce((s, r) => s + r.score, 0);
   const totalQuestions = sessions.reduce((s, r) => s + r.total, 0);
   const totalTimeSec = sessions.reduce((s, r) => s + r.time_spent, 0);
   const overallScore = totalQuestions ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
 
-  // Per topic breakdown
-  const byTopic = {};
-  for (const slug of GED_TOPIC_SLUGS) byTopic[slug] = { score: 0, total: 0, percent: 0, sessions: 0 };
+  // Per-subject → per-topic breakdown. Each known subject is pre-seeded
+  // with all its topics at 0/0 so the dashboard can render even empty bars.
+  const bySubject = {};
+  for (const sub of SUBJECT_SLUGS) {
+    const topics = {};
+    for (const slug of Object.keys(TOPICS_BY_SUBJECT[sub] || {})) {
+      topics[slug] = { score: 0, total: 0, percent: 0, sessions: 0, name: TOPICS_BY_SUBJECT[sub][slug].name };
+    }
+    bySubject[sub] = {
+      slug: sub,
+      name: SUBJECTS[sub].name,
+      pdfPath: SUBJECTS[sub].pdfPath,
+      icon: SUBJECTS[sub].icon,
+      score: 0, total: 0, percent: 0, sessions: 0, timeSec: 0,
+      topics
+    };
+  }
   for (const s of sessions) {
-    if (!byTopic[s.topic]) byTopic[s.topic] = { score: 0, total: 0, percent: 0, sessions: 0 };
-    byTopic[s.topic].score += s.score;
-    byTopic[s.topic].total += s.total;
-    byTopic[s.topic].sessions += 1;
+    const subj = s.subject || 'math';
+    if (!bySubject[subj]) {
+      bySubject[subj] = { slug: subj, name: subj, topics: {}, score: 0, total: 0, percent: 0, sessions: 0, timeSec: 0 };
+    }
+    bySubject[subj].score    += s.score;
+    bySubject[subj].total    += s.total;
+    bySubject[subj].sessions += 1;
+    bySubject[subj].timeSec  += s.time_spent;
+
+    const topicBucket = bySubject[subj].topics[s.topic] || { score: 0, total: 0, percent: 0, sessions: 0, name: s.topic };
+    topicBucket.score    += s.score;
+    topicBucket.total    += s.total;
+    topicBucket.sessions += 1;
+    bySubject[subj].topics[s.topic] = topicBucket;
   }
-  for (const k of Object.keys(byTopic)) {
-    const t = byTopic[k];
-    t.percent = t.total ? Math.round((t.score / t.total) * 100) : 0;
+  // Compute percents
+  for (const sub of Object.values(bySubject)) {
+    sub.percent = sub.total ? Math.round((sub.score / sub.total) * 100) : 0;
+    for (const t of Object.values(sub.topics)) {
+      t.percent = t.total ? Math.round((t.score / t.total) * 100) : 0;
+    }
   }
+
+  // Legacy flat byTopic (math only) — kept so older dashboard code still works.
+  const byTopic = {};
+  for (const [slug, t] of Object.entries(bySubject['math']?.topics || {})) byTopic[slug] = t;
 
   // Streak (consecutive days ending today)
   const dates = new Set(sessions.map(s => s.created_at.slice(0, 10)));
@@ -48,51 +103,56 @@ router.get('/stats', requireAuth, (req, res) => {
     d.setUTCDate(d.getUTCDate() - i);
     const key = d.toISOString().slice(0, 10);
     if (dates.has(key)) streak++;
-    else if (i === 0) continue; // allow today to be missing
+    else if (i === 0) continue;
     else break;
   }
 
-  // Recommended Review: topics with ≥3 attempts AND <70% accuracy, sorted worst-first,
-  // each enriched with the page range to study from the official PDF.
-  const weakTopics = Object.entries(byTopic)
-    .filter(([_, t]) => t.total >= 3 && t.percent < 70)
-    .map(([slug, t]) => {
-      const guide = GED_TOPIC_GUIDES[slug] || {};
+  // Recommended Review across all subjects: ≥3 attempts AND <70% accuracy.
+  const weakTopics = [];
+  for (const sub of Object.values(bySubject)) {
+    for (const [slug, t] of Object.entries(sub.topics)) {
+      if (t.total < 3 || t.percent >= 70) continue;
+      const guide = getTopic(sub.slug, slug) || {};
       const [first, last] = guide.pageRange || [null, null];
-      return {
+      const subjMeta = SUBJECTS[sub.slug];
+      weakTopics.push({
+        subject: sub.slug,
+        subjectName: sub.name,
         slug,
         name: guide.name || slug,
         percent: t.percent,
         attempts: t.total,
         sectionName: guide.sectionName || '',
         pageRange: guide.pageRange || null,
-        pdfHref: first ? `/study-guide.pdf#page=${first}` : '/study-guide.pdf',
+        pdfHref: first && subjMeta ? `${subjMeta.pdfPath}#page=${first}` : (subjMeta?.pdfPath || '/study-guide.pdf'),
         recommendation: first
-          ? `You're struggling with ${guide.name}. We recommend reviewing pages ${first}–${last} in the Study Guide.`
-          : `You're struggling with ${guide.name}. Review it in the Study Guide.`
-      };
-    })
-    .sort((a, b) => a.percent - b.percent)
-    .slice(0, 3);
+          ? `You're struggling with ${guide.name} (${sub.name}). We recommend reviewing pages ${first}–${last} in the ${sub.name} Study Guide.`
+          : `You're struggling with ${guide.name} (${sub.name}). Review it in the Study Guide.`
+      });
+    }
+  }
+  weakTopics.sort((a, b) => a.percent - b.percent);
 
   res.json({
     overallScore,
     totalTimeMinutes: Math.round(totalTimeSec / 60),
     sessionsCompleted: sessions.length,
     streakDays: streak,
-    byTopic,
-    weakTopics
+    bySubject,
+    byTopic,                       // legacy
+    weakTopics: weakTopics.slice(0, 3)
   });
 });
 
 router.get('/history', requireAuth, (req, res) => {
   const limit = Math.min(parseInt(req.query.limit) || 30, 200);
-  const rows = db.prepare(`SELECT id, topic, difficulty, score, total, time_spent, created_at
+  const rows = db.prepare(`SELECT id, subject, topic, difficulty, score, total, time_spent, created_at
                            FROM practice_sessions WHERE user_id = ?
                            ORDER BY created_at DESC LIMIT ?`).all(req.user.sub, limit);
   res.json({
     sessions: rows.map(r => ({
       id: r.id,
+      subject: r.subject || 'math',
       topic: r.topic,
       difficulty: r.difficulty,
       score: r.score,
