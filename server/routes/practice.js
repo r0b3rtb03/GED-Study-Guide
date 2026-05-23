@@ -2,7 +2,7 @@ import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { db, newId } from '../services/db.js';
-import { generateQuestion, checkAnswer } from '../services/claude.js';
+import { generateQuestion, checkAnswer } from '../services/ai.js';
 import { GED_TOPIC_GUIDES } from '../data/gedTopicGuides.js';
 
 const router = Router();

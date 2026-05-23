@@ -5,7 +5,7 @@ import helmet from 'helmet';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadAllStudyGuides } from './services/studyGuideLoader.js';
-import { isAiEnabled } from './services/claude.js';
+import { isAiEnabled } from './services/ai.js';
 import authRoutes from './routes/auth.js';
 import practiceRoutes, { guestPracticeRouter } from './routes/practice.js';
 import userRoutes from './routes/user.js';

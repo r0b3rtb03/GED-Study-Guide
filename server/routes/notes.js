@@ -3,7 +3,7 @@ import multer from 'multer';
 import rateLimit from 'express-rate-limit';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { getStudyGuide } from '../services/studyGuideLoader.js';
-import { structureNotes, isAiEnabled } from '../services/claude.js';
+import { structureNotes, isAiEnabled } from '../services/ai.js';
 import { GED_TOPIC_GUIDES } from '../data/gedTopicGuides.js';
 import { createRequire } from 'node:module';
 
