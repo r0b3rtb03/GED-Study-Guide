@@ -7,7 +7,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { randomInt, randomUUID } from 'node:crypto';
-import { GED_TOPIC_GUIDES } from '../data/gedTopicGuides.js';
+import { GED_TOPIC_GUIDES, topicPageIndex } from '../data/gedTopicGuides.js';
 import { getStudyGuide, getNonCalcTips } from './studyGuideLoader.js';
 
 const CLAUDE_MODEL = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6';
@@ -217,6 +217,12 @@ ${studyContent}
 --- STUDY GUIDE END ---`
     : `Topic scope reference: ${topicGuide.scope}`;
 
+  // Precise page-numbered concept index for this topic. Required so Gemini
+  // can return a specific page in studyGuideReference (e.g. "Page 16").
+  const pageIndex = `
+Concept-to-page index for "${topicGuide.sectionName}" section of the official PDF (pages ${topicGuide.pageRange[0]}–${topicGuide.pageRange[1]}):
+${topicPageIndex(topic)}`;
+
   const nonCalcTips = getNonCalcTips();
   const nonCalcBlock = nonCalcTips
     ? `Official GED "Tips for the Calculator-Prohibited Section":
@@ -240,19 +246,23 @@ VARIETY REQUIREMENTS (CRITICAL — read every word):
 - Do NOT default to canonical textbook examples (no "2x + 5 = 17", no "(1,2) and (4,11) slope", no "6-8-10 triangle", no "25% off $80 jacket").
 - The numbers used should NOT be common GED-prep clichés (e.g., 6,8,10; 3,4,5; multiples of 25%).
 
-CRITICAL: Your JSON response MUST include ALL of these fields, no exceptions:
+CRITICAL: Your JSON response MUST include ALL of these fields:
   question, type, options (if multiple_choice), correctAnswer,
   calculatorAllowed (boolean), calculatorReasoning (string),
-  studyGuideReference, hint, explanation, steps.
+  studyGuideReference, studyGuidePage (integer), hint, explanation, steps.
 
 ${studyGuideBlock}
+
+${pageIndex}
 
 ${nonCalcBlock}
 
 Rules:
 - The problem MUST test a concept covered in the study guide / scope above.
 - For multiple_choice, provide EXACTLY 4 options labeled "A) ...", "B) ...", "C) ...", "D) ...".
-- correctAnswer MUST be one of "A", "B", "C", or "D" for multiple choice (you don't need to vary positions — the server shuffles).
+- correctAnswer MUST be one of "A", "B", "C", or "D" (server shuffles positions later).
+- studyGuidePage MUST be the EXACT page number from the concept-to-page index for the specific concept this question tests. Pick the single most relevant page.
+- studyGuideReference MUST follow the format: "<Concept name from the index> — Page <N>" where N is the same page as studyGuidePage.
 ${previousQuestions.length > 0 ? `- AVOID any of these previously-asked questions:\n${previousQuestions.slice(-15).join('\n')}` : ''}
 
 Return ONLY valid JSON (no markdown):
@@ -263,7 +273,8 @@ Return ONLY valid JSON (no markdown):
   "correctAnswer": "A" | "B" | "C" | "D" | "<numeric value>",
   "calculatorAllowed": true,
   "calculatorReasoning": "One sentence on whether this is calculator-prohibited.",
-  "studyGuideReference": "Short quote or section title from the guide.",
+  "studyGuideReference": "Pythagorean theorem — Page 16",
+  "studyGuidePage": 16,
   "hint": "Short hint without giving away the answer.",
   "explanation": "What concept this tests.",
   "steps": ["Step 1: ...", "Step 2: ...", "Step 3: ..."]

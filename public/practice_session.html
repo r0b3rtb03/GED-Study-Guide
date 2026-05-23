@@ -162,7 +162,14 @@
         <span class="material-symbols-outlined" style="font-size:22px">menu_book</span>GED Math Master
       </a>
       <div class="flex items-center gap-2">
-        <span class="hidden sm:inline text-label-md text-on-surface-variant">Guest mode</span>
+        <span class="hidden md:inline text-label-md text-on-surface-variant">Guest mode</span>
+        <a href="/study-guide.pdf" target="_blank" rel="noopener" class="hidden sm:inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-on-surface-variant hover:bg-surface-container text-label-md font-bold">
+          <span class="material-symbols-outlined" style="font-size:18px">auto_stories</span>
+          Study Guide
+        </a>
+        <a href="/study-guide.pdf" target="_blank" rel="noopener" class="sm:hidden w-9 h-9 rounded-full hover:bg-surface-container flex items-center justify-center text-on-surface-variant" aria-label="Open study guide">
+          <span class="material-symbols-outlined" style="font-size:20px">auto_stories</span>
+        </a>
         <button id="guestThemeBtn" class="w-9 h-9 rounded-full hover:bg-surface-container flex items-center justify-center text-on-surface-variant" aria-label="Toggle theme">
           <span class="material-symbols-outlined" id="guestThemeIcon" style="font-size:20px">dark_mode</span>
         </button>
@@ -578,10 +585,21 @@
           <span class="material-symbols-outlined ${q.calculatorAllowed ? 'text-[#047857]' : 'text-[#92400e]'}" style="font-size:18px">${q.calculatorAllowed ? 'calculate' : 'do_not_disturb'}</span>
           <p class="text-label-md text-on-surface-variant"><span class="font-bold ${q.calculatorAllowed ? 'text-[#047857]' : 'text-[#92400e]'}">${q.calculatorAllowed ? 'Calculator allowed on test:' : 'No calculator on test:'}</span> ${escape(q.calculatorReasoning)}</p>
         </div>` : '';
+    // Page number for "Review Study Guide" button — prefer the structured
+    // studyGuidePage field, fall back to parsing "Page N" out of the reference.
+    const pageMatch = q.studyGuidePage || (q.studyGuideReference?.match(/Page\s+(\d+)/i)?.[1]);
+    const pdfHref = pageMatch ? `/study-guide.pdf#page=${pageMatch}` : '/study-guide.pdf';
+
     const refBlock = q.studyGuideReference
-      ? `<div class="p-3 bg-surface-container-low border border-outline-variant rounded-lg flex items-start gap-2">
-          <span class="material-symbols-outlined text-primary" style="font-size:18px">menu_book</span>
-          <p class="text-label-md text-on-surface-variant"><span class="font-bold text-primary">From your study guide:</span> ${escape(q.studyGuideReference)}</p>
+      ? `<div class="p-3 bg-surface-container-low border border-outline-variant rounded-lg flex flex-col sm:flex-row sm:items-center gap-3">
+          <div class="flex items-start gap-2 flex-1 min-w-0">
+            <span class="material-symbols-outlined text-primary" style="font-size:18px">menu_book</span>
+            <p class="text-label-md text-on-surface-variant min-w-0"><span class="font-bold text-primary">From your study guide:</span> ${escape(q.studyGuideReference)}</p>
+          </div>
+          ${!result.isCorrect ? `<a href="${pdfHref}" target="_blank" rel="noopener" class="shrink-0 inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-lg bg-primary text-on-primary text-label-md font-bold hover:opacity-90">
+            <span class="material-symbols-outlined" style="font-size:18px">auto_stories</span>
+            Review Study Guide
+          </a>` : ''}
         </div>` : '';
 
     $('feedback').innerHTML = `

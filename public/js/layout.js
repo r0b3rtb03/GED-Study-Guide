@@ -9,8 +9,9 @@ const NAV_ITEMS = [
 ];
 
 const FOOTER_ITEMS = [
-  { href: '/account_settings', label: 'Settings', icon: 'settings' },
-  { href: '#',                       label: 'Help',     icon: 'help_outline' }
+  { href: '/study-guide.pdf',  label: 'Study Guide', icon: 'auto_stories', external: true },
+  { href: '/account_settings', label: 'Settings',    icon: 'settings' },
+  { href: '#',                 label: 'Help',        icon: 'help_outline' }
 ];
 
 function isActive(href) {
@@ -54,7 +55,7 @@ export function renderShell({ active } = {}) {
       }).join('')}
     </nav>
     <div class="px-3 py-4 border-t border-outline-variant space-y-1">
-      ${FOOTER_ITEMS.map(n => `<a href="${n.href}" class="flex items-center gap-3 h-10 px-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low">
+      ${FOOTER_ITEMS.map(n => `<a href="${n.href}" ${n.external ? 'target="_blank" rel="noopener"' : ''} class="flex items-center gap-3 h-10 px-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low">
         <span class="material-symbols-outlined" style="font-size:20px">${n.icon}</span>
         <span class="text-label-md font-label-md">${n.label}</span>
       </a>`).join('')}
