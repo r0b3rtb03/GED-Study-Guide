@@ -104,8 +104,12 @@ export function renderShell({ active } = {}) {
   sideNav.innerHTML = `
     <div class="px-5 pt-6 pb-5 border-b border-outline-variant">
       <div class="flex items-center gap-2.5">
-        <div class="w-9 h-9 shrink-0 rounded-full bg-primary-container/10 flex items-center justify-center">
-          <span class="material-symbols-outlined text-primary" style="font-size:20px">menu_book</span>
+        <div class="w-9 h-9 shrink-0 rounded-lg flex items-center justify-center overflow-hidden bg-primary-container/10">
+          <!-- Site logo. If /logo.png is missing the onerror swaps the img for
+               the original menu_book icon so the header never shows a broken
+               image. -->
+          <img src="/logo.png" alt="GED Study Guide logo" class="w-full h-full object-contain"
+               onerror="this.outerHTML='&lt;span class=\'material-symbols-outlined text-primary\' style=\'font-size:20px\'&gt;menu_book&lt;/span&gt;'">
         </div>
         <div class="min-w-0 flex-1 sidebar-brand">
           <p class="text-[17px] font-bold text-primary leading-tight whitespace-nowrap">GED Study Guide</p>
@@ -131,10 +135,13 @@ export function renderShell({ active } = {}) {
       }).join('')}
     </nav>
     <div class="px-3 py-4 border-t border-outline-variant space-y-1">
-      ${FOOTER_ITEMS.map(n => `<a href="${n.href}"${n.id ? ` id="${n.id}"` : ''}${n.action ? ` data-action="${n.action}"` : ''} ${n.external ? 'target="_blank" rel="noopener"' : ''} class="flex items-center gap-3 h-10 px-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low" title="${n.label}">
-        <span class="material-symbols-outlined shrink-0" style="font-size:20px">${n.icon}</span>
-        <span class="text-label-md font-label-md sidebar-label whitespace-nowrap">${n.label}</span>
-      </a>`).join('')}
+      ${FOOTER_ITEMS.map(n => {
+        const common = `${n.id ? ` id="${n.id}"` : ''}${n.action ? ` data-action="${n.action}"` : ''} class="flex items-center gap-3 h-10 px-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low text-left w-full" title="${n.label}"`;
+        const inner  = `<span class="material-symbols-outlined shrink-0" style="font-size:20px">${n.icon}</span><span class="text-label-md font-label-md sidebar-label whitespace-nowrap">${n.label}</span>`;
+        // action-based items render as <button> so href="#" can't mis-route
+        if (n.action) return `<button type="button"${common}>${inner}</button>`;
+        return `<a href="${n.href}"${n.external ? ' target="_blank" rel="noopener"' : ''}${common}>${inner}</a>`;
+      }).join('')}
       <button id="ged-theme-btn" class="w-full flex items-center gap-3 h-10 px-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low text-left" title="Toggle theme">
         <span class="material-symbols-outlined shrink-0" style="font-size:20px" id="ged-theme-icon">dark_mode</span>
         <span class="text-label-md font-label-md sidebar-label whitespace-nowrap" id="ged-theme-label">Dark mode</span>
@@ -213,16 +220,22 @@ export function renderShell({ active } = {}) {
 
   // Help button → launch the guided product tour. We lazy-import the tour
   // module on first click so users who never open it don't pay the bytes.
+  // Absolute import path so it doesn't depend on the base URL of whatever
+  // page is calling renderShell.
   const helpBtn = document.querySelector('[data-action="help"]');
   if (helpBtn) {
     helpBtn.addEventListener('click', async (e) => {
       e.preventDefault();
+      e.stopPropagation();
+      console.log('[tour] starting…');
       try {
-        const mod = await import('./site-tour.js');
-        mod.startSiteTour();
+        const mod = await import('/js/site-tour.js');
+        await mod.startSiteTour();
       } catch (err) {
         console.error('[tour] failed to load:', err);
       }
     });
+  } else {
+    console.warn('[tour] Help button not found in sidebar — selector miss?');
   }
 }
