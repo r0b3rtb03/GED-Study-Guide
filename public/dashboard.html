@@ -120,6 +120,15 @@
     </div>`;
   }
 
+  // Priority badge logic — red (<60%) "Needs attention", orange (60-79%)
+  // "Needs a refresher", green (>=80%) nothing. Returns HTML for the chip
+  // (empty string if no chip is warranted).
+  function priorityBadge(pct) {
+    if (pct >= 80) return '';
+    if (pct >= 60) return `<span class="bg-[#fef3c7] text-[#92400e] text-[11px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Needs a refresher</span>`;
+    return `<span class="bg-[#fee2e2] text-[#991b1b] text-[11px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Needs attention</span>`;
+  }
+
   function priorityCard(w) {
     const subjLabel = w.subjectName || (w.subject === 'social-studies' ? 'Social Studies' : 'Math');
     const subjPill  = w.subject === 'social-studies'
@@ -132,21 +141,24 @@
       ? 'bg-[#fef3c7] text-[#92400e]'
       : 'bg-[#fee2e2] text-[#991b1b]';
     const diffLabel = diff[0].toUpperCase() + diff.slice(1);
+    const scoreTone = w.percent < 60 ? 'text-error' : 'text-[#92400e]';
     return `<article class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden">
       <div class="p-4">
         <div class="flex items-center justify-between gap-2 mb-3 flex-wrap">
           <div class="flex items-center gap-1.5 flex-wrap">
             <span class="${subjPill} text-[11px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">${subjLabel}</span>
             <span class="${diffPill} text-[11px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">${diffLabel}</span>
+            ${priorityBadge(w.percent)}
           </div>
-          <span class="text-error text-label-md font-bold">${w.score}/${w.total} · ${w.percent}%</span>
+          <span class="${scoreTone} text-label-md font-bold">${w.score}/${w.total} · ${w.percent}%</span>
         </div>
         <h4 class="text-headline-md font-bold text-on-surface mb-1">${w.name}</h4>
         <p class="text-body-md text-on-surface-variant">${w.recommendation}</p>
       </div>
-      <div class="bg-surface-container-low p-3 flex gap-2">
-        <a href="${w.pdfHref}" target="_blank" rel="noopener" class="flex-1 text-center bg-surface-container-lowest border border-outline-variant text-on-surface hover:bg-surface-container py-2 rounded text-label-md font-bold transition-colors">Study Guide</a>
-        <a href="/practice_session?subject=${w.subject || 'math'}&topic=${w.slug}" class="flex-1 text-center bg-primary text-on-primary hover:opacity-90 py-2 rounded text-label-md font-bold transition-colors">Practice</a>
+      <div class="bg-surface-container-low p-3 grid grid-cols-3 gap-2">
+        <a href="/study_notes?topic=${w.slug}" class="text-center bg-surface-container-lowest border border-outline-variant text-on-surface hover:bg-surface-container py-2 rounded text-label-md font-bold transition-colors">Study Notes</a>
+        <a href="${w.pdfHref}" target="_blank" rel="noopener" class="text-center bg-surface-container-lowest border border-outline-variant text-on-surface hover:bg-surface-container py-2 rounded text-label-md font-bold transition-colors">Study Guide</a>
+        <a href="/practice_session?subject=${w.subject || 'math'}&topic=${w.slug}" class="text-center bg-primary text-on-primary hover:opacity-90 py-2 rounded text-label-md font-bold transition-colors">Practice</a>
       </div>
     </article>`;
   }

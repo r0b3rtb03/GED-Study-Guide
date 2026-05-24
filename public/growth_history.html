@@ -41,14 +41,21 @@
         <!-- Subject Mastery (dark) -->
         <section class="rounded-xl p-5 text-white relative overflow-hidden"
                  style="background: linear-gradient(160deg, #1d2640 0%, #0d1320 100%);">
-          <h2 class="text-headline-sm font-headline-sm mb-1">Subject Mastery</h2>
-          <p class="text-label-md text-white/60 mb-5">Coverage across all topics</p>
-          <div id="masteryList" class="space-y-4"></div>
-          <a href="/practice_session" id="reviewWeakBtn"
-             class="mt-6 w-full inline-flex items-center justify-center gap-2 h-11 rounded-lg bg-[#8ab4ff] text-[#0a1530] font-bold text-label-md hover:opacity-90 transition">
-            <span class="material-symbols-outlined" style="font-size:20px">flag</span>
-            Review Weak Topics
-          </a>
+          <!-- Decorative graduation cap behind the content — purely visual. -->
+          <span class="material-symbols-outlined absolute pointer-events-none select-none"
+                style="font-size:220px; right:-30px; bottom:-40px; color:rgba(255,255,255,0.06); transform: rotate(-12deg)">
+            school
+          </span>
+          <div class="relative">
+            <h2 class="text-headline-sm font-headline-sm mb-1">Subject Mastery</h2>
+            <p class="text-label-md text-white/60 mb-5">Coverage across all topics</p>
+            <div id="masteryList" class="space-y-4"></div>
+            <a href="/practice_session" id="reviewWeakBtn"
+               class="mt-6 w-full inline-flex items-center justify-center gap-2 h-11 rounded-lg bg-[#8ab4ff] text-[#0a1530] font-bold text-label-md hover:opacity-90 transition">
+              <span class="material-symbols-outlined" style="font-size:20px">flag</span>
+              Review Weak Topics
+            </a>
+          </div>
         </section>
       </div>
 

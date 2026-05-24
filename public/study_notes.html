@@ -11,47 +11,85 @@
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap" rel="stylesheet" />
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <script src="/js/theme.js"></script>
-<style>body{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}</style>
+<style>
+  body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+  /* Crumb separator chevrons */
+  .crumb-sep::before { content: '›'; padding: 0 8px; color: var(--ged-outline); }
+  /* Numbered section heading (1., 2., etc.) — Inter, bold, larger */
+  .note-section-num { font-feature-settings: "tnum"; }
+</style>
 </head>
 <body class="bg-background text-on-surface min-h-screen">
   <main class="md:pl-64 pt-16 md:pt-0 pb-20 md:pb-0">
-    <div class="max-w-[1200px] mx-auto p-margin-mobile md:p-margin-desktop">
-      <header class="mb-6">
-        <h1 class="text-headline-lg font-headline-lg">Study Notes</h1>
-        <p class="text-body-md text-on-surface-variant mt-1">Learn from official GED Math content, then practice what you've read.</p>
-      </header>
+    <div class="max-w-[1280px] mx-auto p-margin-mobile md:p-margin-desktop">
 
-      <div class="grid md:grid-cols-[260px_1fr] gap-gutter">
-        <!-- Topic tabs -->
-        <aside class="bg-surface-container-lowest rounded-xl border border-outline-variant/40 p-3 h-fit md:sticky md:top-4">
-          <nav id="topicTabs" class="flex md:flex-col gap-1 overflow-x-auto md:overflow-visible"></nav>
-          <div class="mt-3 pt-3 border-t border-outline-variant/40 hidden md:block">
-            <label class="block text-label-md font-label-md mb-2">Upload your own</label>
+      <div class="grid md:grid-cols-[280px_1fr] gap-gutter items-start">
+        <!-- ===== Subject Catalog sidebar ===== -->
+        <aside class="md:sticky md:top-20 space-y-5">
+          <h1 class="text-headline-md font-bold text-on-surface px-1">Subject Catalog</h1>
+
+          <div id="topicTabs" class="space-y-5"></div>
+
+          <!-- Upload Personal Notes card -->
+          <div class="rounded-xl p-5 text-white relative overflow-hidden"
+               style="background: linear-gradient(160deg, #1d2640 0%, #0d1320 100%);">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="material-symbols-outlined" style="font-size:20px">description</span>
+              <p class="font-bold">Upload Personal Notes</p>
+            </div>
+            <p class="text-label-md text-white/70 mb-4">Add your own shortcuts or scanned notes here.</p>
             <input id="fileInput" type="file" accept=".pdf,.txt,.md" class="hidden" />
-            <button id="uploadBtn" class="w-full h-10 rounded-lg border border-dashed border-outline-variant text-label-md text-on-surface-variant hover:border-primary hover:text-primary flex items-center justify-center gap-2">
+            <button id="uploadBtn" class="w-full h-11 rounded-lg border border-dashed border-white/40 text-white/90 text-label-md font-bold flex items-center justify-center gap-2 hover:border-white hover:bg-white/5 transition">
               <span class="material-symbols-outlined" style="font-size:18px">upload_file</span>
-              Choose file
+              Select File
             </button>
-            <p class="text-[11px] text-on-surface-variant mt-2">PDF, TXT, or MD up to 8MB.</p>
           </div>
         </aside>
 
-        <!-- Notes panel -->
-        <section class="bg-surface-container-lowest rounded-xl border border-outline-variant/40 p-6 min-h-[60vh]">
-          <div id="notesBody">
-            <div class="animate-pulse space-y-3">
+        <!-- ===== Notes panel ===== -->
+        <section class="min-h-[60vh]">
+          <!-- Breadcrumbs -->
+          <nav id="crumbs" class="mb-3 text-label-md text-on-surface-variant">
+            <a href="/study_notes" class="text-primary hover:underline">Subjects</a>
+            <span id="crumbSubject" class="crumb-sep"></span>
+            <span id="crumbTopic" class="crumb-sep font-bold text-on-surface"></span>
+          </nav>
+
+          <div id="topicHero" class="mb-6"></div>
+
+          <div id="notesBody" class="space-y-5">
+            <div class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-6 animate-pulse space-y-3">
               <div class="h-6 w-1/3 bg-surface-container rounded"></div>
               <div class="h-4 w-2/3 bg-surface-container rounded"></div>
               <div class="h-4 w-full bg-surface-container rounded"></div>
               <div class="h-4 w-5/6 bg-surface-container rounded"></div>
             </div>
           </div>
-          <div class="mt-6 pt-6 border-t border-outline-variant/40 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-            <p class="text-label-md text-on-surface-variant">Ready to test what you learned?</p>
-            <a id="practiceCta" href="/practice_session" class="inline-flex items-center justify-center gap-2 h-12 px-5 bg-primary text-on-primary rounded-lg font-bold text-label-md hover:opacity-90">
+
+          <!-- "Ready to test what you learned?" card -->
+          <div class="mt-6 bg-surface-container-low border border-outline-variant/40 rounded-xl p-6 text-center">
+            <h3 class="text-headline-sm font-bold mb-1">Ready to test what you learned?</h3>
+            <p class="text-body-md text-on-surface-variant mb-4">Generate a custom set of practice problems based on the <span id="ctaTopicName" class="font-bold">topic</span> covered above.</p>
+            <a id="practiceCta" href="/practice_session" class="inline-flex items-center justify-center gap-2 h-12 px-6 bg-[#0d1320] text-white rounded-lg font-bold text-label-md hover:opacity-90">
               <span class="material-symbols-outlined" style="font-size:20px">edit_square</span>
               Generate Practice Problems
             </a>
+          </div>
+
+          <!-- Previous / Mark as Complete / Next nav -->
+          <div class="mt-6 pt-5 border-t border-outline-variant/40 flex items-center justify-between gap-3">
+            <button id="prevTopicBtn" class="inline-flex items-center gap-2 h-10 px-4 rounded-lg text-label-md font-bold text-on-surface-variant hover:bg-surface-container-low disabled:opacity-40 disabled:cursor-not-allowed">
+              <span class="material-symbols-outlined" style="font-size:18px">arrow_back</span>
+              <span>Previous Topic</span>
+            </button>
+            <button id="markCompleteBtn" class="inline-flex items-center gap-2 h-10 px-5 rounded-lg text-label-md font-bold bg-[#0d1320] text-white hover:opacity-90 transition">
+              <span class="material-symbols-outlined" style="font-size:18px" id="markIcon">check_circle</span>
+              <span id="markLabel">Mark as Complete</span>
+            </button>
+            <button id="nextTopicBtn" class="inline-flex items-center gap-2 h-10 px-4 rounded-lg text-label-md font-bold text-on-surface hover:bg-surface-container-low disabled:opacity-40 disabled:cursor-not-allowed">
+              <span id="nextLabel">Next Topic</span>
+              <span class="material-symbols-outlined" style="font-size:18px">arrow_forward</span>
+            </button>
           </div>
         </section>
       </div>
@@ -64,65 +102,177 @@
   renderShell({ active: 'study_notes' });
 
   const TOPICS = [
-    { slug: 'algebra',           name: 'Algebra',                          subject: 'math' },
-    { slug: 'linear-equations',  name: 'Linear Equations & Graphs',        subject: 'math' },
-    { slug: 'fractions',         name: 'Fractions, Decimals & Percents',   subject: 'math' },
-    { slug: 'geometry',          name: 'Geometry Basics',                  subject: 'math' },
-    { slug: 'stats',             name: 'Statistics & Data',                subject: 'math' },
-    { slug: 'civics-government', name: 'Civics & Government',              subject: 'social-studies' },
-    { slug: 'us-history',        name: 'U.S. History',                     subject: 'social-studies' },
-    { slug: 'economics',         name: 'Economics',                        subject: 'social-studies' },
-    { slug: 'geography',         name: 'Geography',                        subject: 'social-studies' },
-    { slug: 'world-history',     name: 'World History',                    subject: 'social-studies' }
+    { slug: 'algebra',           name: 'Algebra',                          subject: 'math',           sub: 'Master equations & relationships',  heroTitle: 'Algebra Foundations',     heroBlurb: 'A comprehensive guide to mastering equations, inequalities, and functional relationships for the GED Math section.' },
+    { slug: 'linear-equations',  name: 'Linear Equations & Graphs',        subject: 'math',           sub: 'Slopes and graphing',               heroTitle: 'Linear Equations & Graphs', heroBlurb: 'Build fluency with slope, intercepts, and the equations that describe straight lines on the coordinate plane.' },
+    { slug: 'fractions',         name: 'Fractions, Decimals & Percents',   subject: 'math',           sub: 'Core arithmetic operations',        heroTitle: 'Fractions, Decimals & Percents', heroBlurb: 'Convert fluently between forms and apply ratios, proportions, and percent change to real-world problems.' },
+    { slug: 'geometry',          name: 'Geometry Basics',                  subject: 'math',           sub: 'Shapes and measurements',           heroTitle: 'Geometry Basics',         heroBlurb: 'Perimeter, area, volume, and the Pythagorean theorem — the geometry the GED actually tests.' },
+    { slug: 'stats',             name: 'Statistics & Data',                subject: 'math',           sub: 'Interpreting charts & graphs',      heroTitle: 'Statistics & Data',       heroBlurb: 'Read and interpret data displays and compute the measures of center and spread the test asks about.' },
+    { slug: 'civics-government', name: 'Civics & Government',              subject: 'social-studies', sub: 'US system and civic duties',         heroTitle: 'Civics & Government',     heroBlurb: 'How the U.S. government works, the Constitution, and the rights and responsibilities of citizens.' },
+    { slug: 'us-history',        name: 'U.S. History',                     subject: 'social-studies', sub: 'From colonies to modern day',       heroTitle: 'U.S. History',            heroBlurb: 'Key eras, turning points, and the cause-and-effect questions the GED loves to ask.' },
+    { slug: 'economics',         name: 'Economics',                        subject: 'social-studies', sub: 'Markets and financial systems',      heroTitle: 'Economics',               heroBlurb: 'Supply and demand, scarcity, key macro indicators, and the personal finance skills the test covers.' },
+    { slug: 'geography',         name: 'Geography',                        subject: 'social-studies', sub: 'Maps, regions, and climate',         heroTitle: 'Geography',               heroBlurb: 'Read maps confidently and understand how place shapes history, economics, and culture.' },
+    { slug: 'world-history',     name: 'World History',                    subject: 'social-studies', sub: 'Ancient times to today',             heroTitle: 'World History',           heroBlurb: 'Major civilizations and global movements from antiquity through the modern era.' }
   ];
+
+  const SUBJECT_META = {
+    'math':           { label: 'MATHEMATICS',    icon: 'calculate' },
+    'social-studies': { label: 'SOCIAL STUDIES', icon: 'public' }
+  };
 
   const params = new URLSearchParams(location.search);
   let activeSlug = TOPICS.find(t => t.slug === params.get('topic'))?.slug || 'algebra';
 
-  const tabsEl = document.getElementById('topicTabs');
-  const bodyEl = document.getElementById('notesBody');
-  const ctaEl  = document.getElementById('practiceCta');
+  const tabsEl   = document.getElementById('topicTabs');
+  const bodyEl   = document.getElementById('notesBody');
+  const heroEl   = document.getElementById('topicHero');
+  const ctaEl    = document.getElementById('practiceCta');
+  const ctaName  = document.getElementById('ctaTopicName');
+  const crumbSub = document.getElementById('crumbSubject');
+  const crumbTop = document.getElementById('crumbTopic');
+  const prevBtn  = document.getElementById('prevTopicBtn');
+  const nextBtn  = document.getElementById('nextTopicBtn');
+  const nextLbl  = document.getElementById('nextLabel');
+  const markBtn  = document.getElementById('markCompleteBtn');
+  const markLbl  = document.getElementById('markLabel');
+  const markIcn  = document.getElementById('markIcon');
 
-  const SUBJECT_LABEL = { 'math': 'Math', 'social-studies': 'Social Studies' };
+  // Per-topic mastery for sidebar priority badges. Populated async; sidebar
+  // re-renders once stats arrive so the first paint isn't blocked on the API.
+  let topicPercent = {};   // slug -> percent (0-100); missing = not attempted
+  let completed    = loadCompleted();
+
+  function loadCompleted() {
+    try { return new Set(JSON.parse(localStorage.getItem('ged_completed_notes') || '[]')); }
+    catch { return new Set(); }
+  }
+  function saveCompleted() {
+    try { localStorage.setItem('ged_completed_notes', JSON.stringify([...completed])); } catch {}
+  }
+
+  // Same color scale as the dashboard's Priority Review:
+  //   red    (<60%)  → "Needs attention"
+  //   orange (60-79) → "Needs a refresher"
+  //   green  (>=80)  → no badge
+  function priorityChip(pct) {
+    if (pct == null) return '';
+    if (pct >= 80) return '';
+    if (pct >= 60) return `<span class="bg-[#fef3c7] text-[#92400e] text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap">Refresher</span>`;
+    return `<span class="bg-[#fee2e2] text-[#991b1b] text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap">Needs Review</span>`;
+  }
+  function subjectNeedsReview(subjectKey) {
+    // Show "NEEDS REVIEW" header chip when any topic in the subject is < 60%.
+    return TOPICS.some(t => t.subject === subjectKey && (topicPercent[t.slug] ?? 100) < 60);
+  }
 
   function renderTabs() {
-    const bySubject = TOPICS.reduce((acc, t) => {
-      (acc[t.subject] ||= []).push(t); return acc;
-    }, {});
-    tabsEl.innerHTML = Object.entries(bySubject).map(([subject, topics]) => {
-      const buttons = topics.map(t => {
-        const a = t.slug === activeSlug;
-        return `<button data-slug="${t.slug}" class="text-left whitespace-nowrap px-3 h-10 rounded-lg text-label-md font-label-md ${a ? 'bg-primary-container/10 text-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container-low'}">${t.name}</button>`;
+    const groups = {};
+    for (const t of TOPICS) (groups[t.subject] ||= []).push(t);
+
+    tabsEl.innerHTML = Object.entries(groups).map(([subjectKey, topics]) => {
+      const meta = SUBJECT_META[subjectKey] || { label: subjectKey.toUpperCase(), icon: 'school' };
+      const needsReview = subjectNeedsReview(subjectKey);
+      const cards = topics.map(t => {
+        const active = t.slug === activeSlug;
+        const pct = topicPercent[t.slug];
+        const chip = priorityChip(pct);
+        const isComplete = completed.has(t.slug);
+        return `<button data-slug="${t.slug}" class="text-left w-full rounded-xl border transition px-4 py-3 ${active ? 'border-[#0d1320] bg-surface-container-lowest shadow-sm' : 'border-outline-variant/40 bg-surface-container-lowest hover:border-outline-variant'}">
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0">
+              <p class="font-bold text-on-surface truncate flex items-center gap-1.5">
+                ${t.name}
+                ${isComplete ? '<span class="material-symbols-outlined text-[#16a34a]" style="font-size:14px" title="Completed">check_circle</span>' : ''}
+              </p>
+              <p class="text-[12px] text-on-surface-variant truncate mt-0.5">${t.sub}</p>
+            </div>
+            ${chip ? `<div class="shrink-0">${chip}</div>` : ''}
+          </div>
+        </button>`;
       }).join('');
-      return `<div class="flex flex-col gap-1 md:contents">
-        <p class="px-3 pt-2 pb-1 text-[11px] uppercase tracking-wide font-bold text-on-surface-variant whitespace-nowrap">${SUBJECT_LABEL[subject] || subject}</p>
-        ${buttons}
+
+      return `<div>
+        <div class="flex items-center justify-between px-1 mb-2">
+          <div class="flex items-center gap-2 text-on-surface-variant">
+            <span class="material-symbols-outlined" style="font-size:18px">${meta.icon}</span>
+            <p class="text-[12px] font-bold tracking-[0.08em]">${meta.label}</p>
+          </div>
+          ${needsReview ? `<span class="bg-[#fee2e2] text-[#991b1b] text-[10px] font-bold px-2 py-0.5 rounded-full">NEEDS REVIEW</span>` : ''}
+        </div>
+        <div class="space-y-2">${cards}</div>
       </div>`;
     }).join('');
-    tabsEl.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { activeSlug = b.dataset.slug; renderTabs(); loadNotes(); }));
+
+    tabsEl.querySelectorAll('button[data-slug]').forEach(b => {
+      b.addEventListener('click', () => {
+        activeSlug = b.dataset.slug;
+        history.replaceState(null, '', `/study_notes?topic=${activeSlug}`);
+        renderTabs(); renderHeroAndNav(); loadNotes();
+      });
+    });
+  }
+
+  function renderHeroAndNav() {
+    const t = TOPICS.find(x => x.slug === activeSlug);
+    if (!t) return;
+    crumbSub.textContent = SUBJECT_META[t.subject]?.label.charAt(0) + SUBJECT_META[t.subject]?.label.slice(1).toLowerCase() || '';
+    crumbSub.textContent = t.subject === 'math' ? 'Math' : 'Social Studies';
+    crumbTop.textContent = t.name;
+    ctaName.textContent  = t.heroTitle;
+    ctaEl.href = `/practice_session?subject=${t.subject}&topic=${t.slug}`;
+
+    const pct = topicPercent[t.slug];
+    const heroChip = pct == null
+      ? ''
+      : pct >= 80
+        ? `<span class="inline-flex items-center gap-1 bg-[#dcfce7] text-[#166534] text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">${pct}% · Mastered</span>`
+      : pct >= 60
+        ? `<span class="inline-flex items-center gap-1 bg-[#fef3c7] text-[#92400e] text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">${pct}% · Needs a refresher</span>`
+        : `<span class="inline-flex items-center gap-1 bg-[#fee2e2] text-[#991b1b] text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">${pct}% · Needs attention</span>`;
+
+    heroEl.innerHTML = `
+      <div class="flex items-start justify-between gap-3 flex-wrap">
+        <div class="min-w-0">
+          <h2 class="text-[36px] leading-tight font-bold text-on-surface tracking-tight">${t.heroTitle}</h2>
+          <p class="text-body-lg text-on-surface-variant mt-2 max-w-2xl">${t.heroBlurb}</p>
+        </div>
+        ${heroChip}
+      </div>
+    `;
+
+    // Prev / Next state
+    const idx = TOPICS.findIndex(x => x.slug === activeSlug);
+    prevBtn.disabled = idx <= 0;
+    nextBtn.disabled = idx >= TOPICS.length - 1;
+    prevBtn.dataset.slug = TOPICS[idx - 1]?.slug || '';
+    nextBtn.dataset.slug = TOPICS[idx + 1]?.slug || '';
+    nextLbl.textContent  = idx < TOPICS.length - 1 ? `Next Topic: ${TOPICS[idx + 1].name.split(/[,&]/)[0].trim()}` : 'Next Topic';
+
+    // Mark-complete state
+    const done = completed.has(activeSlug);
+    markLbl.textContent = done ? 'Completed' : 'Mark as Complete';
+    markIcn.textContent = done ? 'task_alt' : 'check_circle';
+    markBtn.classList.toggle('bg-[#16a34a]', done);
+    markBtn.classList.toggle('bg-[#0d1320]', !done);
   }
 
   function renderNotes(data) {
-    const sections = (data.sections || []).map(s => `
-      <section class="mb-6">
-        <h3 class="text-headline-sm font-headline-sm mb-2">${s.heading || ''}</h3>
-        <div class="text-body-md text-on-surface-variant whitespace-pre-wrap">${(s.content || '').replace(/</g, '&lt;')}</div>
-        ${s.keyFormulas?.length ? `<div class="mt-3 p-3 bg-surface-container-low rounded-lg">
-          <p class="text-label-md font-bold mb-1">Key Formulas</p>
-          <ul class="list-disc list-inside text-body-md">${s.keyFormulas.map(f => `<li>${f}</li>`).join('')}</ul>
+    const sections = (data.sections || []).map((s, i) => `
+      <section class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-6">
+        <h3 class="text-headline-md font-bold mb-3 note-section-num">${i + 1}. ${s.heading || ''}</h3>
+        <div class="text-body-md text-on-surface-variant whitespace-pre-wrap leading-relaxed">${(s.content || '').replace(/</g, '&lt;')}</div>
+        ${s.keyFormulas?.length ? `<div class="mt-4 p-4 bg-surface-container rounded-lg font-mono text-center">
+          ${s.keyFormulas.map(f => `<p class="text-body-md text-on-surface">${f}</p>`).join('')}
         </div>` : ''}
-        ${s.tips?.length ? `<div class="mt-3 p-3 bg-secondary-container/40 rounded-lg">
-          <p class="text-label-md font-bold mb-1 text-on-secondary-container">Tips</p>
-          <ul class="list-disc list-inside text-body-md text-on-secondary-container">${s.tips.map(t => `<li>${t}</li>`).join('')}</ul>
-        </div>` : ''}
+        ${s.tips?.length ? `<ul class="mt-4 space-y-1.5 list-disc list-inside text-body-md text-on-surface-variant">
+          ${s.tips.map(t => `<li>${t}</li>`).join('')}
+        </ul>` : ''}
       </section>
     `).join('');
-    bodyEl.innerHTML = `<h2 class="text-headline-md font-headline-md mb-4">${data.title || ''}</h2>${sections}`;
+    bodyEl.innerHTML = sections;
   }
 
   async function loadNotes() {
-    ctaEl.href = `/practice_session?topic=${activeSlug}`;
-    bodyEl.innerHTML = `<div class="animate-pulse space-y-3"><div class="h-6 w-1/3 bg-surface-container rounded"></div><div class="h-4 w-2/3 bg-surface-container rounded"></div><div class="h-4 w-full bg-surface-container rounded"></div></div>`;
+    bodyEl.innerHTML = `<div class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-6 animate-pulse space-y-3"><div class="h-6 w-1/3 bg-surface-container rounded"></div><div class="h-4 w-2/3 bg-surface-container rounded"></div><div class="h-4 w-full bg-surface-container rounded"></div></div>`;
     try {
       const data = await apiJson(`/api/notes/${activeSlug}`);
       renderNotes(data);
@@ -131,12 +281,34 @@
     }
   }
 
-  // File upload
+  // ---- Wire prev/next/mark ----
+  prevBtn.addEventListener('click', () => {
+    if (prevBtn.disabled || !prevBtn.dataset.slug) return;
+    activeSlug = prevBtn.dataset.slug;
+    history.replaceState(null, '', `/study_notes?topic=${activeSlug}`);
+    renderTabs(); renderHeroAndNav(); loadNotes();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+  nextBtn.addEventListener('click', () => {
+    if (nextBtn.disabled || !nextBtn.dataset.slug) return;
+    activeSlug = nextBtn.dataset.slug;
+    history.replaceState(null, '', `/study_notes?topic=${activeSlug}`);
+    renderTabs(); renderHeroAndNav(); loadNotes();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+  markBtn.addEventListener('click', () => {
+    if (completed.has(activeSlug)) completed.delete(activeSlug);
+    else completed.add(activeSlug);
+    saveCompleted();
+    renderTabs(); renderHeroAndNav();
+  });
+
+  // ---- Upload ----
   document.getElementById('uploadBtn').addEventListener('click', () => document.getElementById('fileInput').click());
   document.getElementById('fileInput').addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    bodyEl.innerHTML = `<div class="animate-pulse text-on-surface-variant">Processing ${file.name}...</div>`;
+    bodyEl.innerHTML = `<div class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-6 animate-pulse text-on-surface-variant">Processing ${file.name}...</div>`;
     const form = new FormData();
     form.append('file', file);
     try {
@@ -149,7 +321,24 @@
     }
   });
 
+  // ---- Async mastery fetch — fills in priority badges once available ----
+  (async () => {
+    try {
+      const stats = await apiJson('/api/user/stats');
+      const subjects = Object.values(stats.bySubject || {});
+      for (const sub of subjects) {
+        for (const [slug, t] of Object.entries(sub.topics || {})) {
+          if (t.total > 0) topicPercent[slug] = t.percent;
+        }
+      }
+      renderTabs();
+      renderHeroAndNav();
+    } catch (e) { /* mastery is nice-to-have; ignore failures */ }
+  })();
+
+  // ---- Initial render ----
   renderTabs();
+  renderHeroAndNav();
   loadNotes();
 </script>
 </body>
