@@ -129,11 +129,7 @@
         fontFamily: {
           'label-md': ['Inter'], 'headline-lg': ['Inter'], 'body-md': ['Inter'],
           'headline-md': ['Inter'], 'headline-sm': ['Inter'], 'body-lg': ['Inter'],
-          'metric-display': ['Inter'],
-          // Academic serif used on display headings and welcome banners.
-          // Falls back to Inter wherever a class isn't applied so existing
-          // pages keep their look unchanged.
-          'serif': ['"Source Serif 4"', 'Georgia', 'serif']
+          'metric-display': ['Inter']
         },
         fontSize: {
           'label-md':       ['14px', { lineHeight: '20px', fontWeight: '500' }],
