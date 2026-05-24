@@ -7,47 +7,56 @@
 <link rel="apple-touch-icon" href="/favicon.png" />
 <title>Dashboard — GED Study Guide</title>
 <link href="https://fonts.googleapis.com" rel="preconnect" />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet" />
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap" rel="stylesheet" />
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <script src="/js/theme.js"></script>
-<style>body{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}</style>
+<style>
+  body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+  .font-serif { font-family: 'Source Serif 4', Georgia, serif; }
+  .circular-chart { display: block; }
+  .circle-bg { fill: none; stroke: rgba(115, 119, 128, 0.18); stroke-width: 3.4; }
+  .circle    { fill: none; stroke-width: 3.2; stroke-linecap: round; animation: progress 1s ease-out forwards; }
+  @keyframes progress { 0% { stroke-dasharray: 0 100; } }
+</style>
 </head>
 <body class="bg-background text-on-surface min-h-screen">
   <main class="md:pl-64 pt-16 md:pt-0 pb-20 md:pb-0">
-    <div class="max-w-[1200px] mx-auto p-margin-mobile md:p-margin-desktop">
-      <header class="mb-8">
-        <h1 class="text-headline-lg font-headline-lg" id="welcomeHeader">Welcome back</h1>
-        <p class="text-body-md text-on-surface-variant mt-1">Here's a snapshot of your GED progress.</p>
-        <div id="encouragement" class="mt-4 hidden p-4 bg-primary-container/10 border-l-4 border-primary rounded-r-lg">
-          <p class="text-body-md text-on-surface flex items-start gap-2">
-            <span class="material-symbols-outlined text-primary shrink-0" style="font-size:22px">favorite</span>
-            <span id="encouragementText"></span>
-          </p>
+    <div class="max-w-[1200px] mx-auto p-margin-mobile md:p-margin-desktop space-y-8">
+
+      <!-- Welcome banner: date + serif greeting + inspirational quote -->
+      <section class="border-b border-outline-variant/40 pb-6">
+        <p id="welcomeDate" class="text-label-md font-bold text-on-surface-variant uppercase tracking-[0.1em] mb-2"></p>
+        <h1 id="welcomeHeader" class="font-serif text-[36px] md:text-[48px] leading-tight font-bold text-primary mb-2">Welcome back.</h1>
+        <p id="welcomeQuote" class="text-body-lg text-on-surface-variant max-w-2xl"></p>
+      </section>
+
+      <section id="statsGrid" class="grid grid-cols-2 lg:grid-cols-4 gap-4"></section>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-1 flex flex-col gap-8">
+          <section id="recommendedReviewSection" class="hidden">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="font-serif text-headline-md font-bold text-primary">Priority Review</h2>
+              <span class="bg-surface-container-high px-2 py-1 rounded text-[12px] font-bold text-on-surface-variant uppercase tracking-wider">Needs attention</span>
+            </div>
+            <div id="recommendedReview" class="space-y-4"></div>
+          </section>
         </div>
-      </header>
 
-      <section id="statsGrid" class="grid grid-cols-2 md:grid-cols-4 gap-gutter mb-8">
-        <!-- stat cards injected here -->
-      </section>
+        <div class="lg:col-span-2 flex flex-col gap-8">
+          <section>
+            <h2 class="font-serif text-headline-md font-bold text-primary mb-4">Quick Start</h2>
+            <div id="quickStart" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+          </section>
 
-      <section id="recommendedReviewSection" class="mb-8 hidden">
-        <h2 class="text-headline-md font-headline-md mb-4 flex items-center gap-2">
-          <span class="material-symbols-outlined text-primary" style="font-size:24px">auto_stories</span>
-          Recommended Review
-        </h2>
-        <div id="recommendedReview" class="space-y-3"></div>
-      </section>
+          <section>
+            <h2 class="font-serif text-headline-md font-bold text-primary mb-4">Detailed Progress</h2>
+            <div id="topicProgress" class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm divide-y divide-outline-variant/40"></div>
+          </section>
+        </div>
+      </div>
 
-      <section class="mb-8">
-        <h2 class="text-headline-md font-headline-md mb-4">Topic Progress</h2>
-        <div id="topicProgress" class="space-y-4"></div>
-      </section>
-
-      <section>
-        <h2 class="text-headline-md font-headline-md mb-4">Quick Start</h2>
-        <div id="quickStart" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-gutter"></div>
-      </section>
     </div>
   </main>
 
@@ -55,186 +64,172 @@
   import { renderShell } from '/js/layout.js';
   import { apiJson, getUser } from '/js/auth.js';
   import { randomEncouragement } from '/js/encouragement.js';
-
   renderShell({ active: 'dashboard' });
 
-  // Topic icons by slug (across all subjects). The actual topic list comes
-  // from /api/user/stats → bySubject so the dashboard always reflects the
-  // current backend configuration.
   const TOPIC_ICONS = {
-    'algebra': 'function',
-    'linear-equations': 'show_chart',
-    'fractions': 'percent',
-    'geometry': 'square_foot',
-    'stats': 'bar_chart',
-    'civics-government': 'gavel',
-    'us-history': 'flag',
-    'economics': 'payments',
-    'geography': 'public',
-    'world-history': 'history_edu'
+    'algebra': 'function', 'linear-equations': 'show_chart', 'fractions': 'percent',
+    'geometry': 'square_foot', 'stats': 'bar_chart',
+    'civics-government': 'gavel', 'us-history': 'flag', 'economics': 'payments',
+    'geography': 'public', 'world-history': 'history_edu'
   };
-  const SUBJECT_ICONS = { 'math': 'function', 'social-studies': 'public' };
+  const SUBJECT_META = {
+    'math':           { icon: 'calculate', tile: 'bg-primary-container text-on-primary', tileCta: 'text-primary' },
+    'social-studies': { icon: 'public',    tile: 'bg-[#003a3a] text-white',              tileCta: 'text-[#003a3a]' }
+  };
 
   const user = getUser();
-  if (user?.firstName) document.getElementById('welcomeHeader').textContent = `Welcome back, ${user.firstName}`;
+  if (user?.firstName) document.getElementById('welcomeHeader').textContent = `Welcome back, ${user.firstName}.`;
+  document.getElementById('welcomeDate').textContent = new Date().toLocaleDateString('en-US',
+    { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  document.getElementById('welcomeQuote').textContent = randomEncouragement(user?.firstName);
 
-  // Random encouragement message — runs once per dashboard load.
-  const encEl = document.getElementById('encouragement');
-  const encText = document.getElementById('encouragementText');
-  if (encEl && encText) {
-    encText.textContent = randomEncouragement(user?.firstName);
-    encEl.classList.remove('hidden');
-  }
+  const scoreHex   = pct => pct >= 80 ? '#16a34a' : pct >= 60 ? '#ca8a04' : pct > 0 ? '#dc2626' : '#737780';
+  const scoreLabel = pct => pct >= 80 ? 'Strong'  : pct >= 60 ? 'Solid'   : pct > 0 ? 'Needs Work' : 'Start Here';
+  const scoreClass = pct =>
+    pct >= 80 ? 'text-[#16a34a]' :
+    pct >= 60 ? 'text-[#ca8a04]' :
+    pct > 0   ? 'text-error'     : 'text-on-surface-variant';
 
-  function scoreColor(pct) {
-    if (pct >= 80) return 'text-[#10b981]';
-    if (pct >= 60) return 'text-[#f59e0b]';
-    if (pct > 0)   return 'text-error';
-    return 'text-on-surface-variant';
-  }
-  function barColor(pct) {
-    if (pct >= 80) return 'bg-[#10b981]';
-    if (pct >= 60) return 'bg-[#f59e0b]';
-    if (pct > 0)   return 'bg-error';
-    return 'bg-outline-variant';
-  }
-
-  function statCard(label, value, suffix, icon, color = 'text-primary') {
-    return `<div class="bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/40">
-      <div class="flex items-center justify-between mb-3">
-        <span class="text-label-md text-on-surface-variant">${label}</span>
-        <span class="material-symbols-outlined ${color}" style="font-size:22px">${icon}</span>
+  function overallCard(pct) {
+    const color = scoreHex(pct);
+    return `<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 shadow-sm flex items-center gap-4 col-span-2 lg:col-span-1">
+      <div class="w-16 h-16 shrink-0 relative">
+        <svg class="circular-chart w-full h-full" viewBox="0 0 36 36">
+          <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+          <path class="circle" stroke="${color}" stroke-dasharray="${pct}, 100"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+        </svg>
+        <div class="absolute inset-0 flex items-center justify-center text-label-md font-bold" style="color:${color}">${pct}%</div>
       </div>
-      <div class="flex items-baseline gap-1">
-        <span class="text-metric-display font-metric-display ${color}">${value}</span>
-        <span class="text-body-md text-on-surface-variant">${suffix || ''}</span>
+      <div class="min-w-0">
+        <p class="text-[12px] font-bold text-on-surface-variant uppercase tracking-wider">Overall score</p>
+        <p class="font-serif text-headline-md font-bold text-on-surface mt-1">${scoreLabel(pct)}</p>
+      </div>
+    </div>`;
+  }
+  function simpleStatCard(label, value, suffix, icon, accent = '') {
+    return `<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 shadow-sm flex items-center justify-between">
+      <div class="min-w-0">
+        <p class="text-[12px] font-bold text-on-surface-variant uppercase tracking-wider">${label}</p>
+        <p class="font-serif text-headline-md font-bold text-on-surface mt-1">
+          ${value}<span class="text-body-md font-normal text-on-surface-variant ml-1">${suffix || ''}</span>
+        </p>
+      </div>
+      <div class="w-10 h-10 rounded-lg ${accent || 'bg-surface-container-low text-primary'} flex items-center justify-center shrink-0">
+        <span class="material-symbols-outlined" style="font-size:22px">${icon}</span>
       </div>
     </div>`;
   }
 
-  function renderSubjectProgress(bySubject) {
-    // Render one block per subject, each with its topics inside.
+  function priorityCard(w) {
+    const subjLabel = w.subjectName || (w.subject === 'social-studies' ? 'Social Studies' : 'Math');
+    const subjPill  = w.subject === 'social-studies'
+      ? 'bg-[#cde7e7] text-[#003a3a]'
+      : 'bg-[#d3e4fe] text-[#1f477b]';
+    return `<article class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+      <div class="p-4">
+        <div class="flex items-start justify-between mb-3">
+          <span class="${subjPill} text-[11px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">${subjLabel}</span>
+          <span class="text-error text-label-md font-bold">${w.percent}% acc.</span>
+        </div>
+        <h4 class="font-serif text-headline-md font-bold text-on-surface mb-1">${w.name}</h4>
+        <p class="text-body-md text-on-surface-variant">${w.recommendation}</p>
+      </div>
+      <div class="bg-surface-container-low p-3 flex gap-2">
+        <a href="${w.pdfHref}" target="_blank" rel="noopener" class="flex-1 text-center bg-surface-container-lowest border border-outline-variant text-on-surface hover:bg-surface-container py-2 rounded text-label-md font-bold transition-colors">Study Guide</a>
+        <a href="/practice_session?subject=${w.subject || 'math'}&topic=${w.slug}" class="flex-1 text-center bg-primary text-on-primary hover:opacity-90 py-2 rounded text-label-md font-bold transition-colors">Practice</a>
+      </div>
+    </article>`;
+  }
+
+  function quickStartTile(sub) {
+    const meta = SUBJECT_META[sub.slug] || { icon: 'school', tile: 'bg-primary-container text-on-primary', tileCta: 'text-primary' };
+    const sessionsText = sub.sessions === 0
+      ? 'Start your first session.'
+      : `Pick up where you left off · ${sub.percent}% overall`;
+    return `<a href="/practice_session?subject=${sub.slug}" class="${meta.tile} p-6 rounded-xl flex flex-col relative overflow-hidden group cursor-pointer border border-transparent hover:border-outline-variant transition-colors">
+      <div class="absolute -right-4 -top-4 opacity-10 pointer-events-none">
+        <span class="material-symbols-outlined" style="font-size:120px">${meta.icon}</span>
+      </div>
+      <h3 class="font-serif text-headline-lg font-bold mb-1 relative z-10">${sub.name}</h3>
+      <p class="text-body-md mb-6 relative z-10 opacity-90">${sessionsText}</p>
+      <span class="mt-auto self-start bg-surface-container-lowest ${meta.tileCta} px-6 py-2 rounded shadow text-label-md font-bold relative z-10 group-hover:bg-surface-container-low transition-colors">Practice Now</span>
+    </a>`;
+  }
+
+  function diffPill(label, d) {
+    const attempted = d.total > 0;
+    const tone = attempted ? scoreClass(d.percent) : 'text-on-surface-variant/60';
+    const txt = attempted ? `${d.score}/${d.total}` : 'not attempted';
+    return `<span class="${tone} text-[11px] font-bold">${label} ${txt}</span>`;
+  }
+  function renderTopicProgress(bySubject) {
     const subjects = Object.values(bySubject || {});
-    if (!subjects.length) return '<p class="text-on-surface-variant text-label-md">No subjects configured.</p>';
-
-    // Per-difficulty pill — shows score/total for that difficulty, or
-    // "not attempted" in muted text when the user hasn't tried that level.
-    const diffPill = (label, d) => {
-      const attempted = d.total > 0;
-      const cls = attempted
-        ? scoreColor(d.percent).replace('text-', 'text-') + ' bg-surface-container'
-        : 'text-on-surface-variant/60 bg-surface-container/50';
-      const txt = attempted ? `${d.score}/${d.total}` : 'not attempted';
-      return `<span class="inline-flex items-center gap-1 px-2 h-5 rounded-full text-[11px] font-bold ${cls}">${label} ${txt}</span>`;
-    };
-
+    if (!subjects.length) return '<p class="p-6 text-on-surface-variant text-label-md">No subjects configured.</p>';
     return subjects.map(sub => {
-      const topicRows = Object.entries(sub.topics).map(([slug, data]) => {
+      const subjMeta = SUBJECT_META[sub.slug] || { icon: 'school' };
+      const rows = Object.entries(sub.topics).map(([slug, data]) => {
         const icon = TOPIC_ICONS[slug] || 'category';
-        const bd = data.byDifficulty || { easy:{total:0}, medium:{total:0}, hard:{total:0} };
-        return `<div class="flex items-start gap-4">
-          <div class="w-9 h-9 rounded-lg bg-primary-container/10 flex items-center justify-center shrink-0 mt-0.5">
-            <span class="material-symbols-outlined text-primary" style="font-size:20px">${icon}</span>
+        const bd = data.byDifficulty || { easy:{total:0,percent:0,score:0}, medium:{total:0,percent:0,score:0}, hard:{total:0,percent:0,score:0} };
+        return `<div class="space-y-1.5">
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-on-surface-variant shrink-0" style="font-size:18px">${icon}</span>
+            <span class="text-body-md text-on-surface truncate flex-1 min-w-0">${data.name || slug}</span>
+            <span class="text-label-md font-bold ${scoreClass(data.percent)} w-12 text-right">${data.percent}%</span>
           </div>
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center justify-between mb-1">
-              <p class="text-label-md font-label-md truncate">${data.name || slug}</p>
-              <p class="text-label-md font-bold ${scoreColor(data.percent)}">${data.percent}%</p>
-            </div>
-            <div class="w-full h-2 bg-surface-container rounded-full overflow-hidden">
-              <div class="h-full ${barColor(data.percent)} transition-all" style="width:${data.percent}%"></div>
-            </div>
-            <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
-              ${diffPill('Easy',   bd.easy)}
-              ${diffPill('Medium', bd.medium)}
-              ${diffPill('Hard',   bd.hard)}
-            </div>
+          <div class="ml-7 mr-14 h-2 bg-surface-container rounded-full overflow-hidden">
+            <div class="h-full rounded-full transition-all" style="width:${data.percent}%; background:${scoreHex(data.percent)}"></div>
+          </div>
+          <div class="ml-7 flex flex-wrap gap-x-3 gap-y-1">
+            ${diffPill('Easy',   bd.easy)}
+            ${diffPill('Medium', bd.medium)}
+            ${diffPill('Hard',   bd.hard)}
           </div>
         </div>`;
       }).join('');
-      const subjIcon = SUBJECT_ICONS[sub.slug] || 'school';
-      return `<section class="bg-surface-container-lowest rounded-xl border border-outline-variant/40 p-5">
-        <header class="flex items-center justify-between gap-3 mb-4">
-          <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-primary" style="font-size:22px">${subjIcon}</span>
-            <h3 class="text-headline-sm font-headline-sm">${sub.name}</h3>
-            <span class="text-label-md text-on-surface-variant">· ${sub.sessions} session${sub.sessions === 1 ? '' : 's'}</span>
+      return `<div class="p-6">
+        <header class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-primary-container/15 text-primary flex items-center justify-center">
+              <span class="material-symbols-outlined">${subjMeta.icon}</span>
+            </div>
+            <div>
+              <h3 class="font-serif text-headline-md font-bold text-on-surface">${sub.name}</h3>
+              <p class="text-[12px] text-on-surface-variant">${sub.percent}% overall · ${sub.sessions} session${sub.sessions === 1 ? '' : 's'}</p>
+            </div>
           </div>
-          <p class="text-label-md font-bold ${scoreColor(sub.percent)}">${sub.percent}% overall</p>
         </header>
-        <div class="space-y-4">${topicRows}</div>
-      </section>`;
+        <div class="space-y-4">${rows}</div>
+      </div>`;
     }).join('');
   }
-
   function renderRecommendedReview(weakTopics) {
     const section = document.getElementById('recommendedReviewSection');
     const container = document.getElementById('recommendedReview');
     if (!weakTopics.length) { section.classList.add('hidden'); return; }
     section.classList.remove('hidden');
-    container.innerHTML = weakTopics.map(w => `
-      <article class="bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/40 flex flex-col md:flex-row md:items-center gap-4">
-        <div class="w-12 h-12 rounded-lg bg-error-container/60 flex items-center justify-center shrink-0">
-          <span class="material-symbols-outlined text-error" style="font-size:24px">priority_high</span>
-        </div>
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-2 flex-wrap">
-            <p class="text-headline-sm font-headline-sm">${w.name}</p>
-            ${w.subjectName ? `<span class="text-label-md text-on-surface-variant px-2 h-5 rounded-full bg-surface-container">${w.subjectName}</span>` : ''}
-          </div>
-          <p class="text-body-md text-on-surface-variant mt-1">${w.recommendation}</p>
-          <p class="text-label-md text-on-surface-variant mt-1">Current accuracy: <span class="font-bold text-error">${w.percent}%</span> across ${w.attempts} questions</p>
-        </div>
-        <div class="flex flex-col sm:flex-row gap-2 shrink-0">
-          <a href="${w.pdfHref}" target="_blank" rel="noopener" class="inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-lg bg-primary text-on-primary font-bold text-label-md hover:opacity-90">
-            <span class="material-symbols-outlined" style="font-size:18px">auto_stories</span>
-            Open Study Guide
-          </a>
-          <a href="/practice_session?subject=${w.subject || 'math'}&topic=${w.slug}" class="inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-lg ring-1 ring-outline-variant text-on-surface font-bold text-label-md hover:bg-surface-container-low">
-            <span class="material-symbols-outlined" style="font-size:18px">edit_square</span>
-            Practice
-          </a>
-        </div>
-      </article>
-    `).join('');
+    container.innerHTML = weakTopics.map(priorityCard).join('');
   }
-
   function renderQuickStart(bySubject) {
-    // Quick start: one card per subject — clicking takes user to the practice
-    // chooser with the subject pre-selected (they still pick difficulty +
-    // topic there).
     const subjects = Object.values(bySubject || {});
-    return subjects.map(sub => `
-      <a href="/practice_session?subject=${sub.slug}" class="group bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/40 hover:border-primary hover:shadow-md transition flex flex-col gap-3">
-        <div class="w-12 h-12 rounded-lg bg-primary-container/10 flex items-center justify-center">
-          <span class="material-symbols-outlined text-primary" style="font-size:26px">${SUBJECT_ICONS[sub.slug] || 'school'}</span>
-        </div>
-        <div>
-          <p class="text-headline-sm font-headline-sm">${sub.name}</p>
-          <p class="text-label-md text-on-surface-variant mt-1">${Object.keys(sub.topics).length} topics · 10 questions per session</p>
-        </div>
-        <div class="mt-auto text-primary text-label-md font-bold flex items-center gap-1 group-hover:gap-2 transition-all">
-          Practice now <span class="material-symbols-outlined" style="font-size:18px">arrow_forward</span>
-        </div>
-      </a>`).join('');
+    document.getElementById('quickStart').innerHTML = subjects.map(quickStartTile).join('');
   }
 
   (async () => {
     try {
       const stats = await apiJson('/api/user/stats');
-      const overallColor = stats.overallScore >= 80 ? 'text-[#10b981]' : stats.overallScore >= 60 ? 'text-[#f59e0b]' : 'text-primary';
+      const streakAccent = stats.streakDays > 0 ? 'bg-error-container text-on-error-container' : '';
       document.getElementById('statsGrid').innerHTML = [
-        statCard('Overall Score', stats.overallScore, '%', 'school', overallColor),
-        statCard('Time Studied', stats.totalTimeMinutes, 'min', 'schedule'),
-        statCard('Sessions', stats.sessionsCompleted, '', 'edit_square'),
-        statCard('Current Streak', stats.streakDays, 'days', 'local_fire_department', 'text-[#f59e0b]')
+        overallCard(stats.overallScore),
+        simpleStatCard('Time Studied',  stats.totalTimeMinutes, 'min', 'schedule'),
+        simpleStatCard('Sessions',      stats.sessionsCompleted, '',   'history_edu'),
+        simpleStatCard('Current Streak', stats.streakDays, stats.streakDays === 1 ? 'day' : 'days', 'local_fire_department', streakAccent)
       ].join('');
-      document.getElementById('topicProgress').innerHTML = renderSubjectProgress(stats.bySubject || {});
+      document.getElementById('topicProgress').innerHTML = renderTopicProgress(stats.bySubject || {});
       renderRecommendedReview(stats.weakTopics || []);
-      document.getElementById('quickStart').innerHTML = renderQuickStart(stats.bySubject || {});
+      renderQuickStart(stats.bySubject || {});
     } catch (e) {
       document.getElementById('statsGrid').innerHTML = `<div class="col-span-full text-error text-label-md">${e.message}</div>`;
-      document.getElementById('topicProgress').innerHTML = '';
     }
   })();
 </script>

@@ -129,7 +129,11 @@
         fontFamily: {
           'label-md': ['Inter'], 'headline-lg': ['Inter'], 'body-md': ['Inter'],
           'headline-md': ['Inter'], 'headline-sm': ['Inter'], 'body-lg': ['Inter'],
-          'metric-display': ['Inter']
+          'metric-display': ['Inter'],
+          // Academic serif used on display headings and welcome banners.
+          // Falls back to Inter wherever a class isn't applied so existing
+          // pages keep their look unchanged.
+          'serif': ['"Source Serif 4"', 'Georgia', 'serif']
         },
         fontSize: {
           'label-md':       ['14px', { lineHeight: '20px', fontWeight: '500' }],
@@ -138,7 +142,10 @@
           'headline-md':    ['24px', { lineHeight: '32px', fontWeight: '600' }],
           'headline-sm':    ['20px', { lineHeight: '28px', fontWeight: '600' }],
           'body-lg':        ['18px', { lineHeight: '28px', fontWeight: '400' }],
-          'metric-display': ['48px', { lineHeight: '48px', letterSpacing: '-0.03em', fontWeight: '800' }]
+          'metric-display': ['48px', { lineHeight: '48px', letterSpacing: '-0.03em', fontWeight: '800' }],
+          // Display sizes for the dashboard's welcome banner.
+          'display-lg':     ['48px', { lineHeight: '56px', letterSpacing: '-0.02em', fontWeight: '700' }],
+          'display-md':     ['36px', { lineHeight: '44px', letterSpacing: '-0.02em', fontWeight: '700' }]
         }
       }
     }
