@@ -1,0 +1,112 @@
+/* ===== Site Tour =====
+   Adapted for GED Study Guide — pulls its theme from the same CSS variables
+   that drive the rest of the app, so light and dark mode both look native.
+   Upstream: https://github.com/r0b3rtb03/Take-a-Tour-Feature */
+
+:root {
+  --tour-accent:           var(--ged-primary);
+  --tour-bg:               var(--ged-surface-container-lowest);
+  --tour-text:             var(--ged-on-surface);
+  --tour-text-strong:      var(--ged-on-surface);
+  --tour-text-muted:       var(--ged-on-surface-variant);
+  --tour-btn-back-bg:      var(--ged-surface-container-low);
+  --tour-btn-back-border:  var(--ged-outline-variant);
+  --tour-btn-back-hover:   var(--ged-surface-container);
+  --tour-code-bg:          var(--ged-surface-container);
+}
+
+.tour-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  pointer-events: none;
+  animation: tour-fadein 0.25s ease-out;
+}
+.tour-overlay svg { width: 100%; height: 100%; display: block; }
+.tour-overlay path { pointer-events: auto; cursor: not-allowed; }
+@keyframes tour-fadein { from { opacity: 0 } to { opacity: 1 } }
+
+.tour-highlighted { position: relative; z-index: 10001; pointer-events: auto; }
+
+.tour-popover {
+  position: fixed;
+  z-index: 10002;
+  max-width: 380px;
+  min-width: 280px;
+  padding: 18px 20px;
+  background: var(--tour-bg);
+  border: 1px solid var(--tour-accent);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 91, 191, 0.10);
+  color: var(--tour-text);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+  animation: tour-popfadein 0.22s ease-out;
+}
+@keyframes tour-popfadein {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.tour-popover-arrow {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: var(--tour-bg);
+  border: 1px solid var(--tour-accent);
+  transform: rotate(45deg);
+}
+.tour-popover-arrow.top    { top: -8px;    border-right: none; border-bottom: none; }
+.tour-popover-arrow.bottom { bottom: -8px; border-left:  none; border-top:    none; }
+.tour-popover-arrow.left   { left: -8px;   border-right: none; border-top:    none; }
+.tour-popover-arrow.right  { right: -8px;  border-left:  none; border-bottom: none; }
+
+.tour-popover-step {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--tour-accent);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.tour-popover-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--tour-text-strong);
+  margin-bottom: 8px;
+}
+.tour-popover-body { color: var(--tour-text-muted); margin-bottom: 14px; }
+.tour-popover-body strong { color: var(--tour-text-strong); }
+.tour-popover-body code {
+  background: var(--tour-code-bg);
+  color: var(--tour-text);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: Consolas, Monaco, monospace;
+}
+
+.tour-popover-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
+}
+.tour-btn {
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: filter 0.15s, background 0.15s;
+}
+.tour-btn-skip   { background: transparent; color: var(--tour-text-muted); border-color: transparent; }
+.tour-btn-skip:hover { color: var(--tour-text-strong); }
+.tour-btn-back   { background: var(--tour-btn-back-bg); color: var(--tour-text); border-color: var(--tour-btn-back-border); }
+.tour-btn-back:hover    { background: var(--tour-btn-back-hover); }
+.tour-btn-back:disabled { opacity: 0.4; cursor: not-allowed; }
+.tour-btn-next   { background: var(--tour-accent); color: #ffffff; }
+.tour-btn-next:hover { filter: brightness(1.08); }

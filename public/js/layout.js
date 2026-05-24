@@ -19,7 +19,9 @@ const NAV_ITEMS = [
 
 const FOOTER_ITEMS = [
   { href: '/account_settings', label: 'Settings', icon: 'settings' },
-  { href: '#',                 label: 'Help',     icon: 'help_outline' }
+  // Help launches the guided product tour. `data-action="help"` is picked up
+  // by the click handler set in renderShell — see startSiteTour() wiring.
+  { href: '#', label: 'Help', icon: 'help_outline', id: 'ged-help-btn', action: 'help' }
 ];
 
 function isActive(href) {
@@ -129,7 +131,7 @@ export function renderShell({ active } = {}) {
       }).join('')}
     </nav>
     <div class="px-3 py-4 border-t border-outline-variant space-y-1">
-      ${FOOTER_ITEMS.map(n => `<a href="${n.href}" ${n.external ? 'target="_blank" rel="noopener"' : ''} class="flex items-center gap-3 h-10 px-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low" title="${n.label}">
+      ${FOOTER_ITEMS.map(n => `<a href="${n.href}"${n.id ? ` id="${n.id}"` : ''}${n.action ? ` data-action="${n.action}"` : ''} ${n.external ? 'target="_blank" rel="noopener"' : ''} class="flex items-center gap-3 h-10 px-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low" title="${n.label}">
         <span class="material-symbols-outlined shrink-0" style="font-size:20px">${n.icon}</span>
         <span class="text-label-md font-label-md sidebar-label whitespace-nowrap">${n.label}</span>
       </a>`).join('')}
@@ -208,4 +210,19 @@ export function renderShell({ active } = {}) {
   syncThemeBtn();
   themeBtn.addEventListener('click', () => { window.GedTheme?.toggle(); });
   window.addEventListener('ged-theme-change', syncThemeBtn);
+
+  // Help button → launch the guided product tour. We lazy-import the tour
+  // module on first click so users who never open it don't pay the bytes.
+  const helpBtn = document.querySelector('[data-action="help"]');
+  if (helpBtn) {
+    helpBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      try {
+        const mod = await import('./site-tour.js');
+        mod.startSiteTour();
+      } catch (err) {
+        console.error('[tour] failed to load:', err);
+      }
+    });
+  }
 }
