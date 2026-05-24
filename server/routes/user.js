@@ -45,24 +45,19 @@ router.get('/stats', requireAuth, (req, res) => {
     'SELECT subject, topic, difficulty, score, total, time_spent, created_at FROM practice_sessions WHERE user_id = ? ORDER BY created_at DESC'
   ).all(userId);
 
-  // Difficulty weights. Mastery of hard questions counts more toward a
-  // topic's overall percent than easy questions, so getting 10/10 easy
-  // doesn't read as "100% on this topic" the way it used to.
-  const WEIGHT = { easy: 1, medium: 2, hard: 3 };
-  const w = d => WEIGHT[d] || 2;
+  // Coverage-based scoring. Every topic is treated as having 30 questions
+  // available (10 per difficulty). A topic's percent = score / 30, so
+  // mastery requires completing all three difficulty levels:
+  //   - 3/10 Easy + 0/0 Medium + 0/0 Hard  →  3/30 = 10%
+  //   - 10/10 Easy only                     →  10/30 = 33%
+  //   - 10/10 across all difficulties       →  30/30 = 100%
+  // This naturally penalizes uneven coverage without arbitrarily weighting.
+  const QUESTIONS_PER_DIFFICULTY = 10;
+  const DIFFICULTIES = ['easy', 'medium', 'hard'];
+  const TOPIC_MAX = QUESTIONS_PER_DIFFICULTY * DIFFICULTIES.length; // 30
 
   const totalCorrect = sessions.reduce((s, r) => s + r.score, 0);
-  const totalQuestions = sessions.reduce((s, r) => s + r.total, 0);
   const totalTimeSec = sessions.reduce((s, r) => s + r.time_spent, 0);
-  // Overall is also weighted now.
-  let overallWeightedScore = 0, overallWeightedTotal = 0;
-  for (const s of sessions) {
-    overallWeightedScore += s.score * w(s.difficulty);
-    overallWeightedTotal += s.total * w(s.difficulty);
-  }
-  const overallScore = overallWeightedTotal
-    ? Math.round((overallWeightedScore / overallWeightedTotal) * 100)
-    : 0;
 
   // Per-subject → per-topic breakdown. Each topic tracks BOTH raw
   // score/total and a weighted score/total + per-difficulty buckets.
@@ -70,7 +65,7 @@ router.get('/stats', requireAuth, (req, res) => {
     return {
       name,
       score: 0, total: 0,
-      weightedScore: 0, weightedTotal: 0,
+      maxPossible: TOPIC_MAX,   // 30 — fixed ceiling so coverage matters
       percent: 0, sessions: 0,
       byDifficulty: {
         easy:   { score: 0, total: 0, percent: 0 },
@@ -91,7 +86,7 @@ router.get('/stats', requireAuth, (req, res) => {
       pdfPath: SUBJECTS[sub].pdfPath,
       icon: SUBJECTS[sub].icon,
       score: 0, total: 0,
-      weightedScore: 0, weightedTotal: 0,
+      maxPossible: TOPIC_MAX * Object.keys(topics).length,
       percent: 0, sessions: 0, timeSec: 0,
       topics
     };
@@ -99,32 +94,29 @@ router.get('/stats', requireAuth, (req, res) => {
   for (const s of sessions) {
     const subj = s.subject || 'math';
     if (!bySubject[subj]) {
-      bySubject[subj] = { slug: subj, name: subj, topics: {}, score: 0, total: 0, weightedScore: 0, weightedTotal: 0, percent: 0, sessions: 0, timeSec: 0 };
+      bySubject[subj] = { slug: subj, name: subj, topics: {}, score: 0, total: 0, maxPossible: 0, percent: 0, sessions: 0, timeSec: 0 };
     }
-    const wt = w(s.difficulty);
-    bySubject[subj].score          += s.score;
-    bySubject[subj].total          += s.total;
-    bySubject[subj].weightedScore  += s.score * wt;
-    bySubject[subj].weightedTotal  += s.total * wt;
-    bySubject[subj].sessions       += 1;
-    bySubject[subj].timeSec        += s.time_spent;
+    bySubject[subj].score    += s.score;
+    bySubject[subj].total    += s.total;
+    bySubject[subj].sessions += 1;
+    bySubject[subj].timeSec  += s.time_spent;
 
     const t = bySubject[subj].topics[s.topic] || freshTopicBucket(s.topic);
-    t.score         += s.score;
-    t.total         += s.total;
-    t.weightedScore += s.score * wt;
-    t.weightedTotal += s.total * wt;
-    t.sessions      += 1;
+    t.score    += s.score;
+    t.total    += s.total;
+    t.sessions += 1;
     const d = s.difficulty in t.byDifficulty ? s.difficulty : 'medium';
     t.byDifficulty[d].score += s.score;
     t.byDifficulty[d].total += s.total;
     bySubject[subj].topics[s.topic] = t;
   }
-  // Compute weighted percents.
+  // Compute coverage percents — score / 30 per topic, summed for subject.
   for (const sub of Object.values(bySubject)) {
-    sub.percent = sub.weightedTotal ? Math.round((sub.weightedScore / sub.weightedTotal) * 100) : 0;
+    sub.percent = sub.maxPossible
+      ? Math.round((sub.score / sub.maxPossible) * 100)
+      : 0;
     for (const t of Object.values(sub.topics)) {
-      t.percent = t.weightedTotal ? Math.round((t.weightedScore / t.weightedTotal) * 100) : 0;
+      t.percent = Math.round((t.score / TOPIC_MAX) * 100);
       for (const d of Object.values(t.byDifficulty)) {
         d.percent = d.total ? Math.round((d.score / d.total) * 100) : 0;
       }
@@ -173,6 +165,10 @@ router.get('/stats', requireAuth, (req, res) => {
     }
   }
   weakTopics.sort((a, b) => a.percent - b.percent);
+
+  // Overall = total correct across all subjects / total possible (subjects × topics × 30)
+  const overallMax = Object.values(bySubject).reduce((s, sub) => s + (sub.maxPossible || 0), 0);
+  const overallScore = overallMax ? Math.round((totalCorrect / overallMax) * 100) : 0;
 
   res.json({
     overallScore,
