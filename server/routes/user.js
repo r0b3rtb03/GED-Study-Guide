@@ -144,9 +144,11 @@ router.get('/stats', requireAuth, (req, res) => {
   // Old logic flagged whole topics by coverage %, which surfaced "10/10
   // Easy" topics as weak (because 10/30 = 33%). New logic looks at each
   // difficulty INDEPENDENTLY: if you actually attempted that level AND
-  // scored under 70%, surface it. So 10/10 easy never gets flagged, but
-  // 3/10 easy does. Sort worst-first, cap at 4.
-  const WEAK_THRESHOLD = 70;
+  // scored under 80%, surface it. So 10/10 easy never gets flagged, but
+  // 7/10 easy (orange band, "Needs a refresher") does. Sort worst-first,
+  // cap at 4. The 80% threshold matches the dashboard's badge logic —
+  // anything green (>=80%) is hidden, orange/red is surfaced.
+  const WEAK_THRESHOLD = 80;
   const weakAttempts = [];
   for (const sub of Object.values(bySubject)) {
     for (const [slug, t] of Object.entries(sub.topics)) {
