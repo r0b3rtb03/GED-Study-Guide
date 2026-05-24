@@ -71,7 +71,12 @@
 
           <section>
             <h2 class="text-headline-md font-bold text-primary mb-4">Detailed Progress</h2>
-            <div id="topicProgress" class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm divide-y divide-outline-variant/40"></div>
+            <!-- 2-column grid on desktop: pairs of subjects sit side by side
+                 so the user sees twice as much in the same vertical space.
+                 Stacks on mobile where there isn't horizontal room. Each
+                 subject card carries its own surface, so we don't need
+                 dividers in the container itself. -->
+            <div id="topicProgress" class="grid md:grid-cols-2 gap-gutter"></div>
           </section>
         </div>
       </div>
@@ -245,7 +250,7 @@
           </div>
         </div>`;
       }).join('');
-      return `<div class="p-6">
+      return `<div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm p-6">
         <header class="flex items-center justify-between mb-4">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-lg bg-primary-container/15 text-primary flex items-center justify-center">
