@@ -16,7 +16,7 @@ export function setSession({ accessToken, refreshToken, user }) {
   if (refreshToken) localStorage.setItem(REFRESH_KEY, refreshToken);
   if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
 }
-export function logout() {
+export function logout({ expired = false } = {}) {
   const refreshToken = getRefreshToken();
   if (refreshToken) {
     fetch('/api/auth/logout', {
@@ -28,7 +28,7 @@ export function logout() {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(REFRESH_KEY);
   localStorage.removeItem(USER_KEY);
-  window.location.href = '/login';
+  window.location.href = expired ? '/login?expired=1' : '/login';
 }
 
 export function requireLogin() {
@@ -54,23 +54,33 @@ async function rawFetch(url, options = {}) {
   return fetch(url, { ...options, headers });
 }
 
+// Sentinel — returning a never-settling promise on session expiry stops
+// callers from running catch blocks that render half-broken UI before
+// window.location.href = '/login' kicks them off the page.
+const NEVER = new Promise(() => {});
+
 export async function apiFetch(url, options = {}) {
   let res = await rawFetch(url, options);
   if (res.status !== 401) return res;
 
   const refreshToken = getRefreshToken();
-  if (!refreshToken) { logout(); return res; }
+  if (!refreshToken) { logout({ expired: true }); return NEVER; }
 
   const refreshRes = await fetch('/api/auth/refresh', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ refreshToken })
   });
-  if (!refreshRes.ok) { logout(); return res; }
+  if (!refreshRes.ok) { logout({ expired: true }); return NEVER; }
 
   const { accessToken } = await refreshRes.json();
   localStorage.setItem(TOKEN_KEY, accessToken);
-  return rawFetch(url, options);
+  // Retry the original request once with the fresh token.
+  const retry = await rawFetch(url, options);
+  // If the retry STILL comes back unauthorized, something's actually
+  // wrong with our session — bounce cleanly.
+  if (retry.status === 401) { logout({ expired: true }); return NEVER; }
+  return retry;
 }
 
 export async function apiJson(url, options = {}) {

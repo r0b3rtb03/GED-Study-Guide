@@ -34,6 +34,11 @@
       <p class="text-body-md font-body-md text-on-surface-variant">Sign in to continue your learning journey.</p>
     </div>
 
+    <div id="expiredBanner" class="hidden mb-4 p-3 rounded-lg bg-error-container/60 border border-error/30 text-on-error-container flex items-start gap-2 text-label-md">
+      <span class="material-symbols-outlined shrink-0" style="font-size:20px">schedule</span>
+      <span>Your session expired. Please sign in again to continue.</span>
+    </div>
+
     <form id="loginForm" class="space-y-5" novalidate>
       <div class="space-y-2">
         <label class="block text-label-md font-label-md text-on-surface" for="emailInput">Email Address</label>
@@ -101,6 +106,11 @@
 <script type="module">
   import { setSession, getAccessToken } from '/js/auth.js';
   if (getAccessToken()) window.location.href = '/dashboard';
+
+  // Show "session expired" banner if we got here from an auth bounce.
+  if (new URLSearchParams(location.search).get('expired') === '1') {
+    document.getElementById('expiredBanner')?.classList.remove('hidden');
+  }
 
   const $ = id => document.getElementById(id);
   const err = (msg) => { const e = $('errorMsg'); e.textContent = msg; e.classList.remove('hidden'); };
