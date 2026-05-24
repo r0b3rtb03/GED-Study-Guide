@@ -218,24 +218,30 @@ export function renderShell({ active } = {}) {
   themeBtn.addEventListener('click', () => { window.GedTheme?.toggle(); });
   window.addEventListener('ged-theme-change', syncThemeBtn);
 
-  // Help button → launch the guided product tour. We lazy-import the tour
-  // module on first click so users who never open it don't pay the bytes.
-  // Absolute import path so it doesn't depend on the base URL of whatever
-  // page is calling renderShell.
-  const helpBtn = document.querySelector('[data-action="help"]');
-  if (helpBtn) {
-    helpBtn.addEventListener('click', async (e) => {
+  // Help button → launch the guided product tour. Uses document-level event
+  // delegation instead of attaching directly to the button, so it works even
+  // if the button gets re-rendered or moved by something else later. A
+  // module-level _helpWired guard prevents double-binding across multiple
+  // renderShell calls (e.g. if a page re-mounts the layout).
+  console.log('[tour] renderShell ran, Help button present:', !!document.querySelector('[data-action="help"]'));
+  if (!window.__gedHelpWired) {
+    window.__gedHelpWired = true;
+    document.addEventListener('click', async (e) => {
+      const btn = e.target.closest('[data-action="help"]');
+      if (!btn) return;
       e.preventDefault();
       e.stopPropagation();
-      console.log('[tour] starting…');
+      console.log('[tour] Help clicked, loading module…');
       try {
         const mod = await import('/js/site-tour.js');
+        console.log('[tour] module loaded, calling startSiteTour');
         await mod.startSiteTour();
+        console.log('[tour] tour started');
       } catch (err) {
-        console.error('[tour] failed to load:', err);
+        console.error('[tour] failed:', err);
+        alert('Could not start the tour: ' + (err?.message || err));
       }
     });
-  } else {
-    console.warn('[tour] Help button not found in sidebar — selector miss?');
+    console.log('[tour] click delegate attached');
   }
 }
