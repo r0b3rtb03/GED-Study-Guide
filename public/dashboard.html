@@ -35,11 +35,31 @@
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div class="lg:col-span-1 flex flex-col gap-8">
           <section id="recommendedReviewSection" class="hidden">
-            <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center justify-between mb-3">
               <h2 class="text-headline-md font-bold text-primary">Priority Review</h2>
-              <span class="bg-surface-container-high px-2 py-1 rounded text-[12px] font-bold text-on-surface-variant uppercase tracking-wider">Needs attention</span>
+              <span id="prCount" class="bg-surface-container-high px-2 py-1 rounded text-[12px] font-bold text-on-surface-variant uppercase tracking-wider">0</span>
+            </div>
+            <!-- Filter controls. Sort dropdown picks ordering; pill row filters
+                 by priority band, difficulty, or subject. Pills are mutually
+                 exclusive within their row (single-select) but the rows
+                 themselves combine — pick one priority + one difficulty +
+                 one subject. -->
+            <div id="prFilters" class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-3 mb-4 space-y-3">
+              <div class="flex items-center justify-between gap-2">
+                <p class="text-[11px] uppercase tracking-wider font-bold text-on-surface-variant">Sort by</p>
+                <select id="prSort" class="h-8 px-2 rounded-lg ring-1 ring-outline-variant text-label-md bg-surface-container-lowest">
+                  <option value="worst">Lowest score first</option>
+                  <option value="best">Highest score first</option>
+                  <option value="difficulty">Difficulty (Easy → Hard)</option>
+                  <option value="subject">Subject (A → Z)</option>
+                </select>
+              </div>
+              <div data-filter-row="priority"  class="flex flex-wrap gap-1.5"></div>
+              <div data-filter-row="difficulty" class="flex flex-wrap gap-1.5"></div>
+              <div data-filter-row="subject"    class="flex flex-wrap gap-1.5"></div>
             </div>
             <div id="recommendedReview" class="space-y-4"></div>
+            <p id="prEmpty" class="hidden text-label-md text-on-surface-variant mt-2 text-center">No topics match these filters.</p>
           </section>
         </div>
 
@@ -224,13 +244,106 @@
       </div>`;
     }).join('');
   }
+  // ---- Priority Review filtering ----
+  // All raw weak attempts kept here; the filter pills + sort dropdown derive
+  // the visible subset on every interaction. Single-select per row, 'all'
+  // means "no filter on this dimension".
+  const prState = { sort: 'worst', priority: 'all', difficulty: 'all', subject: 'all', all: [] };
+
+  function priorityBand(pct) {
+    if (pct < 60) return 'attention';
+    if (pct < 80) return 'refresher';
+    return 'mastered';
+  }
+
+  function pillButton(active, label, value, row) {
+    return `<button data-row="${row}" data-value="${value}" class="h-7 px-2.5 rounded-full text-[11px] font-bold uppercase tracking-wider transition ${active ? 'bg-primary text-on-primary' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'}">${label}</button>`;
+  }
+
+  function renderFilterPills() {
+    // Derive subject options from the actual data so we never show a filter
+    // that would match zero items.
+    const subjects = [...new Set(prState.all.map(w => w.subject))];
+    const subjectLabel = (slug) => slug === 'social-studies' ? 'Social Studies' : 'Math';
+
+    document.querySelector('[data-filter-row="priority"]').innerHTML = [
+      pillButton(prState.priority === 'all',       'All',       'all',       'priority'),
+      pillButton(prState.priority === 'attention', 'Needs attention',  'attention', 'priority'),
+      pillButton(prState.priority === 'refresher', 'Needs a refresher','refresher', 'priority')
+    ].join('');
+
+    document.querySelector('[data-filter-row="difficulty"]').innerHTML = [
+      pillButton(prState.difficulty === 'all',    'Any difficulty', 'all',    'difficulty'),
+      pillButton(prState.difficulty === 'easy',   'Easy',           'easy',   'difficulty'),
+      pillButton(prState.difficulty === 'medium', 'Medium',         'medium', 'difficulty'),
+      pillButton(prState.difficulty === 'hard',   'Hard',           'hard',   'difficulty')
+    ].join('');
+
+    const subjectRow = document.querySelector('[data-filter-row="subject"]');
+    if (subjects.length <= 1) {
+      // Only one subject is represented — hide the row entirely; a single-
+      // option filter is just noise.
+      subjectRow.innerHTML = '';
+    } else {
+      subjectRow.innerHTML = [
+        pillButton(prState.subject === 'all', 'All subjects', 'all', 'subject'),
+        ...subjects.map(s => pillButton(prState.subject === s, subjectLabel(s), s, 'subject'))
+      ].join('');
+    }
+  }
+
+  function sortAttempts(list) {
+    const diffOrder = { easy: 0, medium: 1, hard: 2 };
+    const arr = [...list];
+    switch (prState.sort) {
+      case 'best':       arr.sort((a, b) => b.percent - a.percent); break;
+      case 'difficulty': arr.sort((a, b) => (diffOrder[a.difficulty] ?? 99) - (diffOrder[b.difficulty] ?? 99) || a.percent - b.percent); break;
+      case 'subject':    arr.sort((a, b) => (a.subjectName || a.subject).localeCompare(b.subjectName || b.subject) || a.percent - b.percent); break;
+      case 'worst':
+      default:           arr.sort((a, b) => a.percent - b.percent); break;
+    }
+    return arr;
+  }
+
+  function applyFilters() {
+    let list = prState.all;
+    if (prState.priority   !== 'all') list = list.filter(w => priorityBand(w.percent) === prState.priority);
+    if (prState.difficulty !== 'all') list = list.filter(w => (w.difficulty || 'medium') === prState.difficulty);
+    if (prState.subject    !== 'all') list = list.filter(w => w.subject === prState.subject);
+    return sortAttempts(list);
+  }
+
+  function renderPriorityCards() {
+    const container = document.getElementById('recommendedReview');
+    const empty     = document.getElementById('prEmpty');
+    const visible   = applyFilters();
+    document.getElementById('prCount').textContent = `${visible.length} of ${prState.all.length}`;
+    container.innerHTML = visible.map(priorityCard).join('');
+    empty.classList.toggle('hidden', visible.length > 0);
+  }
+
   function renderRecommendedReview(weakTopics) {
     const section = document.getElementById('recommendedReviewSection');
-    const container = document.getElementById('recommendedReview');
     if (!weakTopics.length) { section.classList.add('hidden'); return; }
     section.classList.remove('hidden');
-    container.innerHTML = weakTopics.map(priorityCard).join('');
+    prState.all = weakTopics;
+    renderFilterPills();
+    renderPriorityCards();
   }
+
+  // Wire filter interactions (event delegation — pills are re-rendered on
+  // every selection so direct listeners would go stale).
+  document.getElementById('prFilters').addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-row]');
+    if (!btn) return;
+    prState[btn.dataset.row] = btn.dataset.value;
+    renderFilterPills();
+    renderPriorityCards();
+  });
+  document.getElementById('prSort').addEventListener('change', (e) => {
+    prState.sort = e.target.value;
+    renderPriorityCards();
+  });
   function renderQuickStart(bySubject) {
     const subjects = Object.values(bySubject || {});
     document.getElementById('quickStart').innerHTML = subjects.map(quickStartTile).join('');

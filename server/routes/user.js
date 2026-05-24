@@ -193,7 +193,9 @@ router.get('/stats', requireAuth, (req, res) => {
     streakDays: streak,
     bySubject,
     byTopic,                       // legacy
-    weakAttempts: weakAttempts.slice(0, 4),
+    // Send the full list — the dashboard now has filter/sort controls,
+    // so a hard cap would silently hide attempts that match a user's filter.
+    weakAttempts,
     weakTopics:   weakTopics.slice(0, 4)   // legacy alias
   });
 });
