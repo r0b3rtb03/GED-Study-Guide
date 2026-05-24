@@ -448,31 +448,52 @@ export async function checkAnswer({ question, correctAnswer, userAnswer, subject
   return mockCheck({ correctAnswer, userAnswer });
 }
 
+// Plain-text fallback used when an AI call truncates or returns garbage —
+// surfaces the raw study guide so the notes page still shows something useful.
+function rawFallbackNotes(rawText, title = 'Study Notes') {
+  return {
+    title,
+    sections: [{
+      heading: 'Study Guide Content',
+      content: rawText.slice(0, 8000),
+      keyFormulas: [],
+      tips: ['This is the raw study guide text. AI-structured notes are temporarily unavailable.']
+    }]
+  };
+}
+
 export async function structureNotes(rawText) {
   if (!isAiEnabled()) {
-    return {
-      title: 'Study Notes',
-      sections: [{
-        heading: 'Overview',
-        content: rawText.slice(0, 1200),
-        keyFormulas: [],
-        tips: ['Add ANTHROPIC_API_KEY or GEMINI_API_KEY to .env to enable AI-structured notes.']
-      }]
-    };
+    return rawFallbackNotes(rawText);
   }
 
-  const prompt = `Convert this raw GED Math study guide content into clean, student-friendly structured notes.
-Return ONLY valid JSON:
+  const prompt = `Convert this raw GED study guide content into clean, student-friendly structured notes.
+
+CRITICAL FORMATTING RULES:
+- Return ONLY valid JSON — no markdown fences, no commentary before or after.
+- Keep each "content" string under 500 characters so the full response fits in the token budget.
+- Limit the response to AT MOST 8 sections. Pick the most important concepts and consolidate.
+- Use short, punchy bullet points in "tips" and "keyFormulas" arrays.
+
+Shape:
 {
   "title": "Topic name",
   "sections": [
-    { "heading": "Section title", "content": "Explanation...", "keyFormulas": ["..."], "tips": ["..."] }
+    { "heading": "Section title", "content": "Explanation under 500 chars...", "keyFormulas": ["..."], "tips": ["..."] }
   ]
 }
 
 Raw content:
 ${rawText.slice(0, 8000)}`;
 
-  if (getClaude()) return await callClaude({ prompt, maxTokens: 2048 });
-  return await callGemini({ prompt, maxTokens: 2048 });
+  // Structured notes are long. Bumped from 2048 → 6144 so Claude/Gemini have
+  // room to finish the JSON without truncating mid-string. Truncation was
+  // throwing "Claude returned malformed JSON" on every /api/notes/:topic call.
+  try {
+    if (getClaude()) return await callClaude({ prompt, maxTokens: 6144 });
+    return await callGemini({ prompt, maxTokens: 6144 });
+  } catch (err) {
+    console.error('[ai] structureNotes failed, returning raw fallback:', err.message);
+    return rawFallbackNotes(rawText);
+  }
 }
