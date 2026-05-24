@@ -244,7 +244,7 @@
   }
 
   function renderMastery(stats) {
-    const items = (stats.bySubject || []).map(sub => {
+    const items = Object.values(stats.bySubject || {}).map(sub => {
       const pct = Math.round(sub.percent || 0);
       const barColor = pct >= 80 ? '#9bdc8f' : pct >= 60 ? '#f5b76b' : '#ff9d97';
       return `<div>

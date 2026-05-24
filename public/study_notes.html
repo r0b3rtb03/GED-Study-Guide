@@ -83,10 +83,21 @@
   const bodyEl = document.getElementById('notesBody');
   const ctaEl  = document.getElementById('practiceCta');
 
+  const SUBJECT_LABEL = { 'math': 'Math', 'social-studies': 'Social Studies' };
+
   function renderTabs() {
-    tabsEl.innerHTML = TOPICS.map(t => {
-      const a = t.slug === activeSlug;
-      return `<button data-slug="${t.slug}" class="text-left whitespace-nowrap px-3 h-10 rounded-lg text-label-md font-label-md ${a ? 'bg-primary-container/10 text-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container-low'}">${t.name}</button>`;
+    const bySubject = TOPICS.reduce((acc, t) => {
+      (acc[t.subject] ||= []).push(t); return acc;
+    }, {});
+    tabsEl.innerHTML = Object.entries(bySubject).map(([subject, topics]) => {
+      const buttons = topics.map(t => {
+        const a = t.slug === activeSlug;
+        return `<button data-slug="${t.slug}" class="text-left whitespace-nowrap px-3 h-10 rounded-lg text-label-md font-label-md ${a ? 'bg-primary-container/10 text-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container-low'}">${t.name}</button>`;
+      }).join('');
+      return `<div class="flex flex-col gap-1 md:contents">
+        <p class="px-3 pt-2 pb-1 text-[11px] uppercase tracking-wide font-bold text-on-surface-variant whitespace-nowrap">${SUBJECT_LABEL[subject] || subject}</p>
+        ${buttons}
+      </div>`;
     }).join('');
     tabsEl.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { activeSlug = b.dataset.slug; renderTabs(); loadNotes(); }));
   }
