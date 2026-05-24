@@ -41,49 +41,82 @@
   <main class="md:pl-64 pt-16 md:pt-0 pb-20 md:pb-0">
     <!-- Pre-session topic chooser -->
     <section id="chooser"
-             class="hidden flex flex-col items-center justify-center px-4 md:px-8 py-8"
-             style="min-height: calc(100vh - 64px);">
-      <div class="w-full max-w-[720px] mx-auto">
-        <div class="text-center mb-6">
-          <h1 class="text-headline-lg font-headline-lg">Start a Practice Session</h1>
-          <p class="text-body-md text-on-surface-variant mt-2">Choose a subject, then a difficulty, then a topic — we'll generate 10 GED-style questions.</p>
-        </div>
+             class="hidden px-4 md:px-8 py-8">
+      <!-- block layout; height grows naturally to fit content -->
+      <div class="w-full max-w-[1100px] mx-auto">
+        <!-- Page header -->
+        <header class="flex items-start gap-3 mb-8">
+          <a href="javascript:history.back()" class="w-10 h-10 shrink-0 rounded-lg border border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant" aria-label="Back">
+            <span class="material-symbols-outlined" style="font-size:20px">arrow_back</span>
+          </a>
+          <div>
+            <h1 class="text-headline-lg font-bold text-primary">Start a Practice Session</h1>
+            <p class="text-body-md text-on-surface-variant mt-1">Configure your focus area to begin.</p>
+          </div>
+        </header>
 
-        <!-- Step 1: Subject -->
-        <p class="text-center text-label-md font-bold text-on-surface-variant mb-3">
-          <span class="inline-flex items-center gap-1.5">
-            <span class="w-5 h-5 rounded-full bg-primary text-on-primary text-[12px] flex items-center justify-center font-bold">1</span>
-            Pick a subject
-          </span>
-        </p>
-        <div id="subjectGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8"></div>
+        <!-- 2-column layout: steps on the left, sticky Learning Objectives sidebar on the right -->
+        <div class="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8 items-start">
+          <!-- LEFT: 3 numbered steps -->
+          <div class="space-y-10">
+            <!-- Step 1: Subject -->
+            <div>
+              <p class="flex items-center gap-3 text-headline-sm font-bold text-on-surface mb-4">
+                <span class="w-8 h-8 rounded-full bg-primary text-on-primary text-[14px] flex items-center justify-center font-bold shrink-0">1</span>
+                Pick a subject
+              </p>
+              <div id="subjectGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+            </div>
 
-        <!-- Step 2: Difficulty -->
-        <p id="difficultyStepLabel" class="text-center text-label-md font-bold text-on-surface-variant mb-3 hidden">
-          <span class="inline-flex items-center gap-1.5">
-            <span class="w-5 h-5 rounded-full bg-primary text-on-primary text-[12px] flex items-center justify-center font-bold">2</span>
-            Choose difficulty
-          </span>
-        </p>
-        <div id="difficultyChooserWrap" class="hidden">
-          <div class="flex justify-center">
-            <div id="difficultyChooser" class="inline-flex rounded-full bg-surface-container p-1 text-label-md">
-              <button data-diff="easy"   class="h-9 px-5 rounded-full">Easy</button>
-              <button data-diff="medium" class="h-9 px-5 rounded-full">Medium</button>
-              <button data-diff="hard"   class="h-9 px-5 rounded-full">Hard</button>
+            <!-- Step 2: Difficulty -->
+            <div>
+              <p class="flex items-center gap-3 text-headline-sm font-bold text-on-surface mb-4">
+                <span class="w-8 h-8 rounded-full bg-primary text-on-primary text-[14px] flex items-center justify-center font-bold shrink-0">2</span>
+                Choose difficulty
+              </p>
+              <div id="difficultyChooserWrap">
+                <p id="difficultyHint" class="text-label-md text-on-surface-variant mb-3">Pick one to unlock topics ↓</p>
+                <div id="difficultyChooser" class="grid grid-cols-3 rounded-lg border border-outline-variant overflow-hidden bg-surface-container-lowest">
+                  <button data-diff="easy"   class="h-11 text-label-md font-bold border-r border-outline-variant">Easy</button>
+                  <button data-diff="medium" class="h-11 text-label-md font-bold border-r border-outline-variant">Medium</button>
+                  <button data-diff="hard"   class="h-11 text-label-md font-bold">Hard</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 3: Topic -->
+            <div>
+              <p class="flex items-center gap-3 text-headline-sm font-bold text-on-surface mb-4">
+                <span class="w-8 h-8 rounded-full bg-primary text-on-primary text-[14px] flex items-center justify-center font-bold shrink-0">3</span>
+                Select a topic
+              </p>
+              <div id="topicGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 opacity-50 pointer-events-none transition"></div>
             </div>
           </div>
-          <p id="difficultyHint" class="text-center text-label-md text-on-surface-variant mt-3">Pick one to unlock topics ↓</p>
-        </div>
 
-        <!-- Step 3: Topic -->
-        <p id="topicStepLabel" class="text-center text-label-md font-bold text-on-surface-variant mt-6 mb-3 hidden">
-          <span class="inline-flex items-center gap-1.5">
-            <span class="w-5 h-5 rounded-full bg-primary text-on-primary text-[12px] flex items-center justify-center font-bold">3</span>
-            Pick a topic
-          </span>
-        </p>
-        <div id="topicGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-4 opacity-50 pointer-events-none transition"></div>
+          <!-- RIGHT: Sticky "Ready to begin" sidebar -->
+          <aside class="lg:sticky lg:top-8">
+            <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm">
+              <div id="readyStatusPill" class="inline-flex items-center gap-2 px-3 h-7 rounded-full bg-surface-container text-on-surface-variant text-[12px] font-bold uppercase tracking-wider mb-4">
+                <span class="w-2 h-2 rounded-full bg-on-surface-variant"></span>
+                <span id="readyStatusText">Get Started</span>
+              </div>
+              <h2 id="readyTitle" class="text-headline-md font-bold text-on-surface mb-1">Select a subject</h2>
+              <p id="readySubtitle" class="text-body-md text-on-surface-variant mb-5">Begin by choosing what you'd like to practice today.</p>
+
+              <div id="readyObjectives" class="hidden">
+                <p class="text-label-md font-bold text-on-surface-variant uppercase tracking-wider mb-3">Learning Objectives</p>
+                <ul id="readyBullets" class="space-y-2.5 text-body-md text-on-surface mb-6"></ul>
+              </div>
+
+              <button id="readyStartBtn"
+                      class="hidden w-full h-12 bg-primary text-on-primary rounded-lg font-bold inline-flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed">
+                Start practice
+                <span class="material-symbols-outlined" style="font-size:20px">arrow_forward</span>
+              </button>
+            </div>
+          </aside>
+        </div>
       </div>
     </section>
 
@@ -193,6 +226,11 @@
     // and main content can center against the full viewport.
     document.querySelector('main')?.classList.remove('md:pl-64');
     document.getElementById('sessionBar')?.classList.remove('md:left-64');
+    // The guest top bar is h-14 and fixed on ALL viewport sizes (the authed
+    // layout's mobile bar is h-16, hidden on desktop). Override md:pt-0 so
+    // desktop guests get the same clearance mobile users already have.
+    const m = document.querySelector('main');
+    if (m) { m.classList.remove('md:pt-0', 'pt-16'); m.classList.add('pt-14', 'md:pt-14'); }
     // Minimal guest top bar (shown on chooser + results, hidden during session)
     guestBar = document.createElement('header');
     guestBar.id = 'guestBar';
@@ -369,23 +407,31 @@
   );
 
   function subjectCard(s) {
-    return `<button data-subject="${s.slug}" class="text-left bg-surface-container-lowest rounded-xl border border-outline-variant p-6 hover:border-primary hover:shadow-sm transition w-full">
-      <div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-        <span class="material-symbols-outlined text-primary" style="font-size:26px">${s.icon}</span>
+    const a = s.slug === session.subject;
+    return `<button data-subject="${s.slug}" class="relative text-left bg-surface-container-lowest rounded-xl p-5 transition w-full ${a ? 'border-2 border-primary shadow-md' : 'border border-outline-variant hover:border-on-surface-variant'}">
+      ${a ? `<span class="absolute top-3 right-3 w-6 h-6 rounded-full bg-primary text-on-primary flex items-center justify-center" aria-hidden="true">
+        <span class="material-symbols-outlined" style="font-size:16px">check</span>
+      </span>` : ''}
+      <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
+        <span class="material-symbols-outlined text-primary" style="font-size:22px">${s.icon}</span>
       </div>
-      <p class="text-headline-sm font-headline-sm">${s.name}</p>
+      <p class="text-headline-sm font-bold text-on-surface">${s.name}</p>
       <p class="text-label-md text-on-surface-variant mt-1">${s.description || ''}</p>
     </button>`;
   }
 
   function topicCard(t) {
     const icon = TOPIC_ICONS[t.slug] || 'category';
-    return `<button data-topic="${t.slug}" class="text-left bg-surface-container-lowest rounded-xl border border-outline-variant p-5 hover:border-primary hover:shadow-sm transition w-full">
-      <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
-        <span class="material-symbols-outlined text-primary" style="font-size:22px">${icon}</span>
-      </div>
-      <p class="text-headline-sm font-headline-sm">${t.name}</p>
-      <p class="text-label-md text-on-surface-variant mt-1">10 questions · ~10 min</p>
+    const a = t.slug === session.topic;
+    return `<button data-topic="${t.slug}" class="relative text-left rounded-xl p-4 transition w-full ${a ? 'bg-primary-container/15 border-2 border-primary' : 'bg-surface-container-lowest border border-outline-variant hover:border-on-surface-variant'}">
+      <span class="absolute top-3 right-3 w-5 h-5 rounded-full ${a ? 'bg-primary' : 'border-2 border-outline-variant'} flex items-center justify-center">
+        ${a ? '<span class="w-2 h-2 rounded-full bg-on-primary"></span>' : ''}
+      </span>
+      <p class="text-label-md font-bold text-on-surface pr-7">${t.name}</p>
+      <p class="text-[12px] text-on-surface-variant mt-1 flex items-center gap-1">
+        <span class="material-symbols-outlined" style="font-size:14px">${icon}</span>
+        10 questions · ~10 min
+      </p>
     </button>`;
   }
 
@@ -398,21 +444,94 @@
     $('topicGrid').innerHTML = TOPICS.map(topicCard).join('');
   }
 
-  function setStepEnabled(step) {
-    // step: 'subject' | 'difficulty' | 'topic'
-    $('difficultyStepLabel').classList.toggle('hidden', step === 'subject');
-    $('difficultyChooserWrap').classList.toggle('hidden', step === 'subject');
-    const topicReady = step === 'topic';
-    $('topicStepLabel').classList.toggle('hidden', !topicReady);
+  function setStepEnabled() {
+    // Topic grid is gated until both subject AND difficulty are picked.
+    const topicReady = !!(session.subject && session.difficulty);
     $('topicGrid').classList.toggle('opacity-50', !topicReady);
     $('topicGrid').classList.toggle('pointer-events-none', !topicReady);
-    // Highlight chosen subject
-    document.querySelectorAll('#subjectGrid [data-subject]').forEach(b => {
-      const a = b.dataset.subject === session.subject;
-      b.classList.toggle('border-primary', a);
-      b.classList.toggle('ring-2', a);
-      b.classList.toggle('ring-primary/20', a);
-    });
+    // Difficulty hint is hidden once a difficulty is selected.
+    $('difficultyHint')?.classList.toggle('hidden', !!session.difficulty);
+    // Re-render subject + topic grids so selected state shows.
+    renderSubjectGrid();
+    if (session.subject) renderTopicGrid();
+    // Update the sticky sidebar to reflect current selection state.
+    updateReadySidebar();
+  }
+
+  // The right-hand "Ready to begin" sidebar mirrors the user's progress
+  // through the 3 steps: empty → subject picked → difficulty picked →
+  // topic picked (ready to start, button enabled).
+  function updateReadySidebar() {
+    const subj = (CATALOG || []).find(s => s.slug === session.subject);
+    const topic = TOPICS.find(t => t.slug === session.topic);
+    const startBtn = $('readyStartBtn');
+    const objectives = $('readyObjectives');
+    const pill = $('readyStatusPill');
+    const pillDot = pill.querySelector('span:first-child');
+    const pillText = $('readyStatusText');
+
+    if (!session.subject) {
+      pill.className = 'inline-flex items-center gap-2 px-3 h-7 rounded-full bg-surface-container text-on-surface-variant text-[12px] font-bold uppercase tracking-wider mb-4';
+      pillDot.className = 'w-2 h-2 rounded-full bg-on-surface-variant';
+      pillText.textContent = 'Get Started';
+      $('readyTitle').textContent = 'Select a subject';
+      $('readySubtitle').textContent = "Begin by choosing what you'd like to practice today.";
+      objectives.classList.add('hidden');
+      startBtn.classList.add('hidden');
+      return;
+    }
+
+    // Subject picked
+    if (!session.difficulty) {
+      $('readyTitle').textContent = subj?.name || session.subject;
+      $('readySubtitle').textContent = 'Now pick a difficulty level to unlock topics.';
+      pill.className = 'inline-flex items-center gap-2 px-3 h-7 rounded-full bg-surface-container text-on-surface-variant text-[12px] font-bold uppercase tracking-wider mb-4';
+      pillDot.className = 'w-2 h-2 rounded-full bg-on-surface-variant';
+      pillText.textContent = 'Step 2 of 3';
+      objectives.classList.add('hidden');
+      startBtn.classList.add('hidden');
+      return;
+    }
+
+    // Subject + difficulty picked (topic optional)
+    if (!session.topic) {
+      $('readyTitle').textContent = subj?.name || session.subject;
+      const diffLabel = session.difficulty[0].toUpperCase() + session.difficulty.slice(1);
+      $('readySubtitle').textContent = `${diffLabel} Difficulty · pick a topic to begin`;
+      pill.className = 'inline-flex items-center gap-2 px-3 h-7 rounded-full bg-surface-container text-on-surface-variant text-[12px] font-bold uppercase tracking-wider mb-4';
+      pillDot.className = 'w-2 h-2 rounded-full bg-on-surface-variant';
+      pillText.textContent = 'Step 3 of 3';
+      // Show objectives once a subject is picked, even before topic
+      if (subj?.intro?.bullets?.length) {
+        objectives.classList.remove('hidden');
+        $('readyBullets').innerHTML = subj.intro.bullets.map(b => `
+          <li class="flex items-start gap-2">
+            <span class="material-symbols-outlined text-primary shrink-0" style="font-size:18px">check</span>
+            <span>${b}</span>
+          </li>`).join('');
+      } else {
+        objectives.classList.add('hidden');
+      }
+      startBtn.classList.add('hidden');
+      return;
+    }
+
+    // All three chosen — ready to start
+    $('readyTitle').textContent = topic?.name || session.topic;
+    const diffLabel = session.difficulty[0].toUpperCase() + session.difficulty.slice(1);
+    $('readySubtitle').textContent = `${diffLabel} Difficulty · 10 Questions`;
+    pill.className = 'inline-flex items-center gap-2 px-3 h-7 rounded-full bg-secondary-container/60 text-on-secondary-container text-[12px] font-bold uppercase tracking-wider mb-4';
+    pillDot.className = 'w-2 h-2 rounded-full bg-on-secondary-container';
+    pillText.textContent = 'Ready to Begin';
+    if (subj?.intro?.bullets?.length) {
+      objectives.classList.remove('hidden');
+      $('readyBullets').innerHTML = subj.intro.bullets.map(b => `
+        <li class="flex items-start gap-2">
+          <span class="material-symbols-outlined text-primary shrink-0" style="font-size:18px">check</span>
+          <span>${b}</span>
+        </li>`).join('');
+    }
+    startBtn.classList.remove('hidden');
   }
 
   async function showChooser() {
@@ -431,32 +550,38 @@
     }
     renderSubjectGrid();
     renderDifficulty();
-    setStepEnabled(session.subject ? (session.difficulty ? 'topic' : 'difficulty') : 'subject');
     if (session.subject) renderTopicGrid();
+    setStepEnabled();
   }
 
-  // Subject click → reveal difficulty step
+  // Subject click → re-render with selected state, update sidebar
   document.addEventListener('click', (e) => {
     const b = e.target.closest('#subjectGrid [data-subject]');
     if (!b) return;
+    if (session.subject !== b.dataset.subject) session.topic = null;
     session.subject = b.dataset.subject;
-    session.topic = null;
-    renderTopicGrid();
-    setStepEnabled(session.difficulty ? 'topic' : 'difficulty');
+    setStepEnabled();
   });
 
-  // Topic click → show the intro screen first (skills the user will be tested on)
+  // Topic click → just select (no auto-advance). User clicks "Start practice"
+  // in the sidebar when they're ready.
   document.addEventListener('click', (e) => {
     const b = e.target.closest('#topicGrid [data-topic]');
     if (!b) return;
-    if (!session.subject || !session.difficulty) return; // gated
+    if (!session.subject || !session.difficulty) return;
     session.topic = b.dataset.topic;
-    // Prefetch the first question NOW (in the background) so by the time the
-    // user finishes reading the intro and clicks Start, Q1 is ready.
+    setStepEnabled();
+  });
+
+  // "Start practice" CTA in the sidebar — kicks off prefetch + session
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#readyStartBtn')) return;
+    if (!session.subject || !session.difficulty || !session.topic) return;
     prefetchPromise = null;
     session.questions = [];
     startPrefetch();
-    showIntro();
+    // Skip the intro screen since the sidebar already showed objectives
+    startSession();
   });
 
   function showIntro() {
@@ -536,7 +661,8 @@
     });
     document.querySelectorAll('#difficultyChooser button').forEach(b => {
       const a = b.dataset.diff === session.difficulty;
-      b.className = `h-9 px-5 rounded-full text-label-md transition ${a ? 'bg-primary text-on-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container-high'}`;
+      const borders = b.dataset.diff === 'hard' ? '' : 'border-r border-outline-variant';
+      b.className = `h-11 text-label-md font-bold transition ${borders} ${a ? 'bg-primary text-on-primary' : 'text-on-surface-variant hover:bg-surface-container-low'}`;
     });
     const hint = document.getElementById('difficultyHint');
     if (hint) hint.classList.toggle('hidden', !!session.difficulty);
@@ -546,9 +672,8 @@
     if (!b) return;
     session.difficulty = b.dataset.diff;
     renderDifficulty();
-    if (session.subject && session.difficulty && !$('chooser').classList.contains('hidden')) {
-      setStepEnabled('topic');
-    }
+    // If we're on the chooser screen, advance the gate / sidebar.
+    if (!$('chooser').classList.contains('hidden')) setStepEnabled();
   });
 
   function updateProgress() {
