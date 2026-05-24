@@ -298,7 +298,12 @@
   const initialTopic   = params.get('topic');
 
   // Map subject → PDF path so feedback buttons jump to the right guide.
-  const SUBJECT_PDF = { 'math': '/study-guide.pdf', 'social-studies': '/social-studies-guide.pdf' };
+  const SUBJECT_PDF = {
+    'math':           '/study-guide.pdf',
+    'social-studies': '/social-studies-guide.pdf',
+    'english':        '/english-guide.pdf',
+    'science':        '/science-guide.pdf'
+  };
   const subjectPdfFor = (subj) => SUBJECT_PDF[subj] || '/study-guide.pdf';
 
   const session = {
@@ -409,8 +414,10 @@
   // Subject card uses the same colored hero-tile style as the dashboard
   // Quick Start so the visual language matches across the app.
   const SUBJECT_TILE = {
-    'math':           { bg: 'bg-primary-container text-on-primary',         heroIcon: 'calculate' },
-    'social-studies': { bg: 'bg-[#003a3a] text-white',                       heroIcon: 'public' }
+    'math':           { bg: 'bg-primary-container text-on-primary', heroIcon: 'calculate' },
+    'social-studies': { bg: 'bg-[#003a3a] text-white',              heroIcon: 'public' },
+    'english':        { bg: 'bg-[#4a1f6b] text-white',              heroIcon: 'menu_book' },
+    'science':        { bg: 'bg-[#6b2f1f] text-white',              heroIcon: 'science' }
   };
   function subjectCard(s) {
     const a = s.slug === session.subject;

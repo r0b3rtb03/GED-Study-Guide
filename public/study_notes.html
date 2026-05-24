@@ -111,12 +111,26 @@
     { slug: 'us-history',        name: 'U.S. History',                     subject: 'social-studies', sub: 'From colonies to modern day',       heroTitle: 'U.S. History',            heroBlurb: 'Key eras, turning points, and the cause-and-effect questions the GED loves to ask.' },
     { slug: 'economics',         name: 'Economics',                        subject: 'social-studies', sub: 'Markets and financial systems',      heroTitle: 'Economics',               heroBlurb: 'Supply and demand, scarcity, key macro indicators, and the personal finance skills the test covers.' },
     { slug: 'geography',         name: 'Geography',                        subject: 'social-studies', sub: 'Maps, regions, and climate',         heroTitle: 'Geography',               heroBlurb: 'Read maps confidently and understand how place shapes history, economics, and culture.' },
-    { slug: 'world-history',     name: 'World History',                    subject: 'social-studies', sub: 'Ancient times to today',             heroTitle: 'World History',           heroBlurb: 'Major civilizations and global movements from antiquity through the modern era.' }
+    { slug: 'world-history',     name: 'World History',                    subject: 'social-studies', sub: 'Ancient times to today',             heroTitle: 'World History',           heroBlurb: 'Major civilizations and global movements from antiquity through the modern era.' },
+
+    { slug: 'reading-comprehension', name: 'Reading Comprehension', subject: 'english',  sub: 'Main ideas and inferences',          heroTitle: 'Reading Comprehension',  heroBlurb: 'Pull main ideas, supporting details, and reasonable inferences from any passage on the GED RLA test.' },
+    { slug: 'grammar-and-usage',     name: 'Grammar & Usage',       subject: 'english',  sub: 'Standard English conventions',        heroTitle: 'Grammar & Usage',        heroBlurb: 'Subject–verb agreement, pronouns, punctuation, and parallel structure — the rules the GED tests directly.' },
+    { slug: 'vocabulary-in-context', name: 'Vocabulary in Context', subject: 'english',  sub: 'Context clues and word choice',       heroTitle: 'Vocabulary in Context',  heroBlurb: 'Decode unfamiliar words using context, and read tone and connotation like the test expects.' },
+    { slug: 'analyzing-arguments',   name: 'Analyzing Arguments',   subject: 'english',  sub: 'Claims, evidence, and reasoning',     heroTitle: 'Analyzing Arguments',    heroBlurb: 'Identify the claim, weigh the evidence, and spot the bias or fallacy behind a written argument.' },
+    { slug: 'writing-and-essay',     name: 'Writing & Essay',       subject: 'english',  sub: 'Extended-response strategy',           heroTitle: 'Writing & Essay',        heroBlurb: 'Plan, draft, and edit the 45-minute extended response the way GED scorers reward.' },
+
+    { slug: 'life-science',          name: 'Life Science',          subject: 'science',  sub: 'Cells, genetics, and ecosystems',     heroTitle: 'Life Science',           heroBlurb: 'Cells, DNA, evolution, ecosystems, and human body systems — the biology core of GED Science.' },
+    { slug: 'physical-science',      name: 'Physical Science',      subject: 'science',  sub: 'Chemistry and physics basics',         heroTitle: 'Physical Science',       heroBlurb: 'Matter, atoms, chemical reactions, forces, and energy — the chemistry-and-physics half of Science.' },
+    { slug: 'earth-space-science',   name: 'Earth & Space Science', subject: 'science',  sub: 'Earth systems and the cosmos',         heroTitle: 'Earth & Space Science',  heroBlurb: 'How Earth\'s layers, oceans, weather, and the solar system fit together.' },
+    { slug: 'scientific-method',     name: 'Scientific Method',     subject: 'science',  sub: 'Hypotheses and experiments',           heroTitle: 'Scientific Method',      heroBlurb: 'Form testable hypotheses, identify variables, and design experiments the GED actually scores.' },
+    { slug: 'data-interpretation',   name: 'Scientific Data',       subject: 'science',  sub: 'Tables, graphs, and trends',           heroTitle: 'Scientific Data',        heroBlurb: 'Read tables and graphs, identify trends, and tell correlation from causation.' }
   ];
 
   const SUBJECT_META = {
     'math':           { label: 'MATHEMATICS',    icon: 'calculate' },
-    'social-studies': { label: 'SOCIAL STUDIES', icon: 'public' }
+    'social-studies': { label: 'SOCIAL STUDIES', icon: 'public' },
+    'english':        { label: 'ENGLISH',        icon: 'menu_book' },
+    'science':        { label: 'SCIENCE',        icon: 'science' }
   };
 
   const params = new URLSearchParams(location.search);
@@ -214,8 +228,7 @@
   function renderHeroAndNav() {
     const t = TOPICS.find(x => x.slug === activeSlug);
     if (!t) return;
-    crumbSub.textContent = SUBJECT_META[t.subject]?.label.charAt(0) + SUBJECT_META[t.subject]?.label.slice(1).toLowerCase() || '';
-    crumbSub.textContent = t.subject === 'math' ? 'Math' : 'Social Studies';
+    crumbSub.textContent = ({ 'math': 'Math', 'social-studies': 'Social Studies', 'english': 'English', 'science': 'Science' }[t.subject]) || '';
     crumbTop.textContent = t.name;
     ctaName.textContent  = t.heroTitle;
     ctaEl.href = `/practice_session?subject=${t.subject}&topic=${t.slug}`;

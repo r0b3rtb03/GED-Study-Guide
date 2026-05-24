@@ -600,6 +600,526 @@ export const STATIC_NOTES = {
   }
 };
 
+// English (RLA) — pulled from the official GED Reasoning Through Language Arts guide.
+STATIC_NOTES['english'] = {
+  'reading-comprehension': {
+    title: 'Reading Comprehension',
+    sections: [
+      {
+        heading: 'Main Ideas and Supporting Details',
+        content: 'The main idea is the central point the author wants you to take away. Supporting details are the facts, examples, and reasoning that prove it. The main idea is usually stated near the beginning or end of a paragraph or passage — but sometimes it must be inferred from what the details add up to.',
+        keyFormulas: [],
+        tips: [
+          'A title or first sentence often hints at the main idea, but don\'t lock in until you\'ve read the whole passage.',
+          'Test a candidate main idea by asking, "Do most of the details in this passage support this?"'
+        ]
+      },
+      {
+        heading: 'Drawing Inferences',
+        content: 'An inference is a conclusion the author implies but doesn\'t state outright. You build inferences by combining what the text says with reasonable real-world knowledge. Stay close to the evidence — GED inferences are never wild guesses.',
+        keyFormulas: [],
+        tips: [
+          'If an answer requires information that\'s not in the passage at all, it\'s not a valid inference.',
+          'Watch for tone words ("reluctantly", "smirked") — they often reveal what a character or author is implying.'
+        ]
+      },
+      {
+        heading: 'Summarizing',
+        content: 'A good summary captures the main idea plus the key supporting points, in your own words. It leaves out examples, asides, and personal opinions. On the GED, the correct summary is the one that covers the WHOLE passage — not just the opening or a single paragraph.',
+        keyFormulas: [],
+        tips: [
+          'Eliminate any answer that focuses on only one detail or paragraph.',
+          'Eliminate answers that introduce information the passage didn\'t mention.'
+        ]
+      },
+      {
+        heading: 'Comparing Across Texts',
+        content: 'When two passages appear together, the GED usually asks how they agree, disagree, or treat the same topic differently. Note each author\'s claim and tone separately, then look for the relationship between them.',
+        keyFormulas: [],
+        tips: [
+          'Two passages on the same topic can both be correct — they may just emphasize different angles.',
+          'A "compare" answer that only describes ONE of the two passages is almost always wrong.'
+        ]
+      }
+    ]
+  },
+  'grammar-and-usage': {
+    title: 'Grammar & Usage',
+    sections: [
+      {
+        heading: 'Subject–Verb Agreement',
+        content: 'A verb must agree with its subject in number. Singular subjects take singular verbs; plural subjects take plural verbs. The trick is identifying the real subject when words come between the subject and the verb.',
+        keyFormulas: [
+          'The boy runs.   |   The boys run.',
+          'The box of cookies IS on the table.   (subject: box, not cookies)'
+        ],
+        tips: [
+          'Cross out prepositional phrases ("of cookies", "with my friends") to find the true subject.',
+          'Compound subjects joined by "and" usually take a plural verb.'
+        ]
+      },
+      {
+        heading: 'Pronouns and Antecedents',
+        content: 'A pronoun must clearly refer to a single, specific antecedent — and it must match that antecedent in number and gender. Vague pronouns ("This is important") are a common GED trap.',
+        keyFormulas: [
+          'Each student must bring HIS OR HER textbook.   (each = singular)',
+          'The team celebrated ITS victory.   (team = singular collective)'
+        ],
+        tips: [
+          'If a sentence starts with "It" or "This", ask: "It/this what?" If you can\'t answer in one word, the reference is unclear.',
+          '"Each", "every", "anyone", "everyone" are singular.'
+        ]
+      },
+      {
+        heading: 'Punctuation',
+        content: 'Commas separate items in a list, set off introductory phrases, and join independent clauses with a coordinating conjunction (FANBOYS). Semicolons join two independent clauses without a conjunction. Apostrophes show possession or contraction — never plurals.',
+        keyFormulas: [
+          'Comma + FANBOYS joins clauses: "I studied, AND I passed."',
+          'Semicolon joins clauses directly: "I studied; I passed."',
+          'It\'s = it is.   Its = belongs to it.'
+        ],
+        tips: [
+          'Never use a comma alone between two complete sentences — that\'s a comma splice.',
+          'No apostrophe is needed to pluralize: "the 1990s" not "the 1990\'s".'
+        ]
+      },
+      {
+        heading: 'Parallel Structure',
+        content: 'Items in a list or comparison should share the same grammatical form. Mixing forms (e.g., a noun, a verb, a phrase) sounds off and is consistently wrong on the GED.',
+        keyFormulas: [
+          'Parallel: "running, jumping, and swimming"',
+          'Not parallel: "running, to jump, and swam"'
+        ],
+        tips: [
+          'When you see a list, check that every item starts the same way (all -ing, all to-verbs, all nouns, etc.).',
+          'Comparisons with "than" or "as" must compare like things: "her car is faster than HIS" (not "than him").'
+        ]
+      }
+    ]
+  },
+  'vocabulary-in-context': {
+    title: 'Vocabulary in Context',
+    sections: [
+      {
+        heading: 'Context Clues',
+        content: 'You can usually figure out an unfamiliar word from how it\'s used in the sentence around it. Look for definitions, synonyms, antonyms, examples, and tone signals nearby.',
+        keyFormulas: [
+          'Definition clue: "Photosynthesis, the process plants use to convert light into energy, ..."',
+          'Contrast clue: "She was usually GREGARIOUS, but tonight she sat quietly."'
+        ],
+        tips: [
+          'Pay attention to words like "but", "however", "unlike" — they signal a contrast clue.',
+          'Try plugging your guess back in. If the sentence still makes sense, you\'ve probably got it.'
+        ]
+      },
+      {
+        heading: 'Connotation vs. Denotation',
+        content: 'Denotation is a word\'s dictionary meaning. Connotation is its emotional flavor. "Cheap" and "inexpensive" share a denotation but feel different — one is negative, the other neutral.',
+        keyFormulas: [],
+        tips: [
+          'When two answer choices share a literal meaning, the right one usually matches the passage\'s tone.',
+          'Authors choose connotation deliberately — it\'s a clue to their attitude.'
+        ]
+      },
+      {
+        heading: 'Figurative Language',
+        content: 'Figurative language uses words in non-literal ways for emphasis or imagery. A simile compares with "like" or "as"; a metaphor compares directly; an idiom is a phrase whose meaning isn\'t literal ("kick the bucket" = die).',
+        keyFormulas: [],
+        tips: [
+          'If a literal reading of a phrase makes no sense ("the news hit like a truck"), it\'s figurative.',
+          'Don\'t pick an answer that interprets figurative language literally.'
+        ]
+      },
+      {
+        heading: 'Word Choice and Tone',
+        content: 'Authors pick words to set a mood — formal, casual, urgent, mocking, admiring. Tone questions ask which adjective best captures the author\'s attitude toward the subject.',
+        keyFormulas: [],
+        tips: [
+          'Underline emotional or evaluative words ("absurd", "celebrated", "tragic") — they carry the tone.',
+          'Eliminate tone choices that are too strong ("furious") when the passage is just mildly negative.'
+        ]
+      }
+    ]
+  },
+  'analyzing-arguments': {
+    title: 'Analyzing Arguments',
+    sections: [
+      {
+        heading: 'Claims and Theses',
+        content: 'A claim (or thesis) is the central point an author argues for. Everything else in the passage either supports or qualifies it. The claim is often stated early and restated at the end.',
+        keyFormulas: [],
+        tips: [
+          'Distinguish the claim ("we should") from supporting facts ("data shows").',
+          'A title can be a claim — pay attention to it.'
+        ]
+      },
+      {
+        heading: 'Evidence and Reasoning',
+        content: 'Evidence is the facts, examples, and quotations the author uses to back up a claim. Reasoning is how those facts logically lead to the conclusion. Strong arguments use relevant, specific, and well-reasoned evidence.',
+        keyFormulas: [],
+        tips: [
+          'Ask whether the evidence directly supports the claim, or just sounds impressive.',
+          'A single anecdote rarely proves a general claim.'
+        ]
+      },
+      {
+        heading: 'Bias and Fallacies',
+        content: 'Bias is an unfair lean toward one side. Common fallacies include attacking the person instead of the argument (ad hominem), claiming everyone believes it (bandwagon), or jumping from one event to a wild consequence (slippery slope).',
+        keyFormulas: [],
+        tips: [
+          'Loaded words ("greedy", "heroic") are bias indicators.',
+          'Watch for "all", "always", "never" — sweeping claims are often unsupported.'
+        ]
+      },
+      {
+        heading: 'Comparing Competing Arguments',
+        content: 'When the GED shows two opposing arguments, the question is usually about WHERE they disagree and WHO has stronger support. Both authors can make valid points; only one might back theirs up better.',
+        keyFormulas: [],
+        tips: [
+          'Map each author\'s core claim and main evidence in a sentence before answering.',
+          'A "stronger argument" is one with better evidence, not just a louder claim.'
+        ]
+      }
+    ]
+  },
+  'writing-and-essay': {
+    title: 'Writing & Essay',
+    sections: [
+      {
+        heading: 'Essay Structure',
+        content: 'A GED extended-response essay has three parts: introduction (state your thesis), body (2–3 paragraphs, each with one main point + evidence), and conclusion (restate the thesis and tie it together). Each paragraph should do ONE job.',
+        keyFormulas: [
+          'Intro → Body ¶1 → Body ¶2 → Body ¶3 → Conclusion'
+        ],
+        tips: [
+          'Outline before you write — even 30 seconds of bullets prevents wandering paragraphs.',
+          'Save 5 minutes at the end for editing.'
+        ]
+      },
+      {
+        heading: 'Thesis Statement',
+        content: 'A thesis is one sentence that states your position AND previews how you\'ll defend it. It belongs at the end of your introduction. Vague theses ("This is an important topic") sink your score; specific ones lift it.',
+        keyFormulas: [
+          'Weak: "Schools are important."',
+          'Strong: "Schools improve communities by raising literacy, expanding job options, and lowering crime."'
+        ],
+        tips: [
+          'Try the "because" test: "X is true because A, B, and C." If you can fill that in, you have a thesis.',
+          'Mirror the wording of the prompt — it shows the grader you read it.'
+        ]
+      },
+      {
+        heading: 'Using Textual Evidence',
+        content: 'When the prompt gives you source passages, quote or paraphrase specific lines to back up each body paragraph\'s point. Don\'t just summarize the sources — engage with their arguments.',
+        keyFormulas: [],
+        tips: [
+          'Introduce a quote with context: "The author argues that X, citing ..."',
+          'Always explain WHY the quote supports your point — don\'t leave it standalone.'
+        ]
+      },
+      {
+        heading: 'Editing for Clarity',
+        content: 'The last few minutes are for fixing — not rewriting. Check for run-on sentences, subject–verb agreement, missing commas, and unclear pronouns. Trim wordy phrases.',
+        keyFormulas: [
+          '"In order to" → "to"',
+          '"Due to the fact that" → "because"'
+        ],
+        tips: [
+          'Read your essay one sentence at a time, backwards from the end — it forces you to notice grammar instead of meaning.',
+          'Cut any sentence that doesn\'t move your argument forward.'
+        ]
+      }
+    ]
+  }
+};
+
+// Science — pulled from the official GED Science study guide.
+STATIC_NOTES['science'] = {
+  'life-science': {
+    title: 'Life Science',
+    sections: [
+      {
+        heading: 'Cells',
+        content: 'All living things are made of cells. Cells contain organelles — small structures with specific jobs. Plant and animal cells share most organelles; only plant cells have a cell wall, chloroplasts, and a large central vacuole.',
+        keyFormulas: [
+          'Nucleus: stores DNA',
+          'Mitochondria: produce energy (ATP) — "powerhouse of the cell"',
+          'Ribosomes: build proteins',
+          'Chloroplasts (plants only): perform photosynthesis'
+        ],
+        tips: [
+          'If a question mentions chloroplasts or a cell wall, it\'s about a plant cell.',
+          'Cells reproduce by mitosis (regular growth) or meiosis (forming egg/sperm).'
+        ]
+      },
+      {
+        heading: 'Genetics',
+        content: 'Genes are segments of DNA that code for traits. Each parent passes one copy of every gene to their offspring. Dominant alleles mask recessive ones — so a "Bb" person shows the dominant trait but can pass on the recessive one.',
+        keyFormulas: [
+          'Punnett squares predict offspring trait ratios.',
+          'Dominant allele (B) masks recessive (b). bb only when BOTH parents pass on b.'
+        ],
+        tips: [
+          'Capital letter = dominant, lowercase = recessive.',
+          'Hetero- = different alleles (Bb); homo- = same (BB or bb).'
+        ]
+      },
+      {
+        heading: 'Evolution',
+        content: 'Evolution is the change in a population\'s traits over generations. Natural selection drives it: individuals with traits better suited to their environment survive and reproduce more, passing those traits on. Over time, the population shifts.',
+        keyFormulas: [],
+        tips: [
+          'Evolution acts on POPULATIONS, not individuals — a single organism can\'t evolve.',
+          'Don\'t confuse evolution with "trying" — giraffes didn\'t stretch their necks; long-necked individuals just survived better.'
+        ]
+      },
+      {
+        heading: 'Ecosystems',
+        content: 'An ecosystem is the living things (biotic) and physical environment (abiotic) of an area, interacting. Energy flows ONE way (sun → plants → herbivores → carnivores). Matter cycles (water, carbon, nitrogen) repeatedly.',
+        keyFormulas: [
+          'Producers (plants) → Primary consumers (herbivores) → Secondary consumers (carnivores)',
+          'Each step up the chain only ~10% of energy transfers'
+        ],
+        tips: [
+          'Decomposers (fungi, bacteria) recycle dead matter — they belong in every food web.',
+          'Remove a species and the WHOLE web shifts.'
+        ]
+      },
+      {
+        heading: 'Human Body Systems',
+        content: 'The major systems work together to keep the body running. Circulatory moves blood; respiratory exchanges gases; digestive breaks down food; nervous controls signaling; skeletal/muscular support and move the body.',
+        keyFormulas: [],
+        tips: [
+          'Most GED questions on body systems are about how two systems INTERACT (e.g., respiratory + circulatory deliver oxygen to cells).',
+          'Homeostasis = the body keeping conditions stable (temperature, pH, sugar levels).'
+        ]
+      }
+    ]
+  },
+  'physical-science': {
+    title: 'Physical Science',
+    sections: [
+      {
+        heading: 'States of Matter',
+        content: 'Matter exists as solid, liquid, gas, or plasma. The difference is how much its particles move. Heating adds energy and moves matter "up" the chain; cooling does the opposite.',
+        keyFormulas: [
+          'Solid → liquid: melting',
+          'Liquid → gas: vaporization / boiling',
+          'Gas → liquid: condensation',
+          'Liquid → solid: freezing'
+        ],
+        tips: [
+          'Phase changes do NOT change what the substance is — water is H₂O whether ice, liquid, or steam.',
+          'During a phase change, temperature stays constant even though heat is being added or removed.'
+        ]
+      },
+      {
+        heading: 'Atoms and the Periodic Table',
+        content: 'An atom has a nucleus of protons (+) and neutrons (neutral), surrounded by electrons (–). The number of protons = the atomic number, which defines the element. The periodic table groups elements by similar properties.',
+        keyFormulas: [
+          'Atomic number = number of protons',
+          'Mass number = protons + neutrons',
+          'Neutral atom: protons = electrons'
+        ],
+        tips: [
+          'Columns (groups) share chemical behavior; rows (periods) share electron shell count.',
+          'Group 1 = highly reactive metals; Group 18 = inert noble gases.'
+        ]
+      },
+      {
+        heading: 'Chemical Reactions',
+        content: 'In a chemical reaction, atoms rearrange to form new substances. Mass is conserved — the same atoms appear on both sides of the equation. Balancing means adjusting coefficients until every element has the same count on each side.',
+        keyFormulas: [
+          '2H₂ + O₂ → 2H₂O   (mass and atoms balanced)',
+          'Types: synthesis (A + B → AB), decomposition (AB → A + B), single replacement, double replacement, combustion'
+        ],
+        tips: [
+          'Never change subscripts to balance — only coefficients.',
+          'A balanced equation has the same number of EACH element on left and right.'
+        ]
+      },
+      {
+        heading: 'Forces and Motion',
+        content: 'A force is a push or pull. Newton\'s three laws describe how forces affect motion: 1) Objects keep doing what they\'re doing unless a force acts. 2) F = ma. 3) Every action has an equal, opposite reaction.',
+        keyFormulas: [
+          'Newton\'s 2nd law: F = m × a',
+          'Speed = distance / time;   Acceleration = Δvelocity / time',
+          'Weight (on Earth) = mass × 9.8 m/s²'
+        ],
+        tips: [
+          'Mass is constant everywhere; weight depends on gravity.',
+          'A balanced set of forces produces NO acceleration — but the object can still be moving.'
+        ]
+      },
+      {
+        heading: 'Energy',
+        content: 'Energy is the ability to do work. It comes in many forms — kinetic (motion), potential (stored), thermal (heat), chemical, electrical, light. Energy is conserved: it changes form but is never created or destroyed.',
+        keyFormulas: [
+          'KE = ½ m v²   (kinetic energy)',
+          'PE = m g h    (gravitational potential energy)'
+        ],
+        tips: [
+          'A roller coaster swaps KE and PE — the totals stay (nearly) constant ignoring friction.',
+          'Heat ALWAYS flows from hot to cold, never the reverse on its own.'
+        ]
+      }
+    ]
+  },
+  'earth-space-science': {
+    title: 'Earth & Space Science',
+    sections: [
+      {
+        heading: 'Earth\'s Structure',
+        content: 'Earth has four main layers: the solid inner core, liquid outer core, mantle (mostly solid but slowly flowing), and the thin rocky crust we live on.',
+        keyFormulas: [
+          'Crust (thin, solid) → Mantle (semi-solid) → Outer core (liquid) → Inner core (solid)'
+        ],
+        tips: [
+          'The crust is thinner under oceans, thicker under continents.',
+          'Heat from the core drives mantle convection — which drives plate tectonics.'
+        ]
+      },
+      {
+        heading: 'Plate Tectonics',
+        content: 'The crust is broken into plates that float on the mantle and move slowly. Where plates meet, you get earthquakes, volcanoes, and mountain ranges, depending on whether plates collide, pull apart, or grind past each other.',
+        keyFormulas: [
+          'Convergent: plates collide → mountains, volcanoes, subduction',
+          'Divergent: plates pull apart → mid-ocean ridges, rift valleys',
+          'Transform: plates slide → earthquakes (e.g., San Andreas Fault)'
+        ],
+        tips: [
+          'Most earthquakes happen at plate boundaries.',
+          'The "Ring of Fire" around the Pacific Ocean is a chain of convergent boundaries — that\'s why it has so many volcanoes.'
+        ]
+      },
+      {
+        heading: 'Water Cycle and Weather',
+        content: 'Water continuously cycles: evaporation from oceans/lakes → condensation into clouds → precipitation (rain/snow) → runoff back to oceans. Weather is short-term atmospheric conditions; climate is the long-term pattern.',
+        keyFormulas: [
+          'Evaporation → Condensation → Precipitation → Runoff → (repeat)'
+        ],
+        tips: [
+          'Warm air holds more moisture than cold air — that\'s why humid summers and dry winters.',
+          'Fronts (warm vs. cold air masses meeting) drive most weather changes.'
+        ]
+      },
+      {
+        heading: 'Climate Change',
+        content: 'Climate is the long-term average of weather. Greenhouse gases (CO₂, methane, water vapor) trap heat in the atmosphere — a natural process humans have accelerated by burning fossil fuels. Effects include rising temperatures, melting ice, and rising sea levels.',
+        keyFormulas: [],
+        tips: [
+          'Don\'t confuse weather and climate — a cold winter doesn\'t disprove climate change.',
+          'The scientific consensus that humans are driving recent climate change is overwhelming.'
+        ]
+      },
+      {
+        heading: 'The Solar System and Universe',
+        content: 'The solar system: a star (the Sun) plus 8 planets, their moons, dwarf planets, asteroids, and comets. The Sun, like all stars, fuses hydrogen into helium and releases enormous energy. Beyond it lie billions of other stars in our galaxy (the Milky Way), and billions of other galaxies in the universe.',
+        keyFormulas: [
+          'Inner (rocky) planets: Mercury, Venus, Earth, Mars',
+          'Outer (gas/ice giants): Jupiter, Saturn, Uranus, Neptune'
+        ],
+        tips: [
+          'Earth\'s tilt — not its distance from the sun — causes seasons.',
+          'A light-year is a distance, not a time: how far light travels in one year (~9.5 trillion km).'
+        ]
+      }
+    ]
+  },
+  'scientific-method': {
+    title: 'Scientific Method',
+    sections: [
+      {
+        heading: 'Forming a Hypothesis',
+        content: 'A hypothesis is a specific, testable prediction. "If X, then Y" is the classic form. Good hypotheses can be DISPROVED by an experiment — vague ones ("nature is balanced") can\'t and aren\'t scientific.',
+        keyFormulas: [
+          'Hypothesis form: "If [change], then [predicted result]."'
+        ],
+        tips: [
+          'A hypothesis isn\'t a guess — it\'s an informed prediction based on prior knowledge.',
+          'On the GED, the best hypothesis is the most specific one that the proposed experiment could actually test.'
+        ]
+      },
+      {
+        heading: 'Variables',
+        content: 'In every experiment there\'s an independent variable (what you change), a dependent variable (what you measure), and controlled variables (kept the same). Confusing these is the #1 way GED experimental-design questions go wrong.',
+        keyFormulas: [
+          'Independent: what you change (e.g., amount of water)',
+          'Dependent: what you measure (e.g., plant height)',
+          'Controlled: what you keep the same (light, soil, temperature)'
+        ],
+        tips: [
+          'The dependent variable "depends on" the independent variable.',
+          'If TWO things change between groups, you can\'t tell which one caused the difference.'
+        ]
+      },
+      {
+        heading: 'Experimental Design and Controls',
+        content: 'A control group receives no treatment (or a fake one) and serves as a baseline. The experimental group gets the actual treatment. Comparing them isolates the effect of the variable being tested.',
+        keyFormulas: [],
+        tips: [
+          'Random assignment + large sample size = stronger results.',
+          'If there\'s no control group, the experiment can\'t prove what caused the result.'
+        ]
+      },
+      {
+        heading: 'Drawing Conclusions',
+        content: 'A conclusion summarizes what the data show and whether they support the hypothesis. Stay within what the data actually demonstrate — don\'t generalize beyond your sample, and don\'t claim causation when you only have correlation.',
+        keyFormulas: [],
+        tips: [
+          'Single experiment = preliminary result, NOT proof.',
+          'A failed hypothesis is not a failed experiment — disproving an idea is still useful.'
+        ]
+      }
+    ]
+  },
+  'data-interpretation': {
+    title: 'Scientific Data',
+    sections: [
+      {
+        heading: 'Reading Tables and Graphs',
+        content: 'Line graphs show change over time. Bar graphs compare categories. Scatter plots show relationships between two variables. Always read the title, axis labels, and units before answering.',
+        keyFormulas: [],
+        tips: [
+          'On a scatter plot, look for an overall trend — points going up, down, or scattered.',
+          'Watch the y-axis scale — graphs often exaggerate trends by starting above zero.'
+        ]
+      },
+      {
+        heading: 'Trends and Outliers',
+        content: 'A trend is the overall pattern. An outlier is a data point far from the rest. Outliers can be real (interesting!) or errors (toss them after investigation), but they should never be ignored without comment.',
+        keyFormulas: [],
+        tips: [
+          'A single outlier rarely changes the overall trend.',
+          'Trend descriptions: "increasing", "decreasing", "no change", "fluctuates".'
+        ]
+      },
+      {
+        heading: 'Correlation vs. Causation',
+        content: 'Correlation means two variables move together. Causation means one CAUSES the other. Ice-cream sales and shark attacks rise together — both are driven by summer, not by each other. Establishing causation requires a controlled experiment.',
+        keyFormulas: [],
+        tips: [
+          'If a study only OBSERVES without controlling variables, it can show correlation but not causation.',
+          'Look for the "lurking variable" — the hidden factor driving both observed variables.'
+        ]
+      },
+      {
+        heading: 'Calculations from Data',
+        content: 'Common GED data calculations: mean (sum ÷ count), percent change ((new−old)/old × 100), and rates (units per unit, like mph or m/s²). Use only the numbers the question gives you.',
+        keyFormulas: [
+          'Mean = sum ÷ count',
+          'Percent change = (new − old) / old × 100',
+          'Rate = quantity ÷ time'
+        ],
+        tips: [
+          'Estimate first — if your calculated answer is wildly different, you probably mis-keyed.',
+          'Always include units in your answer.'
+        ]
+      }
+    ]
+  }
+};
+
 export function getStaticNotes(subject, slug) {
   return STATIC_NOTES[subject]?.[slug] || null;
 }

@@ -68,7 +68,9 @@
   const $ = id => document.getElementById(id);
   const SUBJECTS_DEFAULT = [
     { slug: 'math',           name: 'Math',           pdfPath: '/study-guide.pdf',           icon: 'function' },
-    { slug: 'social-studies', name: 'Social Studies', pdfPath: '/social-studies-guide.pdf',  icon: 'public' }
+    { slug: 'social-studies', name: 'Social Studies', pdfPath: '/social-studies-guide.pdf',  icon: 'public' },
+    { slug: 'english',        name: 'English',        pdfPath: '/english-guide.pdf',         icon: 'menu_book' },
+    { slug: 'science',        name: 'Science',        pdfPath: '/science-guide.pdf',         icon: 'science' }
   ];
 
   // Initial subject from ?subject= URL param, else from sessionStorage, else math.

@@ -218,9 +218,187 @@ const SOCIAL_STUDIES_TOPICS = {
   }
 };
 
+// English / RLA. Pages reference the official "Reasoning Through Language
+// Arts" study guide PDF in server/data/studyGuides/english.pdf.
+const ENGLISH_TOPICS = {
+  'reading-comprehension': {
+    name: 'Reading Comprehension',
+    pageRange: [3, 9],
+    sectionName: 'Reading for Meaning',
+    concepts: [
+      { page: 3, name: 'Identifying main ideas and supporting details' },
+      { page: 5, name: 'Drawing inferences and conclusions from passages' },
+      { page: 7, name: 'Summarizing information accurately' },
+      { page: 9, name: 'Comparing information across texts' }
+    ],
+    scope: `
+- Main ideas and supporting details
+- Drawing inferences
+- Summarizing passages
+- Comparing information across texts
+- Author's purpose and tone`
+  },
+  'grammar-and-usage': {
+    name: 'Grammar & Usage',
+    pageRange: [10, 16],
+    sectionName: 'Standard English Conventions',
+    concepts: [
+      { page: 10, name: 'Subject–verb agreement' },
+      { page: 12, name: 'Pronoun usage and antecedent agreement' },
+      { page: 14, name: 'Punctuation: commas, semicolons, apostrophes' },
+      { page: 16, name: 'Sentence structure and parallelism' }
+    ],
+    scope: `
+- Subject–verb agreement
+- Pronoun usage and antecedents
+- Punctuation: commas, semicolons, apostrophes
+- Sentence structure and parallel construction
+- Modifier placement`
+  },
+  'vocabulary-in-context': {
+    name: 'Vocabulary in Context',
+    pageRange: [17, 21],
+    sectionName: 'Word Meaning',
+    concepts: [
+      { page: 17, name: 'Using context clues to determine word meaning' },
+      { page: 19, name: 'Distinguishing connotation from denotation' },
+      { page: 20, name: 'Recognizing figurative language (metaphor, simile, idiom)' },
+      { page: 21, name: 'Word choice and tone' }
+    ],
+    scope: `
+- Using context clues
+- Connotation vs. denotation
+- Figurative language: metaphor, simile, idiom
+- Word choice and tone`
+  },
+  'analyzing-arguments': {
+    name: 'Analyzing Arguments',
+    pageRange: [22, 27],
+    sectionName: 'Argumentation',
+    concepts: [
+      { page: 22, name: 'Identifying the author\'s claim or thesis' },
+      { page: 24, name: 'Evaluating evidence and reasoning' },
+      { page: 26, name: 'Detecting bias, fallacies, and unsupported assertions' },
+      { page: 27, name: 'Comparing arguments across passages' }
+    ],
+    scope: `
+- Identifying claims and theses
+- Evaluating evidence and reasoning
+- Spotting bias, fallacies, unsupported claims
+- Comparing competing arguments`
+  },
+  'writing-and-essay': {
+    name: 'Writing & Essay',
+    pageRange: [28, 34],
+    sectionName: 'Extended Response',
+    concepts: [
+      { page: 28, name: 'Structuring an essay: intro, body, conclusion' },
+      { page: 30, name: 'Developing a clear thesis statement' },
+      { page: 32, name: 'Using textual evidence to support claims' },
+      { page: 34, name: 'Editing for clarity, grammar, and flow' }
+    ],
+    scope: `
+- Essay structure: intro / body / conclusion
+- Crafting a clear thesis
+- Using textual evidence
+- Editing for clarity and conventions`
+  }
+};
+
+// Science. Pages reference server/data/studyGuides/science.pdf.
+const SCIENCE_TOPICS = {
+  'life-science': {
+    name: 'Life Science',
+    pageRange: [3, 12],
+    sectionName: 'Biology',
+    concepts: [
+      { page: 3,  name: 'Cell structure and function' },
+      { page: 5,  name: 'Genetics and heredity' },
+      { page: 7,  name: 'Evolution and natural selection' },
+      { page: 9,  name: 'Ecosystems, food webs, and energy flow' },
+      { page: 11, name: 'Human body systems' }
+    ],
+    scope: `
+- Cell structure and function (organelles, mitosis, meiosis)
+- DNA, genes, and inheritance
+- Evolution and natural selection
+- Ecosystems, food chains, energy flow
+- Human body systems`
+  },
+  'physical-science': {
+    name: 'Physical Science',
+    pageRange: [13, 22],
+    sectionName: 'Chemistry & Physics',
+    concepts: [
+      { page: 13, name: 'States of matter and phase changes' },
+      { page: 15, name: 'Atomic structure and the periodic table' },
+      { page: 17, name: 'Chemical reactions and balancing equations' },
+      { page: 19, name: 'Forces, motion, and Newton\'s laws' },
+      { page: 21, name: 'Energy: forms, transfer, and conservation' }
+    ],
+    scope: `
+- States of matter and phase changes
+- Atoms, elements, the periodic table
+- Chemical reactions and equations
+- Forces, motion, and Newton's laws
+- Energy: forms, transfer, conservation`
+  },
+  'earth-space-science': {
+    name: 'Earth & Space Science',
+    pageRange: [23, 30],
+    sectionName: 'Earth Systems',
+    concepts: [
+      { page: 23, name: 'Earth\'s structure and plate tectonics' },
+      { page: 25, name: 'The water cycle and weather' },
+      { page: 27, name: 'Climate and climate change' },
+      { page: 29, name: 'The solar system and the universe' }
+    ],
+    scope: `
+- Earth's structure: crust, mantle, core
+- Plate tectonics, earthquakes, volcanoes
+- Water cycle, weather, atmosphere
+- Climate and climate change
+- The solar system and the universe`
+  },
+  'scientific-method': {
+    name: 'Scientific Method',
+    pageRange: [31, 36],
+    sectionName: 'Inquiry & Investigation',
+    concepts: [
+      { page: 31, name: 'Forming hypotheses' },
+      { page: 33, name: 'Variables: independent, dependent, controlled' },
+      { page: 35, name: 'Designing experiments and identifying controls' },
+      { page: 36, name: 'Drawing conclusions from results' }
+    ],
+    scope: `
+- Forming hypotheses
+- Independent, dependent, and controlled variables
+- Designing experiments and identifying controls
+- Drawing valid conclusions from data`
+  },
+  'data-interpretation': {
+    name: 'Scientific Data',
+    pageRange: [37, 42],
+    sectionName: 'Data & Graphs',
+    concepts: [
+      { page: 37, name: 'Reading data tables and scientific graphs' },
+      { page: 39, name: 'Identifying trends and outliers' },
+      { page: 41, name: 'Correlation versus causation in scientific results' },
+      { page: 42, name: 'Calculating means, percentages, and rates from data' }
+    ],
+    scope: `
+- Reading data tables and graphs
+- Identifying trends and outliers
+- Correlation vs. causation
+- Calculating means, percentages, rates`
+  }
+};
+
 export const TOPICS_BY_SUBJECT = {
   'math': MATH_TOPICS,
-  'social-studies': SOCIAL_STUDIES_TOPICS
+  'social-studies': SOCIAL_STUDIES_TOPICS,
+  'english': ENGLISH_TOPICS,
+  'science': SCIENCE_TOPICS
 };
 
 // Legacy export — kept for any callers that haven't been migrated yet.

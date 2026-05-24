@@ -89,11 +89,19 @@
     'algebra': 'function', 'linear-equations': 'show_chart', 'fractions': 'percent',
     'geometry': 'square_foot', 'stats': 'bar_chart',
     'civics-government': 'gavel', 'us-history': 'flag', 'economics': 'payments',
-    'geography': 'public', 'world-history': 'history_edu'
+    'geography': 'public', 'world-history': 'history_edu',
+    'reading-comprehension': 'menu_book', 'grammar-and-usage': 'spellcheck',
+    'vocabulary-in-context': 'translate', 'analyzing-arguments': 'forum',
+    'writing-and-essay': 'edit_note',
+    'life-science': 'biotech', 'physical-science': 'science',
+    'earth-space-science': 'public', 'scientific-method': 'experiment',
+    'data-interpretation': 'analytics'
   };
   const SUBJECT_META = {
     'math':           { icon: 'calculate', tile: 'bg-primary-container text-on-primary', tileCta: 'text-primary' },
-    'social-studies': { icon: 'public',    tile: 'bg-[#003a3a] text-white',              tileCta: 'text-[#003a3a]' }
+    'social-studies': { icon: 'public',    tile: 'bg-[#003a3a] text-white',              tileCta: 'text-[#003a3a]' },
+    'english':        { icon: 'menu_book', tile: 'bg-[#4a1f6b] text-white',              tileCta: 'text-[#4a1f6b]' },
+    'science':        { icon: 'science',   tile: 'bg-[#6b2f1f] text-white',              tileCta: 'text-[#6b2f1f]' }
   };
 
   const user = getUser();
@@ -149,11 +157,20 @@
     return `<span class="bg-[#fee2e2] text-[#991b1b] text-[11px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Needs attention</span>`;
   }
 
+  // Subject pill palette — one swatch per subject; default to Math's if
+  // we ever encounter a subject without a registered pill.
+  const SUBJECT_PILL = {
+    'math':           'bg-[#d3e4fe] text-[#1f477b]',
+    'social-studies': 'bg-[#cde7e7] text-[#003a3a]',
+    'english':        'bg-[#e9d8fd] text-[#4a1f6b]',
+    'science':        'bg-[#fde2cf] text-[#6b2f1f]'
+  };
+  const SUBJECT_LABEL = {
+    'math': 'Math', 'social-studies': 'Social Studies', 'english': 'English', 'science': 'Science'
+  };
   function priorityCard(w) {
-    const subjLabel = w.subjectName || (w.subject === 'social-studies' ? 'Social Studies' : 'Math');
-    const subjPill  = w.subject === 'social-studies'
-      ? 'bg-[#cde7e7] text-[#003a3a]'
-      : 'bg-[#d3e4fe] text-[#1f477b]';
+    const subjLabel = w.subjectName || SUBJECT_LABEL[w.subject] || 'Math';
+    const subjPill  = SUBJECT_PILL[w.subject] || SUBJECT_PILL.math;
     const diff = w.difficulty || 'medium';
     const diffPill = diff === 'easy'
       ? 'bg-[#dcfce7] text-[#166534]'
