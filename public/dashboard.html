@@ -125,11 +125,21 @@
     const subjPill  = w.subject === 'social-studies'
       ? 'bg-[#cde7e7] text-[#003a3a]'
       : 'bg-[#d3e4fe] text-[#1f477b]';
+    const diff = w.difficulty || 'medium';
+    const diffPill = diff === 'easy'
+      ? 'bg-[#dcfce7] text-[#166534]'
+      : diff === 'medium'
+      ? 'bg-[#fef3c7] text-[#92400e]'
+      : 'bg-[#fee2e2] text-[#991b1b]';
+    const diffLabel = diff[0].toUpperCase() + diff.slice(1);
     return `<article class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden">
       <div class="p-4">
-        <div class="flex items-start justify-between mb-3">
-          <span class="${subjPill} text-[11px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">${subjLabel}</span>
-          <span class="text-error text-label-md font-bold">${w.percent}% acc.</span>
+        <div class="flex items-center justify-between gap-2 mb-3 flex-wrap">
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <span class="${subjPill} text-[11px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">${subjLabel}</span>
+            <span class="${diffPill} text-[11px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">${diffLabel}</span>
+          </div>
+          <span class="text-error text-label-md font-bold">${w.score}/${w.total} · ${w.percent}%</span>
         </div>
         <h4 class="text-headline-md font-bold text-on-surface mb-1">${w.name}</h4>
         <p class="text-body-md text-on-surface-variant">${w.recommendation}</p>
@@ -225,7 +235,7 @@
         simpleStatCard('Current Streak', stats.streakDays, stats.streakDays === 1 ? 'day' : 'days', 'local_fire_department', streakAccent)
       ].join('');
       document.getElementById('topicProgress').innerHTML = renderTopicProgress(stats.bySubject || {});
-      renderRecommendedReview(stats.weakTopics || []);
+      renderRecommendedReview(stats.weakAttempts || stats.weakTopics || []);
       renderQuickStart(stats.bySubject || {});
     } catch (e) {
       document.getElementById('statsGrid').innerHTML = `<div class="col-span-full text-error text-label-md">${e.message}</div>`;

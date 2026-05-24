@@ -406,17 +406,24 @@
     '<strong class="font-bold text-on-surface">$1</strong>'
   );
 
+  // Subject card uses the same colored hero-tile style as the dashboard
+  // Quick Start so the visual language matches across the app.
+  const SUBJECT_TILE = {
+    'math':           { bg: 'bg-primary-container text-on-primary',         heroIcon: 'calculate' },
+    'social-studies': { bg: 'bg-[#003a3a] text-white',                       heroIcon: 'public' }
+  };
   function subjectCard(s) {
     const a = s.slug === session.subject;
-    return `<button data-subject="${s.slug}" class="relative text-left bg-surface-container-lowest rounded-xl p-5 transition w-full ${a ? 'border-2 border-primary shadow-md' : 'border border-outline-variant hover:border-on-surface-variant'}">
-      ${a ? `<span class="absolute top-3 right-3 w-6 h-6 rounded-full bg-primary text-on-primary flex items-center justify-center" aria-hidden="true">
-        <span class="material-symbols-outlined" style="font-size:16px">check</span>
-      </span>` : ''}
-      <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
-        <span class="material-symbols-outlined text-primary" style="font-size:22px">${s.icon}</span>
+    const t = SUBJECT_TILE[s.slug] || { bg: 'bg-primary-container text-on-primary', heroIcon: s.icon };
+    return `<button data-subject="${s.slug}" class="relative text-left ${t.bg} rounded-xl p-6 transition w-full overflow-hidden group ${a ? 'ring-4 ring-primary ring-offset-2 ring-offset-background' : 'hover:opacity-95'}">
+      <div class="absolute -right-4 -top-4 opacity-15 pointer-events-none">
+        <span class="material-symbols-outlined" style="font-size:120px">${t.heroIcon}</span>
       </div>
-      <p class="text-headline-sm font-bold text-on-surface">${s.name}</p>
-      <p class="text-label-md text-on-surface-variant mt-1">${s.description || ''}</p>
+      ${a ? `<span class="absolute top-3 right-3 w-7 h-7 rounded-full bg-white text-primary flex items-center justify-center shadow z-10" aria-hidden="true">
+        <span class="material-symbols-outlined" style="font-size:18px">check</span>
+      </span>` : ''}
+      <h3 class="text-headline-lg font-bold mb-1 relative z-10">${s.name}</h3>
+      <p class="text-body-md opacity-90 relative z-10">${s.description || ''}</p>
     </button>`;
   }
 

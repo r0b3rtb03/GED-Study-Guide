@@ -52,35 +52,67 @@
       --ged-inverse-surface: #2d3135;
       --ged-inverse-on-surface: #eef1f7;
     }
+    /* Dark mode — designed as its own palette, not a literal inversion.
+       Deep midnight-navy backgrounds give the app a "library at night"
+       feel; surfaces step up in luminance with a subtle warm cast so the
+       hierarchy reads even at low brightness. Primary is a vibrant
+       sky-blue tuned for AAA contrast on the navy background. */
     html.dark {
-      --ged-background: #111418;
-      --ged-surface: #111418;
-      --ged-surface-container-lowest: #1a1d22;
-      --ged-surface-container-low: #1d2026;
-      --ged-surface-container: #22262d;
-      --ged-surface-container-high: #2c3038;
-      --ged-surface-container-highest: #373c44;
-      --ged-surface-variant: #2c3038;
-      --ged-on-background: #e1e2e8;
-      --ged-on-surface: #e1e2e8;
-      --ged-on-surface-variant: #c0c5d5;
-      --ged-outline: #8c919c;
-      --ged-outline-variant: #414754;
-      --ged-primary: #a6c8ff;
-      --ged-primary-container: #1a73e8;
-      --ged-on-primary: #002f63;
-      --ged-on-primary-container: #ffffff;
-      --ged-secondary: #88d982;
-      --ged-secondary-container: #1d4d2a;
-      --ged-on-secondary-container: #a3f69c;
-      --ged-error: #ffb4ab;
-      --ged-error-container: #5b1413;
-      --ged-on-error-container: #ffdad6;
-      --ged-surface-tint: #a6c8ff;
-      --ged-primary-fixed-dim: #002f63;
-      --ged-inverse-surface: #e1e2e8;
-      --ged-inverse-on-surface: #2d3135;
+      /* Page + surface stack — true navy with a touch of warmth */
+      --ged-background:                  #0d1320;
+      --ged-surface:                     #0d1320;
+      --ged-surface-container-lowest:    #131a2a;
+      --ged-surface-container-low:       #182033;
+      --ged-surface-container:           #1d2640;
+      --ged-surface-container-high:      #242e4a;
+      --ged-surface-container-highest:   #2c3656;
+      --ged-surface-variant:             #1d2640;
+
+      /* Text — high-contrast off-white, then muted variants */
+      --ged-on-background:               #e8edf7;
+      --ged-on-surface:                  #e8edf7;
+      --ged-on-surface-variant:          #a7b3cf;
+
+      /* Lines — visible but never harsh */
+      --ged-outline:                     #5b6789;
+      --ged-outline-variant:             #2a3354;
+
+      /* Primary — sky-blue accent that pops against navy. Stays readable
+         when used as a fill (bg-primary text-on-primary) AND when used
+         as text on backgrounds (text-primary). */
+      --ged-primary:                     #8ab4ff;
+      --ged-primary-container:           #3a5fa5;
+      --ged-on-primary:                  #0a1530;
+      --ged-on-primary-container:        #e1ecff;
+
+      /* Secondary — muted teal/green for "correct" pills and accents */
+      --ged-secondary:                   #9bdc8f;
+      --ged-secondary-container:         #1f3b27;
+      --ged-on-secondary-container:      #b7e8a9;
+
+      /* Errors — soft coral, never neon */
+      --ged-error:                       #ff9d97;
+      --ged-error-container:             #4a1719;
+      --ged-on-error-container:          #ffd5d1;
+
+      /* Tint + fixed dims used in gradients on landing pages */
+      --ged-surface-tint:                #8ab4ff;
+      --ged-primary-fixed-dim:           #1a2945;
+
+      /* Inverse used for tooltips/snackbars */
+      --ged-inverse-surface:             #e8edf7;
+      --ged-inverse-on-surface:          #1d2640;
     }
+    /* Dark mode polish — softer shadows + form controls */
+    html.dark .shadow-sm,
+    html.dark .shadow,
+    html.dark .shadow-md,
+    html.dark .shadow-lg {
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+    html.dark input,
+    html.dark textarea,
+    html.dark select { background-color: var(--ged-surface-container-low); }
     /* Form controls auto-adjust */
     html.dark input, html.dark select, html.dark textarea { color-scheme: dark; }
     /* Smooth color transitions when toggling */

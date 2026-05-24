@@ -140,31 +140,45 @@ router.get('/stats', requireAuth, (req, res) => {
     else break;
   }
 
-  // Recommended Review across all subjects: ≥3 attempts AND <70% accuracy.
-  const weakTopics = [];
+  // Priority Review — per-(topic × difficulty) weak attempts.
+  // Old logic flagged whole topics by coverage %, which surfaced "10/10
+  // Easy" topics as weak (because 10/30 = 33%). New logic looks at each
+  // difficulty INDEPENDENTLY: if you actually attempted that level AND
+  // scored under 70%, surface it. So 10/10 easy never gets flagged, but
+  // 3/10 easy does. Sort worst-first, cap at 4.
+  const WEAK_THRESHOLD = 70;
+  const weakAttempts = [];
   for (const sub of Object.values(bySubject)) {
     for (const [slug, t] of Object.entries(sub.topics)) {
-      if (t.total < 3 || t.percent >= 70) continue;
       const guide = getTopic(sub.slug, slug) || {};
       const [first, last] = guide.pageRange || [null, null];
       const subjMeta = SUBJECTS[sub.slug];
-      weakTopics.push({
-        subject: sub.slug,
-        subjectName: sub.name,
-        slug,
-        name: guide.name || slug,
-        percent: t.percent,
-        attempts: t.total,
-        sectionName: guide.sectionName || '',
-        pageRange: guide.pageRange || null,
-        pdfHref: first && subjMeta ? `${subjMeta.pdfPath}#page=${first}` : (subjMeta?.pdfPath || '/study-guide.pdf'),
-        recommendation: first
-          ? `You're struggling with ${guide.name} (${sub.name}). We recommend reviewing pages ${first}–${last} in the ${sub.name} Study Guide.`
-          : `You're struggling with ${guide.name} (${sub.name}). Review it in the Study Guide.`
-      });
+      const pdfHref = first && subjMeta ? `${subjMeta.pdfPath}#page=${first}` : (subjMeta?.pdfPath || '/study-guide.pdf');
+      for (const [diff, d] of Object.entries(t.byDifficulty)) {
+        if (d.total < 1) continue;                  // skip unattempted
+        if (d.percent >= WEAK_THRESHOLD) continue;  // skip strong
+        weakAttempts.push({
+          subject:     sub.slug,
+          subjectName: sub.name,
+          slug,
+          name:        guide.name || slug,
+          difficulty:  diff,
+          score:       d.score,
+          total:       d.total,
+          percent:     d.percent,
+          pageRange:   guide.pageRange || null,
+          pdfHref,
+          recommendation: first
+            ? `You scored ${d.score}/${d.total} on ${diff}. Review pages ${first}–${last} and try again.`
+            : `You scored ${d.score}/${d.total} on ${diff}. Review the Study Guide and try again.`
+        });
+      }
     }
   }
-  weakTopics.sort((a, b) => a.percent - b.percent);
+  weakAttempts.sort((a, b) => a.percent - b.percent);
+
+  // Legacy alias so any older callers using `weakTopics` still work.
+  const weakTopics = weakAttempts;
 
   // Overall = total correct across all subjects / total possible (subjects × topics × 30)
   const overallMax = Object.values(bySubject).reduce((s, sub) => s + (sub.maxPossible || 0), 0);
@@ -177,7 +191,8 @@ router.get('/stats', requireAuth, (req, res) => {
     streakDays: streak,
     bySubject,
     byTopic,                       // legacy
-    weakTopics: weakTopics.slice(0, 3)
+    weakAttempts: weakAttempts.slice(0, 4),
+    weakTopics:   weakTopics.slice(0, 4)   // legacy alias
   });
 });
 
