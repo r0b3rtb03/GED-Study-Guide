@@ -17,11 +17,10 @@ const NAV_ITEMS = [
   { href: '/growth_history',   label: 'History',           icon: 'history',       mobile: 'History',  mobileIcon: 'history' }
 ];
 
+// Help and Sign Out used to live here — they moved to the desktop top bar.
+// Settings stays in the sidebar because it's a destination page, not an action.
 const FOOTER_ITEMS = [
-  { href: '/account_settings', label: 'Settings', icon: 'settings' },
-  // Help launches the guided product tour. `data-action="help"` is picked up
-  // by the click handler set in renderShell — see startSiteTour() wiring.
-  { href: '#', label: 'Help', icon: 'help_outline', id: 'ged-help-btn', action: 'help' }
+  { href: '/account_settings', label: 'Settings', icon: 'settings' }
 ];
 
 function isActive(href) {
@@ -77,6 +76,20 @@ function injectCollapseStyles() {
          brand text. Centered on the border by translating -50% on x. */
       button#ged-collapse-btn { left: 16rem; transition: left 0.18s ease; }
       html[data-sidebar="collapsed"] button#ged-collapse-btn { left: 4rem; }
+
+      /* Desktop top bar — fixed, starts to the right of the sidebar so the
+         sidebar runs continuously top-to-bottom. Left offset tracks the
+         sidebar's collapsed/expanded state for a clean visual seam. */
+      header#ged-topbar { left: 16rem; transition: left 0.18s ease; }
+      html[data-sidebar="collapsed"] header#ged-topbar { left: 4rem; }
+      header#ged-topbar.tour-active { pointer-events: none; }
+
+      /* Push page content below the top bar. Pages already use md:pt-0 so we
+         can add this safely without doubling padding on mobile. */
+      body { padding-top: 3.5rem; }
+
+      /* The practice page's session bar — already sticks below the global
+         top bar via its own offset, so leave it untouched here. */
     }
   `;
   document.head.appendChild(style);
@@ -168,6 +181,63 @@ export function renderShell({ active } = {}) {
     </div>
   `;
 
+  // DESKTOP TOP BAR — sits to the right of the sidebar.
+  // Layout: <left spacer> <search (slightly right of center)> <help> <sign-out> <profile w/ hover-expand panel>
+  // The spacer columns aren't equal — left is 1fr and right is auto, which
+  // shifts the search bar visually to the right of dead-center, matching the
+  // mock.
+  const desktopTopBar = document.createElement('header');
+  desktopTopBar.id = 'ged-topbar';
+  desktopTopBar.className = 'hidden md:flex fixed top-0 right-0 h-14 bg-surface-container-lowest border-b border-outline-variant items-center px-6 z-30 gap-3';
+  desktopTopBar.innerHTML = `
+    <!-- Left spacer: bigger than the right side, so the centered search lands right of dead-center. -->
+    <div class="flex-[1.4]"></div>
+
+    <!-- Search -->
+    <div class="flex-[1.6] max-w-md">
+      <div class="relative">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none" style="font-size:18px">search</span>
+        <input id="ged-topbar-search" type="search" placeholder="Search topics, notes, sessions…"
+               class="w-full h-9 pl-10 pr-3 rounded-lg bg-surface-container text-body-md text-on-surface placeholder:text-on-surface-variant outline-none focus:ring-2 focus:ring-primary border border-transparent focus:border-primary/40 transition" />
+      </div>
+    </div>
+
+    <!-- Right cluster: help, sign-out, profile (in that order, just left of profile) -->
+    <div class="flex items-center gap-1">
+      <button type="button" data-action="help" id="ged-topbar-help"
+              class="w-9 h-9 rounded-full hover:bg-surface-container flex items-center justify-center text-on-surface-variant transition" title="Help &amp; tour" aria-label="Help">
+        <span class="material-symbols-outlined" style="font-size:20px">help_outline</span>
+      </button>
+      <button type="button" id="ged-topbar-logout"
+              class="w-9 h-9 rounded-full hover:bg-surface-container flex items-center justify-center text-on-surface-variant transition" title="Sign out" aria-label="Sign out">
+        <span class="material-symbols-outlined" style="font-size:20px">logout</span>
+      </button>
+
+      <!-- Profile chip + hover-expand panel. The pt-2 inner wrapper bridges
+           the visual gap so moving the cursor from the chip to the panel
+           doesn't trip the :hover state. -->
+      <div class="relative group ml-2">
+        <button class="w-9 h-9 rounded-full bg-primary text-on-primary flex items-center justify-center text-label-md font-bold focus:outline-none focus:ring-2 focus:ring-primary/40" aria-label="Profile">
+          ${initials.toUpperCase()}
+        </button>
+        <div class="absolute right-0 top-full pt-2 hidden group-hover:block group-focus-within:block z-50">
+          <div class="w-64 rounded-xl bg-surface-container-lowest border border-outline-variant shadow-lg p-4">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center text-label-md font-bold shrink-0">${initials.toUpperCase()}</div>
+              <div class="min-w-0">
+                <p class="font-bold text-on-surface truncate">${user.firstName || ''} ${user.lastName || ''}</p>
+                <p class="text-label-md text-on-surface-variant truncate">${user.email || ''}</p>
+              </div>
+            </div>
+            <a href="/account_settings" class="flex items-center gap-2 h-9 px-3 rounded-lg hover:bg-surface-container-low text-label-md text-on-surface">
+              <span class="material-symbols-outlined" style="font-size:18px">settings</span>Account settings
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
   // MOBILE BOTTOM NAV
   const bottomNav = document.createElement('nav');
   const MOBILE_BOTTOM = NAV_ITEMS.filter(n => n.label !== 'History');
@@ -186,14 +256,25 @@ export function renderShell({ active } = {}) {
   // translated -50% on x so it visually straddles the border.
   const collapseBtn = document.createElement('button');
   collapseBtn.id = 'ged-collapse-btn';
-  collapseBtn.className = 'hidden md:flex fixed top-6 z-40 w-8 h-8 rounded-full bg-surface-container-lowest border border-outline-variant items-center justify-center text-on-surface-variant hover:bg-surface-container shadow-sm';
+  collapseBtn.className = 'hidden md:flex fixed top-3 z-40 w-8 h-8 rounded-full bg-surface-container-lowest border border-outline-variant items-center justify-center text-on-surface-variant hover:bg-surface-container shadow-sm';
   collapseBtn.style.transform = 'translateX(-50%)';
   collapseBtn.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
   collapseBtn.innerHTML = `<span class="material-symbols-outlined" id="ged-collapse-icon" style="font-size:18px">${collapsed ? 'chevron_right' : 'chevron_left'}</span>`;
 
-  document.body.prepend(sideNav, topBar, bottomNav);
+  document.body.prepend(sideNav, topBar, desktopTopBar, bottomNav);
   document.body.appendChild(collapseBtn);
   document.getElementById('ged-logout-btn').addEventListener('click', logout);
+  document.getElementById('ged-topbar-logout')?.addEventListener('click', logout);
+
+  // Search: stub navigation — Enter takes the user to a search page if one
+  // exists, otherwise scrolls to the in-page topic the query matches.
+  const searchInput = document.getElementById('ged-topbar-search');
+  searchInput?.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    const q = searchInput.value.trim();
+    if (!q) return;
+    location.href = `/study_notes?topic=${encodeURIComponent(q.toLowerCase().replace(/\s+/g, '-'))}`;
+  });
 
   const collapseIcon = document.getElementById('ged-collapse-icon');
   collapseBtn.addEventListener('click', () => {

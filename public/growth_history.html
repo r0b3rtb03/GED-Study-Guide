@@ -16,25 +16,47 @@
 </head>
 <body class="bg-background text-on-surface min-h-screen">
   <main class="md:pl-64 pt-16 md:pt-0 pb-20 md:pb-0">
-    <div class="max-w-[1200px] mx-auto p-margin-mobile md:p-margin-desktop">
+    <div class="max-w-[1280px] mx-auto p-margin-mobile md:p-margin-desktop">
       <header class="mb-6">
         <h1 class="text-headline-lg font-headline-lg">Growth History</h1>
         <p class="text-body-md text-on-surface-variant mt-1">See how your performance trends over time.</p>
       </header>
 
-      <section id="statsGrid" class="grid grid-cols-2 md:grid-cols-4 gap-gutter mb-8"></section>
+      <!-- Stat cards -->
+      <section id="statsGrid" class="grid grid-cols-2 md:grid-cols-4 gap-gutter mb-6"></section>
 
-      <section class="bg-surface-container-lowest rounded-xl border border-outline-variant/40 p-5 mb-8">
-        <h2 class="text-headline-sm font-headline-sm mb-3">Performance Trend</h2>
-        <div class="relative h-72"><canvas id="performanceChart"></canvas></div>
-      </section>
+      <!-- Chart + Subject Mastery -->
+      <div class="grid lg:grid-cols-[1fr_360px] gap-gutter mb-6">
+        <section class="bg-surface-container-lowest rounded-xl border border-outline-variant/40 p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-headline-sm font-headline-sm">Performance Trend</h2>
+            <div id="rangeToggle" class="inline-flex rounded-lg bg-surface-container p-1 text-label-md">
+              <button data-range="week"  class="px-3 h-8 rounded-md font-bold bg-surface-container-lowest text-on-surface shadow-sm">Week</button>
+              <button data-range="month" class="px-3 h-8 rounded-md text-on-surface-variant">Month</button>
+            </div>
+          </div>
+          <div class="relative h-72"><canvas id="performanceChart"></canvas></div>
+        </section>
 
+        <!-- Subject Mastery (dark) -->
+        <section class="rounded-xl p-5 text-white relative overflow-hidden"
+                 style="background: linear-gradient(160deg, #1d2640 0%, #0d1320 100%);">
+          <h2 class="text-headline-sm font-headline-sm mb-1">Subject Mastery</h2>
+          <p class="text-label-md text-white/60 mb-5">Coverage across all topics</p>
+          <div id="masteryList" class="space-y-4"></div>
+          <a href="/practice_session" id="reviewWeakBtn"
+             class="mt-6 w-full inline-flex items-center justify-center gap-2 h-11 rounded-lg bg-[#8ab4ff] text-[#0a1530] font-bold text-label-md hover:opacity-90 transition">
+            <span class="material-symbols-outlined" style="font-size:20px">flag</span>
+            Review Weak Topics
+          </a>
+        </section>
+      </div>
+
+      <!-- Session History -->
       <section class="bg-surface-container-lowest rounded-xl border border-outline-variant/40 p-5">
-        <div class="flex items-center justify-between mb-3">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
           <h2 class="text-headline-sm font-headline-sm">Session History</h2>
-          <select id="topicFilter" class="h-9 px-3 rounded-lg ring-1 ring-outline-variant text-label-md bg-surface-container-lowest">
-            <option value="">All topics</option>
-          </select>
+          <div id="topicPills" class="flex gap-2 overflow-x-auto"></div>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-left">
@@ -64,18 +86,34 @@
     'linear-equations': 'Linear Equations & Graphs',
     'fractions': 'Fractions, Decimals & Percents',
     'geometry': 'Geometry Basics',
-    'stats': 'Statistics & Data'
+    'stats': 'Statistics & Data',
+    'civics-government': 'Civics & Government',
+    'us-history': 'U.S. History',
+    'economics': 'Economics',
+    'geography': 'Geography',
+    'world-history': 'World History'
   };
 
-  function statCard(label, value, suffix, icon, color = 'text-primary') {
+  function deltaBadge(delta) {
+    if (delta == null || !isFinite(delta) || delta === 0) return '';
+    const positive = delta > 0;
+    const arrow = positive ? 'arrow_upward' : 'arrow_downward';
+    const cls = positive ? 'bg-[#1f3b27] text-[#9bdc8f]' : 'bg-[#4a1719] text-[#ff9d97]';
+    return `<span class="inline-flex items-center gap-0.5 text-[11px] font-bold px-1.5 py-0.5 rounded ${cls}">
+      <span class="material-symbols-outlined" style="font-size:12px">${arrow}</span>${Math.abs(delta)}%
+    </span>`;
+  }
+
+  function statCard(label, value, suffix, icon, color, delta) {
     return `<div class="bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/40">
       <div class="flex items-center justify-between mb-3">
         <span class="text-label-md text-on-surface-variant">${label}</span>
-        <span class="material-symbols-outlined ${color}" style="font-size:22px">${icon}</span>
+        <span class="material-symbols-outlined ${color || 'text-primary'}" style="font-size:22px">${icon}</span>
       </div>
-      <div class="flex items-baseline gap-1">
-        <span class="text-metric-display font-metric-display ${color}">${value}</span>
+      <div class="flex items-baseline gap-2">
+        <span class="text-metric-display font-metric-display ${color || 'text-on-surface'}">${value}</span>
         <span class="text-body-md text-on-surface-variant">${suffix || ''}</span>
+        ${deltaBadge(delta)}
       </div>
     </div>`;
   }
@@ -94,16 +132,18 @@
     const m = Math.floor(sec / 60); return m ? `${m} min` : `${sec}s`;
   }
 
+  // ---- State ----
   let allSessions = [];
+  let activeTopic = '';   // '' = all
+  let activeRange = 'week';
+  let chart = null;
 
-  function renderRows(rows) {
+  function renderRows() {
+    const rows = activeTopic ? allSessions.filter(s => s.topic === activeTopic) : allSessions;
     const tbody = document.getElementById('historyRows');
-    if (!rows.length) {
-      tbody.innerHTML = '';
-      document.getElementById('emptyMsg').classList.remove('hidden');
-      return;
-    }
-    document.getElementById('emptyMsg').classList.add('hidden');
+    const empty = document.getElementById('emptyMsg');
+    if (!rows.length) { tbody.innerHTML = ''; empty.classList.remove('hidden'); return; }
+    empty.classList.add('hidden');
     tbody.innerHTML = rows.map(r => {
       const [bar, txt] = scoreClasses(r.percent);
       return `<tr class="border-b border-outline-variant/30">
@@ -120,12 +160,54 @@
     }).join('');
   }
 
-  function drawChart(sessions) {
-    const ordered = [...sessions].reverse();
-    const labels = ordered.map(s => fmtDate(s.createdAt));
-    const data = ordered.map(s => s.percent);
+  function renderTopicPills() {
+    // Highlight the user's most-practiced topics in addition to "All".
+    const counts = {};
+    for (const s of allSessions) counts[s.topic] = (counts[s.topic] || 0) + 1;
+    const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([slug]) => slug);
+    const items = [{ slug: '', label: 'All topics' }, ...top.map(slug => ({ slug, label: TOPIC_NAMES[slug] || slug }))];
+    const el = document.getElementById('topicPills');
+    el.innerHTML = items.map(i => {
+      const active = i.slug === activeTopic;
+      return `<button data-slug="${i.slug}" class="whitespace-nowrap h-9 px-4 rounded-full text-label-md font-label-md transition ${active ? 'bg-primary text-on-primary font-bold' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'}">${i.label}</button>`;
+    }).join('');
+    el.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+      activeTopic = b.dataset.slug;
+      renderTopicPills();
+      renderRows();
+    }));
+  }
+
+  function bucketByRange(sessions, range) {
+    // For 'week' return last 7 days; for 'month' return last 30 days (per-day avg).
+    const days = range === 'week' ? 7 : 30;
+    const buckets = new Map();
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(today); d.setDate(today.getDate() - i);
+      buckets.set(d.toISOString().slice(0, 10), { sum: 0, n: 0 });
+    }
+    for (const s of sessions) {
+      const key = new Date(s.createdAt.replace(' ', 'T') + (s.createdAt.endsWith('Z') ? '' : 'Z'))
+        .toISOString().slice(0, 10);
+      if (buckets.has(key)) {
+        const b = buckets.get(key); b.sum += s.percent; b.n += 1;
+      }
+    }
+    const labels = [], data = [];
+    for (const [k, v] of buckets) {
+      const d = new Date(k);
+      labels.push(d.toLocaleDateString(undefined, range === 'week' ? { weekday: 'short' } : { month: 'short', day: 'numeric' }));
+      data.push(v.n ? Math.round(v.sum / v.n) : null);
+    }
+    return { labels, data };
+  }
+
+  function drawChart() {
+    const { labels, data } = bucketByRange(allSessions, activeRange);
+    if (chart) chart.destroy();
     const ctx = document.getElementById('performanceChart').getContext('2d');
-    new Chart(ctx, {
+    chart = new Chart(ctx, {
       type: 'line',
       data: {
         labels,
@@ -134,7 +216,9 @@
           data,
           borderColor: '#005bbf',
           backgroundColor: 'rgba(26,115,232,0.12)',
-          fill: true, tension: 0.3, pointBackgroundColor: '#005bbf'
+          fill: true, tension: 0.35,
+          pointBackgroundColor: '#005bbf',
+          spanGaps: true
         }]
       },
       options: {
@@ -145,36 +229,70 @@
     });
   }
 
+  function wireRangeToggle() {
+    const toggle = document.getElementById('rangeToggle');
+    toggle.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => {
+      activeRange = btn.dataset.range;
+      toggle.querySelectorAll('button').forEach(b => {
+        const on = b.dataset.range === activeRange;
+        b.className = on
+          ? 'px-3 h-8 rounded-md font-bold bg-surface-container-lowest text-on-surface shadow-sm'
+          : 'px-3 h-8 rounded-md text-on-surface-variant';
+      });
+      drawChart();
+    }));
+  }
+
+  function renderMastery(stats) {
+    const items = (stats.bySubject || []).map(sub => {
+      const pct = Math.round(sub.percent || 0);
+      const barColor = pct >= 80 ? '#9bdc8f' : pct >= 60 ? '#f5b76b' : '#ff9d97';
+      return `<div>
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-label-md text-white/85 font-bold">${sub.name}</span>
+          <span class="text-label-md text-white font-bold">${pct}%</span>
+        </div>
+        <div class="h-2 rounded-full bg-white/10 overflow-hidden">
+          <div class="h-full rounded-full" style="width:${pct}%; background:${barColor}"></div>
+        </div>
+      </div>`;
+    }).join('');
+    document.getElementById('masteryList').innerHTML = items || `<p class="text-label-md text-white/60">Start a practice session to see mastery.</p>`;
+  }
+
+  function computeRecentDelta(sessions) {
+    // Avg score of last 5 vs prior 5 — simple, honest trend signal.
+    if (sessions.length < 4) return null;
+    const last5 = sessions.slice(0, 5);
+    const prev5 = sessions.slice(5, 10);
+    if (!prev5.length) return null;
+    const a = last5.reduce((s, x) => s + x.percent, 0) / last5.length;
+    const b = prev5.reduce((s, x) => s + x.percent, 0) / prev5.length;
+    return Math.round(a - b);
+  }
+
   (async () => {
     try {
       const [stats, history] = await Promise.all([
         apiJson('/api/user/stats'),
-        apiJson('/api/user/history?limit=50')
+        apiJson('/api/user/history?limit=100')
       ]);
+      allSessions = history.sessions || [];
 
+      const overallDelta = computeRecentDelta(allSessions);
       const overallColor = stats.overallScore >= 80 ? 'text-[#10b981]' : stats.overallScore >= 60 ? 'text-[#f59e0b]' : 'text-primary';
       document.getElementById('statsGrid').innerHTML = [
-        statCard('Overall Progress', stats.overallScore, '%', 'trending_up', overallColor),
+        statCard('Overall Progress', stats.overallScore, '%', 'trending_up', overallColor, overallDelta),
         statCard('Time Studied', stats.totalTimeMinutes, 'min', 'schedule'),
         statCard('Sessions', stats.sessionsCompleted, '', 'edit_square'),
         statCard('Current Streak', stats.streakDays, 'days', 'local_fire_department', 'text-[#f59e0b]')
       ].join('');
 
-      allSessions = history.sessions || [];
-      const filter = document.getElementById('topicFilter');
-      const topics = [...new Set(allSessions.map(s => s.topic))];
-      for (const t of topics) {
-        const o = document.createElement('option');
-        o.value = t; o.textContent = TOPIC_NAMES[t] || t;
-        filter.appendChild(o);
-      }
-      filter.addEventListener('change', () => {
-        const v = filter.value;
-        renderRows(v ? allSessions.filter(s => s.topic === v) : allSessions);
-      });
-
-      renderRows(allSessions);
-      if (allSessions.length) drawChart(allSessions);
+      renderMastery(stats);
+      renderTopicPills();
+      renderRows();
+      wireRangeToggle();
+      drawChart();
     } catch (e) {
       document.getElementById('statsGrid').innerHTML = `<div class="col-span-full text-error text-label-md">${e.message}</div>`;
     }

@@ -4,8 +4,17 @@ import rateLimit from 'express-rate-limit';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { getStudyGuide } from '../services/studyGuideLoader.js';
 import { structureNotes, isAiEnabled } from '../services/ai.js';
-import { GED_TOPIC_GUIDES } from '../data/gedTopicGuides.js';
+import { GED_TOPIC_GUIDES, TOPICS_BY_SUBJECT } from '../data/gedTopicGuides.js';
+import { STATIC_NOTES } from '../data/staticNotes.js';
 import { createRequire } from 'node:module';
+
+// Find which subject owns a topic slug (slugs are unique across subjects).
+function resolveSubject(slug) {
+  for (const [subject, topics] of Object.entries(TOPICS_BY_SUBJECT)) {
+    if (topics[slug]) return subject;
+  }
+  return null;
+}
 
 const router = Router();
 const require = createRequire(import.meta.url);
@@ -42,7 +51,21 @@ const notesCache = new Map();
 
 router.get('/:topic', async (req, res) => {
   const topic = req.params.topic;
-  if (!GED_TOPIC_GUIDES[topic]) return res.status(404).json({ message: 'Topic not found.' });
+  const subject = resolveSubject(topic);
+  if (!subject) return res.status(404).json({ message: 'Topic not found.' });
+
+  // Static notes are pre-written and served instantly — no AI call.
+  const staticNote = STATIC_NOTES[subject]?.[topic];
+  if (staticNote) return res.json(staticNote);
+
+  // Math-only legacy path: only Math topics have raw study-guide text on disk.
+  if (subject !== 'math') {
+    const t = TOPICS_BY_SUBJECT[subject][topic];
+    return res.json({
+      title: t.name,
+      sections: [{ heading: 'Topic Scope', content: t.scope.trim(), keyFormulas: [], tips: [] }]
+    });
+  }
 
   if (notesCache.has(topic)) return res.json(notesCache.get(topic));
 

@@ -64,11 +64,16 @@
   renderShell({ active: 'study_notes' });
 
   const TOPICS = [
-    { slug: 'algebra',          name: 'Algebra' },
-    { slug: 'linear-equations', name: 'Linear Equations & Graphs' },
-    { slug: 'fractions',        name: 'Fractions, Decimals & Percents' },
-    { slug: 'geometry',         name: 'Geometry Basics' },
-    { slug: 'stats',            name: 'Statistics & Data' }
+    { slug: 'algebra',           name: 'Algebra',                          subject: 'math' },
+    { slug: 'linear-equations',  name: 'Linear Equations & Graphs',        subject: 'math' },
+    { slug: 'fractions',         name: 'Fractions, Decimals & Percents',   subject: 'math' },
+    { slug: 'geometry',          name: 'Geometry Basics',                  subject: 'math' },
+    { slug: 'stats',             name: 'Statistics & Data',                subject: 'math' },
+    { slug: 'civics-government', name: 'Civics & Government',              subject: 'social-studies' },
+    { slug: 'us-history',        name: 'U.S. History',                     subject: 'social-studies' },
+    { slug: 'economics',         name: 'Economics',                        subject: 'social-studies' },
+    { slug: 'geography',         name: 'Geography',                        subject: 'social-studies' },
+    { slug: 'world-history',     name: 'World History',                    subject: 'social-studies' }
   ];
 
   const params = new URLSearchParams(location.search);
