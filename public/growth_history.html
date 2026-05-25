@@ -27,7 +27,7 @@
 
       <!-- Chart + Subject Mastery -->
       <div class="grid lg:grid-cols-[1fr_360px] gap-gutter mb-6">
-        <section class="bg-surface-container-lowest rounded-xl border border-outline-variant/40 p-5">
+        <section class="bg-surface-container-lowest rounded-xl p-5">
           <div class="flex items-center justify-between mb-4">
             <h2 class="text-headline-sm font-headline-sm">Performance Trend</h2>
             <div id="rangeToggle" class="inline-flex rounded-lg bg-surface-container p-1 text-label-md">
@@ -60,7 +60,7 @@
       </div>
 
       <!-- Session History -->
-      <section class="bg-surface-container-lowest rounded-xl border border-outline-variant/40 p-5">
+      <section class="bg-surface-container-lowest rounded-xl p-5">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
           <h2 class="text-headline-sm font-headline-sm">Session History</h2>
           <div id="topicPills" class="flex gap-2 overflow-x-auto"></div>
@@ -122,7 +122,7 @@
   }
 
   function statCard(label, value, suffix, icon, color, delta) {
-    return `<div class="bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/40">
+    return `<div class="bg-surface-container-lowest rounded-xl p-5">
       <div class="flex items-center justify-between mb-3">
         <span class="text-label-md text-on-surface-variant">${label}</span>
         <span class="material-symbols-outlined ${color || 'text-primary'}" style="font-size:22px">${icon}</span>
@@ -139,6 +139,17 @@
     if (pct >= 80) return ['bg-[#10b981]', 'text-[#10b981]'];
     if (pct >= 60) return ['bg-[#f59e0b]', 'text-[#f59e0b]'];
     return ['bg-error', 'text-error'];
+  }
+
+  function difficultyBadge(diff) {
+    const d = String(diff || 'medium').toLowerCase();
+    const styles = {
+      easy:   'bg-[#1f3b27] text-[#9bdc8f]',
+      medium: 'bg-[#3b341f] text-[#f5b76b]',
+      hard:   'bg-[#4a1719] text-[#ff9d97]'
+    };
+    const label = d.charAt(0).toUpperCase() + d.slice(1);
+    return `<span class="inline-flex items-center px-2 h-5 rounded text-[11px] font-bold ${styles[d] || styles.medium}">${label}</span>`;
   }
 
   function fmtDate(iso) {
@@ -165,7 +176,12 @@
       const [bar, txt] = scoreClasses(r.percent);
       return `<tr class="border-b border-outline-variant/30">
         <td class="py-3 pr-4 text-on-surface-variant">${fmtDate(r.createdAt)}</td>
-        <td class="py-3 pr-4">${TOPIC_NAMES[r.topic] || r.topic}</td>
+        <td class="py-3 pr-4">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span>${TOPIC_NAMES[r.topic] || r.topic}</span>
+            ${difficultyBadge(r.difficulty)}
+          </div>
+        </td>
         <td class="py-3 pr-4">
           <div class="flex items-center gap-2">
             <div class="w-28 h-2 bg-surface-container rounded-full overflow-hidden"><div class="h-full ${bar}" style="width:${r.percent}%"></div></div>
