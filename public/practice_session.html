@@ -30,7 +30,10 @@
 </head>
 <body class="bg-background text-on-surface min-h-screen">
   <!-- Sticky session bar — visible only during an active session -->
-  <header id="sessionBar" class="hidden fixed top-0 right-0 left-0 md:left-64 z-40 md:z-20 bg-surface-container-lowest border-b border-outline-variant">
+  <!-- z-50 sits above the global top bar (z-30 from layout.js); during a
+       practice session the topic/timer/formula bar takes over the top of
+       the viewport so the user has a focused mode. -->
+  <header id="sessionBar" class="hidden fixed top-0 right-0 left-0 md:left-64 z-50 bg-surface-container-lowest border-b border-outline-variant">
     <div class="max-w-2xl mx-auto h-14 px-4 md:px-6 flex items-center justify-between gap-3">
       <div class="flex items-center gap-3 min-w-0">
         <span id="topicBadge" class="inline-flex items-center gap-1 px-3 h-8 rounded-full bg-primary-container/10 text-primary text-label-md font-bold whitespace-nowrap"></span>
