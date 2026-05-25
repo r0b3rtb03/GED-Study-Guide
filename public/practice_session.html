@@ -843,6 +843,11 @@
       try {
         window.renderMathInElement?.(root, {
           delimiters: [
+            // Our custom JSON-safe delimiters (preferred — no backslash
+            // escaping required in the AI's response).
+            { left: '[m]', right: '[/m]', display: false },
+            { left: '[M]', right: '[/M]', display: true },
+            // Fallbacks if a response still uses LaTeX-style delimiters.
             { left: '$$', right: '$$', display: true },
             { left: '\\(', right: '\\)', display: false },
             { left: '\\[', right: '\\]', display: true }

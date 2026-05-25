@@ -54,7 +54,7 @@ function normalizeSpaces(s) {
 // Split a string on KaTeX math segments — \( ... \), \[ ... \], $$ ... $$ —
 // so we can sanitize the prose around them without touching the LaTeX inside.
 // Returns an array of { math: boolean, text: string } chunks in order.
-const MATH_DELIMS = /(\\\(.+?\\\)|\\\[.+?\\\]|\$\$.+?\$\$)/gs;
+const MATH_DELIMS = /(\[m\][\s\S]+?\[\/m\]|\[M\][\s\S]+?\[\/M\]|\\\([\s\S]+?\\\)|\\\[[\s\S]+?\\\]|\$\$[\s\S]+?\$\$)/g;
 function splitMath(text) {
   const out = [];
   let last = 0;

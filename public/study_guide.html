@@ -93,10 +93,17 @@
                     || sessionStorage.getItem('ged_last_study_guide_subject')
                     || 'math';
 
+  // Supplementary references that are NOT registered subjects — kept here
+  // so the catalog API response doesn't drop them.
+  const EXTRAS = SUBJECTS_DEFAULT.filter(s => !['math','social-studies','english','science'].includes(s.slug));
+
   let SUBJECTS = SUBJECTS_DEFAULT;
   fetch('/api/user/catalog').then(r => r.ok ? r.json() : null).then(d => {
     if (d?.subjects?.length) {
-      SUBJECTS = d.subjects.map(s => ({ slug: s.slug, name: s.name, pdfPath: s.pdfPath, icon: s.icon }));
+      SUBJECTS = [
+        ...d.subjects.map(s => ({ slug: s.slug, name: s.name, pdfPath: s.pdfPath, icon: s.icon })),
+        ...EXTRAS
+      ];
       renderTabs(currentSlug);
     }
   }).catch(() => { /* fall back to defaults */ });

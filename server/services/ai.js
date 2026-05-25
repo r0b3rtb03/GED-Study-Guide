@@ -21,24 +21,30 @@ const SYSTEM_PROMPT = `You are an expert GED Mathematical Reasoning tutor. Your 
 4. Use plain language accessible to adult learners who may have been out of school for years.
 5. Always format your JSON responses exactly as specified — no extra text outside the JSON.
 
-MATH FORMATTING — the frontend renders LaTeX with KaTeX, so use it for
-ANYTHING beyond a trivial arithmetic operator:
-- Wrap inline math in \\( ... \\). Examples:
-    \\( \\frac{12x}{5 + x} \\),  \\( \\sqrt{16} \\),  \\( x^2 + 5x = 14 \\),
-    \\( \\frac{7}{8} \\div \\frac{9}{5} \\),  \\( y = mx + b \\)
-- Wrap a displayed/centered formula in $$ ... $$ (own line).
-- Inside math delimiters, write LaTeX (\\frac, \\sqrt, ^, _, \\div, \\times,
-  \\pi, \\cdot, \\le, \\ge, \\ne, \\pm). Always use \\frac{a}{b} for fractions
-  that have a visible numerator and denominator.
-- Outside math delimiters, plain prose is fine. For inline plain-text
-  arithmetic you can still use × ÷ ² ³ √ π if the value reads cleanly,
-  but prefer the LaTeX form whenever a fraction, root, exponent, or
-  algebraic expression appears.
-- NEVER mix raw LaTeX commands outside delimiters (e.g. \\frac shown as
-  text in the question stem is wrong; either wrap it in \\(...\\) or
-  write it as a plain "3/4").
-- Multiple-choice option strings follow the same rule — wrap the math
-  part of each option in \\(...\\): e.g. "\\( \\frac{7}{40} \\)".`;
+MATH FORMATTING — the frontend renders LaTeX with KaTeX. Use these
+ESCAPE-FREE delimiters (designed to be safe inside JSON strings — no
+backslash escaping needed):
+- Inline math:    [m] ... [/m]
+- Display math:   [M] ... [/M]   (own line, centered)
+
+Examples:
+- Inline fraction:        "Find the value for [m] x [/m] that makes [m] \\\\frac{12x}{5 + x} [/m] undefined."
+- Square root:            "Evaluate [m] \\\\sqrt{16} [/m]."
+- Equation:               "Solve [m] x^2 + 5x = 14 [/m]."
+- Fraction division:      "[m] \\\\frac{7}{8} \\\\div \\\\frac{9}{5} = ? [/m]"
+
+Inside the delimiters, write standard LaTeX: \\\\frac{a}{b}, \\\\sqrt{x},
+^ for exponents, _ for subscripts, \\\\div, \\\\times, \\\\pi, \\\\cdot,
+\\\\le, \\\\ge, \\\\ne, \\\\pm. Use \\\\frac whenever a visible numerator
+sits above a visible denominator.
+
+Outside the delimiters, plain prose is fine. Use × ÷ ² ³ √ π for trivial
+inline arithmetic that doesn't need stacking. NEVER write raw LaTeX
+commands (\\\\frac, \\\\sqrt) outside [m]...[/m] — they will not render
+and look broken.
+
+Multiple-choice option strings follow the same rule — wrap the math part
+of each option: "[m] \\\\frac{7}{40} [/m]", "[m] \\\\sqrt{16} [/m]".`;
 
 // ---------- Provider clients ----------
 
