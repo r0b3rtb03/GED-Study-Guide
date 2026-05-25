@@ -28,8 +28,8 @@
    three gears form a clear triangle with daylight between them. */
 .ged-loader__cogs {
   position: relative;
-  width: 240px;
-  height: 210px;
+  width: 180px;
+  height: 170px;
 }
 /* The overlay used to be a white halo behind the gears — looked muddy
    against our dark navy backgrounds. Removed visually; class kept so
@@ -46,26 +46,25 @@
 }
 .ged-loader__gear path { fill: currentColor; }
 
-/* Triangle layout — large blue gear on top, medium green bottom-left,
-   small orange bottom-right. Centre-to-centre distances chosen so each
-   pair has ~18px of daylight between gear edges — close enough to read
-   as a tight cluster, far enough that no two ever touch. Opposite spin
-   direction still implies coupling. */
+/* Triangle layout where the bottom-left and bottom-right gears MESH
+   with the top gear — centre-to-centre distance equals the sum of
+   pitch radii so each gear's tooth tip slots into the next gear's
+   tooth gap. Opposite spin direction reinforces the "driven" read. */
 .ged-loader__gear--top {
   width: 110px; height: 110px;
-  top: 0; left: 65px;              /* center (120, 55) */
+  top: 0; left: 55px;              /* center (110, 55), r≈47 */
   color: #5a8de8;
   animation: ged-cog-rotate 9s infinite linear;
 }
 .ged-loader__gear--left {
   width: 90px; height: 90px;
-  top: 115px; left: 25px;          /* center (70, 160) — gap ~19px from top */
+  top: 80px; left: 15px;           /* center (60, 125) — dist to top = 86 = 47+39 ✓ */
   color: #6dc6c6;
   animation: ged-cog-rotate-rev 8s infinite linear;
 }
 .ged-loader__gear--right {
   width: 70px; height: 70px;
-  top: 110px; left: 145px;         /* center (180, 145) — gap ~18px from top */
+  top: 90px; left: 108px;          /* center (143, 125) — dist to top = 77 = 47+30 ✓ */
   color: #f2b66a;
   animation: ged-cog-rotate-rev 6s infinite linear;
 }
