@@ -5,6 +5,10 @@ import { db, newId } from '../services/db.js';
 import { generateQuestion, checkAnswer } from '../services/ai.js';
 import { isValidSubject } from '../data/subjects.js';
 import { getTopic } from '../data/gedTopicGuides.js';
+import {
+  pickRecycleProbability, pickCachedQuestion,
+  rememberQuestion, markSeen
+} from '../services/questionCache.js';
 
 const router = Router();
 
@@ -32,6 +36,9 @@ guestPracticeRouter.post('/generate-guest', guestLimiter, async (req, res) => {
   const { difficulty = 'medium', previousQuestions = [] } = req.body || {};
   try {
     const question = await generateQuestion({ ...v, difficulty, previousQuestions });
+    // Guests have no user_id, so they only contribute to the pool — they
+    // don't pull recycled questions and we don't mark anything seen.
+    rememberQuestion({ ...v, difficulty, question });
     res.json({ question });
   } catch (err) {
     console.error('[practice/generate-guest]', err);
@@ -56,8 +63,24 @@ guestPracticeRouter.post('/check-guest', guestLimiter, async (req, res) => {
 router.post('/generate', requireAuth, async (req, res) => {
   const v = validateSubjectAndTopic(req, res); if (!v) return;
   const { difficulty = 'medium', previousQuestions = [] } = req.body || {};
+  const userId = req.user?.sub;
   try {
+    // Maybe recycle: probability depends on the user's current mastery
+    // band for this exact (subject, topic, difficulty) bucket. Cache miss
+    // falls through to a fresh AI generation, so the user never waits on
+    // a recycled question that doesn't exist yet.
+    const prob = pickRecycleProbability(userId, v.subject, v.topic, difficulty);
+    if (Math.random() < prob) {
+      const cached = pickCachedQuestion({ userId, ...v, difficulty });
+      if (cached) {
+        markSeen(userId, cached.id);
+        return res.json({ question: cached.question, fromCache: true });
+      }
+    }
+
     const question = await generateQuestion({ ...v, difficulty, previousQuestions });
+    const id = rememberQuestion({ ...v, difficulty, question });
+    if (id) markSeen(userId, id);
     res.json({ question });
   } catch (err) {
     console.error('[practice/generate]', err);

@@ -41,8 +41,12 @@
         <button data-diff="medium" class="h-7 px-3 rounded-full">Medium</button>
         <button data-diff="hard"   class="h-7 px-3 rounded-full">Hard</button>
       </div>
+      <!-- Use inline style so `hidden` (display:none) doesn't fight
+           `inline-flex` from the Tailwind utilities; show/hide via the
+           style attribute below. -->
       <button id="formulaBtn" type="button"
-              class="hidden h-9 px-3 rounded-lg text-label-md font-bold text-primary hover:bg-primary-container/10 transition inline-flex items-center gap-1.5"
+              style="display:none"
+              class="h-9 px-3 rounded-lg text-label-md font-bold text-primary hover:bg-primary-container/10 transition items-center gap-1.5"
               title="Open the official GED Math formula sheet">
         <span class="material-symbols-outlined" style="font-size:18px">functions</span>
         <span id="formulaBtnLabel" class="hidden sm:inline">Show Formula Sheet</span>
@@ -105,6 +109,32 @@
       body.ged-formula-open #session { padding-right: 460px; transition: padding 0.2s ease-out; }
       body.ged-formula-open #sessionBar { right: 440px; transition: right 0.2s ease-out; }
     }
+
+    /* Graded option pills — keep text legible against the tinted bg in
+       BOTH light and dark mode. Previously the bg pastels combined with
+       light text in dark mode produced a flash-bang. */
+    .option-graded-correct {
+      box-shadow: inset 0 0 0 2px #10b981;
+      background-color: #ecfdf5;
+      color: #064e3b;
+    }
+    .option-graded-wrong {
+      box-shadow: inset 0 0 0 2px #ef4444;
+      background-color: #fef2f2;
+      color: #7f1d1d;
+    }
+    html.dark .option-graded-correct {
+      background-color: rgba(16, 185, 129, 0.15);
+      color: #a7f3d0;
+      box-shadow: inset 0 0 0 2px #34d399;
+    }
+    html.dark .option-graded-wrong {
+      background-color: rgba(239, 68, 68, 0.15);
+      color: #fecaca;
+      box-shadow: inset 0 0 0 2px #f87171;
+    }
+    /* Make sure nested text picks up the contrast color */
+    .option-graded-correct *, .option-graded-wrong * { color: inherit; }
   </style>
 
   <main class="md:pl-64 pt-16 md:pt-0 pb-20 md:pb-0">
@@ -719,7 +749,7 @@
     // Formula Sheet button: Math sessions only. The official GED formula
     // sheet ships with the test and would be available during the real
     // exam, so we surface it during practice for parity.
-    $('formulaBtn').classList.toggle('hidden', session.subject !== 'math');
+    $('formulaBtn').style.display = (session.subject === 'math') ? 'inline-flex' : 'none';
     renderDifficulty();
     startTimer();
     resetIdle();
@@ -925,7 +955,7 @@
     if (q.type === 'multiple_choice') {
       document.querySelectorAll('.option').forEach(el => {
         const letter = el.dataset.letter;
-        if (letter === q.correctAnswer) el.classList.add('ring-2', 'ring-[#10b981]', 'bg-[#ecfdf5]');
+        if (letter === q.correctAnswer) el.classList.add('option-graded-correct');
         // Lock all radio inputs so the user can't toggle them after reveal
         const input = el.querySelector('input[type="radio"]');
         if (input) input.disabled = true;
@@ -1033,8 +1063,8 @@
     if (q.type === 'multiple_choice') {
       document.querySelectorAll('.option').forEach(el => {
         const letter = el.dataset.letter;
-        if (letter === q.correctAnswer) el.classList.add('ring-2', 'ring-[#10b981]', 'bg-[#ecfdf5]');
-        else if (letter === userAnswer && !result.isCorrect) el.classList.add('ring-2', 'ring-[#ef4444]', 'bg-[#fef2f2]');
+        if (letter === q.correctAnswer) el.classList.add('option-graded-correct');
+        else if (letter === userAnswer && !result.isCorrect) el.classList.add('option-graded-wrong');
       });
     }
     const okIcon = result.isCorrect

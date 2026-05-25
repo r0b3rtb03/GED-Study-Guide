@@ -111,6 +111,31 @@ CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON practice_sessions(user_id);
 -- be missing). Creating the index here would crash on first boot.
 CREATE INDEX IF NOT EXISTS idx_sessions_topic ON practice_sessions(topic);
 CREATE INDEX IF NOT EXISTS idx_sessions_created_at ON practice_sessions(created_at);
+
+-- Cached questions. Every successful AI generation gets inserted here, keyed
+-- by (subject, topic, difficulty, content_hash). The hash is computed from
+-- the question text so we never insert a duplicate. user_question_seen tracks
+-- which cached questions a given user has already received so we never
+-- recycle the same question to the same person.
+CREATE TABLE IF NOT EXISTS practice_questions (
+  id            TEXT PRIMARY KEY,
+  subject       TEXT NOT NULL,
+  topic         TEXT NOT NULL,
+  difficulty    TEXT NOT NULL,
+  content_hash  TEXT UNIQUE NOT NULL,
+  question_json TEXT NOT NULL,
+  use_count     INTEGER NOT NULL DEFAULT 0,
+  created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_questions_lookup ON practice_questions(subject, topic, difficulty);
+
+CREATE TABLE IF NOT EXISTS user_question_seen (
+  user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  question_id TEXT NOT NULL REFERENCES practice_questions(id) ON DELETE CASCADE,
+  seen_at     TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (user_id, question_id)
+);
+CREATE INDEX IF NOT EXISTS idx_seen_user ON user_question_seen(user_id);
 `);
 
 // Lightweight migration: add columns added after the original CREATE TABLE on
