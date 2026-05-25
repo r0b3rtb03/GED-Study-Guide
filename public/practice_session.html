@@ -1209,14 +1209,21 @@
   const formulaBtnLabel = document.getElementById('formulaBtnInlineLabel');
   const formulaMobile   = document.getElementById('formulaModalMobile');
 
+  // Iframe.src reads back as the current page URL when unset (browsers
+  // resolve "" against location), so we can't use it as a "has loaded?"
+  // signal. Track with a data attribute instead.
+  const FORMULA_PDF = '/math-formula-sheet.pdf#view=FitH';
+  function ensureFormulaSrc(frame) {
+    if (frame.dataset.loaded === '1') return;
+    frame.src = FORMULA_PDF;
+    frame.dataset.loaded = '1';
+  }
   function openFormula() {
     if (isDesktop()) {
-      const frame = document.getElementById('formulaFrame');
-      if (!frame.src) frame.src = '/math-formula-sheet.pdf#view=FitH';
+      ensureFormulaSrc(document.getElementById('formulaFrame'));
       document.body.classList.add('ged-formula-open');
     } else {
-      const frame = document.getElementById('formulaFrameMobile');
-      if (!frame.src) frame.src = '/math-formula-sheet.pdf#view=FitH';
+      ensureFormulaSrc(document.getElementById('formulaFrameMobile'));
       formulaMobile.classList.remove('hidden');
       formulaMobile.classList.add('flex');
     }
