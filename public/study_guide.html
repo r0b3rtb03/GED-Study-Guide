@@ -78,10 +78,13 @@
 
   const $ = id => document.getElementById(id);
   const SUBJECTS_DEFAULT = [
-    { slug: 'math',           name: 'Math',           pdfPath: '/study-guide.pdf',           icon: 'function' },
-    { slug: 'social-studies', name: 'Social Studies', pdfPath: '/social-studies-guide.pdf',  icon: 'public' },
-    { slug: 'english',        name: 'English',        pdfPath: '/english-guide.pdf',         icon: 'menu_book' },
-    { slug: 'science',        name: 'Science',        pdfPath: '/science-guide.pdf',         icon: 'science' }
+    { slug: 'math',            name: 'Math',                pdfPath: '/study-guide.pdf',           icon: 'function' },
+    { slug: 'social-studies',  name: 'Social Studies',      pdfPath: '/social-studies-guide.pdf',  icon: 'public' },
+    { slug: 'english',         name: 'English',             pdfPath: '/english-guide.pdf',         icon: 'menu_book' },
+    { slug: 'science',         name: 'Science',             pdfPath: '/science-guide.pdf',         icon: 'science' },
+    // Supplementary math references — show up after the four main subjects.
+    { slug: 'formula-sheet',   name: 'Math Formula Sheet',  pdfPath: '/math-formula-sheet.pdf',    icon: 'functions' },
+    { slug: 'no-calc-tips',    name: 'No-Calculator Tips',  pdfPath: '/non-calculator-tips.pdf',   icon: 'do_not_disturb_on' }
   ];
 
   // Initial subject from ?subject= URL param, else from sessionStorage, else math.

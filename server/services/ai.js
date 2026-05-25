@@ -21,17 +21,24 @@ const SYSTEM_PROMPT = `You are an expert GED Mathematical Reasoning tutor. Your 
 4. Use plain language accessible to adult learners who may have been out of school for years.
 5. Always format your JSON responses exactly as specified — no extra text outside the JSON.
 
-MATH OPERATOR FORMATTING — ABSOLUTELY MANDATORY in every string field:
-- Multiplication: use × (Unicode U+00D7).  NEVER use *, \\times, \\cdot, or "x".
-- Division:       use ÷ (Unicode U+00F7).  NEVER use /, \\div, or "over".
-- Subtraction:    use - (plain ASCII hyphen-minus).  NEVER use \\minus or − (en-dash).
-- Addition:       use + (plain plus).
-- Exponents:      write as "x²" or "x^2", but prefer ²/³ Unicode when the exponent is 2 or 3.
-- Square root:    use √. NEVER use \\sqrt.
-- Pi:             use π. NEVER use \\pi.
-- Do NOT use LaTeX, MathJax, KaTeX, or HTML entities anywhere.
-- Fractions like "3/4" or "1/2" may keep the slash (they read as fractions).
-- A standalone division in arithmetic (e.g. "12 ÷ 4") MUST use ÷ with spaces around it.`;
+MATH FORMATTING — the frontend renders LaTeX with KaTeX, so use it for
+ANYTHING beyond a trivial arithmetic operator:
+- Wrap inline math in \\( ... \\). Examples:
+    \\( \\frac{12x}{5 + x} \\),  \\( \\sqrt{16} \\),  \\( x^2 + 5x = 14 \\),
+    \\( \\frac{7}{8} \\div \\frac{9}{5} \\),  \\( y = mx + b \\)
+- Wrap a displayed/centered formula in $$ ... $$ (own line).
+- Inside math delimiters, write LaTeX (\\frac, \\sqrt, ^, _, \\div, \\times,
+  \\pi, \\cdot, \\le, \\ge, \\ne, \\pm). Always use \\frac{a}{b} for fractions
+  that have a visible numerator and denominator.
+- Outside math delimiters, plain prose is fine. For inline plain-text
+  arithmetic you can still use × ÷ ² ³ √ π if the value reads cleanly,
+  but prefer the LaTeX form whenever a fraction, root, exponent, or
+  algebraic expression appears.
+- NEVER mix raw LaTeX commands outside delimiters (e.g. \\frac shown as
+  text in the question stem is wrong; either wrap it in \\(...\\) or
+  write it as a plain "3/4").
+- Multiple-choice option strings follow the same rule — wrap the math
+  part of each option in \\(...\\): e.g. "\\( \\frac{7}{40} \\)".`;
 
 // ---------- Provider clients ----------
 

@@ -51,11 +51,34 @@ function normalizeSpaces(s) {
   return s.replace(/[ \t]+/g, ' ').replace(/ ?([×÷+−])  ?/g, ' $1 ').trim();
 }
 
+// Split a string on KaTeX math segments — \( ... \), \[ ... \], $$ ... $$ —
+// so we can sanitize the prose around them without touching the LaTeX inside.
+// Returns an array of { math: boolean, text: string } chunks in order.
+const MATH_DELIMS = /(\\\(.+?\\\)|\\\[.+?\\\]|\$\$.+?\$\$)/gs;
+function splitMath(text) {
+  const out = [];
+  let last = 0;
+  for (const m of text.matchAll(MATH_DELIMS)) {
+    if (m.index > last) out.push({ math: false, text: text.slice(last, m.index) });
+    out.push({ math: true, text: m[0] });
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) out.push({ math: false, text: text.slice(last) });
+  return out;
+}
+
 export function formatMath(text) {
   if (typeof text !== 'string') return text;
-  let out = text;
-  for (const [re, rep] of REPLACEMENTS) out = out.replace(re, rep);
-  return normalizeSpaces(out);
+  // Only sanitize prose segments — leave LaTeX inside \( \), \[ \], $$ $$ alone
+  // so KaTeX still has \frac, \sqrt, \times, etc. to render.
+  const parts = splitMath(text);
+  const out = parts.map(p => {
+    if (p.math) return p.text;
+    let s = p.text;
+    for (const [re, rep] of REPLACEMENTS) s = s.replace(re, rep);
+    return normalizeSpaces(s);
+  }).join('');
+  return out;
 }
 
 /**
