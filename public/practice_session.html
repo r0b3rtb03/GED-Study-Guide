@@ -44,16 +44,6 @@
         <button data-diff="medium" class="h-7 px-3 rounded-full">Medium</button>
         <button data-diff="hard"   class="h-7 px-3 rounded-full">Hard</button>
       </div>
-      <!-- Use inline style so `hidden` (display:none) doesn't fight
-           `inline-flex` from the Tailwind utilities; show/hide via the
-           style attribute below. -->
-      <button id="formulaBtn" type="button"
-              style="display:none"
-              class="h-9 px-3 rounded-lg text-label-md font-bold text-primary hover:bg-primary-container/10 transition items-center gap-1.5"
-              title="Open the official GED Math formula sheet">
-        <span class="material-symbols-outlined" style="font-size:18px">functions</span>
-        <span id="formulaBtnLabel" class="hidden sm:inline">Show Formula Sheet</span>
-      </button>
       <p id="qCounter" class="text-label-md text-on-surface-variant whitespace-nowrap">Question 1 of 10</p>
     </div>
   </header>
@@ -272,6 +262,14 @@
             </button>
             <button id="revealBtn" class="h-10 px-3 rounded-lg text-label-md font-bold text-on-surface-variant hover:bg-surface-container-low inline-flex items-center gap-1.5">
               <span class="material-symbols-outlined" style="font-size:18px">visibility</span> Show Answer
+            </button>
+            <!-- Math-only Formula Sheet toggle. Inline style display:none
+                 so Tailwind's `hidden` utility doesn't fight inline-flex. -->
+            <button id="formulaBtnInline" type="button" style="display:none"
+                    class="h-10 px-3 rounded-lg text-label-md font-bold text-primary hover:bg-primary-container/10 items-center gap-1.5"
+                    title="Open the official GED Math formula sheet">
+              <span class="material-symbols-outlined" style="font-size:18px">functions</span>
+              <span id="formulaBtnInlineLabel">Formula Sheet</span>
             </button>
           </div>
           <div class="ml-auto flex gap-2">
@@ -752,7 +750,7 @@
     // Formula Sheet button: Math sessions only. The official GED formula
     // sheet ships with the test and would be available during the real
     // exam, so we surface it during practice for parity.
-    $('formulaBtn').style.display = (session.subject === 'math') ? 'inline-flex' : 'none';
+    $('formulaBtnInline').style.display = (session.subject === 'math') ? 'inline-flex' : 'none';
     renderDifficulty();
     startTimer();
     resetIdle();
@@ -1204,7 +1202,7 @@
   // Mobile: full-screen overlay (no room to dock). PDF iframe loads
   // lazily on first open so we don't pay the cost up front.
   const isDesktop  = () => window.matchMedia('(min-width: 768px)').matches;
-  const formulaBtnLabel = document.getElementById('formulaBtnLabel');
+  const formulaBtnLabel = document.getElementById('formulaBtnInlineLabel');
   const formulaMobile   = document.getElementById('formulaModalMobile');
 
   function openFormula() {
@@ -1224,13 +1222,13 @@
     document.body.classList.remove('ged-formula-open');
     formulaMobile.classList.add('hidden');
     formulaMobile.classList.remove('flex');
-    if (formulaBtnLabel) formulaBtnLabel.textContent = 'Show Formula Sheet';
+    if (formulaBtnLabel) formulaBtnLabel.textContent = 'Formula Sheet';
   }
   function isFormulaOpen() {
     return document.body.classList.contains('ged-formula-open')
         || !formulaMobile.classList.contains('hidden');
   }
-  $('formulaBtn').addEventListener('click', () => {
+  $('formulaBtnInline').addEventListener('click', () => {
     isFormulaOpen() ? closeFormula() : openFormula();
   });
   document.getElementById('formulaCloseBtn').addEventListener('click', closeFormula);
