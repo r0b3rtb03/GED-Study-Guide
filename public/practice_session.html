@@ -45,35 +45,67 @@
               class="hidden h-9 px-3 rounded-lg text-label-md font-bold text-primary hover:bg-primary-container/10 transition inline-flex items-center gap-1.5"
               title="Open the official GED Math formula sheet">
         <span class="material-symbols-outlined" style="font-size:18px">functions</span>
-        <span class="hidden sm:inline">Formula Sheet</span>
+        <span id="formulaBtnLabel" class="hidden sm:inline">Show Formula Sheet</span>
       </button>
       <p id="qCounter" class="text-label-md text-on-surface-variant whitespace-nowrap">Question 1 of 10</p>
     </div>
   </header>
 
-  <!-- ===== Formula Sheet modal ===== -->
-  <div id="formulaModal" class="hidden fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm items-center justify-center p-4">
-    <div class="bg-surface-container-lowest rounded-xl shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden">
-      <header class="shrink-0 flex items-center justify-between px-4 h-12 border-b border-outline-variant/40">
-        <div class="flex items-center gap-2 text-on-surface">
-          <span class="material-symbols-outlined text-primary" style="font-size:20px">functions</span>
-          <p class="text-label-md font-bold">GED Math Formula Sheet</p>
-        </div>
-        <div class="flex items-center gap-1">
-          <a href="/math-formula-sheet.pdf" target="_blank" rel="noopener"
-             class="h-8 px-3 rounded-lg text-label-md font-bold text-on-surface-variant hover:bg-surface-container-low inline-flex items-center gap-1.5">
-            <span class="material-symbols-outlined" style="font-size:16px">open_in_new</span>
-            <span class="hidden sm:inline">Open in tab</span>
-          </a>
-          <button id="formulaCloseBtn" type="button"
-                  class="w-8 h-8 rounded-lg hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant" aria-label="Close">
-            <span class="material-symbols-outlined" style="font-size:20px">close</span>
-          </button>
-        </div>
-      </header>
-      <iframe id="formulaFrame" src="" title="GED Math Formula Sheet" class="flex-1 w-full border-0 bg-white"></iframe>
-    </div>
+  <!-- ===== Formula Sheet side panel =====
+       Docks to the right of the viewport when open, and a body class
+       pushes the session content over so the question card slides left
+       instead of being overlapped. Hidden on mobile via the panel's
+       own `hidden md:flex` — phones still get the modal-style overlay
+       behaviour because there's no room to dock. -->
+  <aside id="formulaPanel"
+         class="fixed top-14 right-0 bottom-0 w-[440px] z-40 bg-surface-container-lowest border-l border-outline-variant flex-col overflow-hidden shadow-2xl
+                transform translate-x-full transition-transform duration-200 ease-out hidden md:flex">
+    <header class="shrink-0 flex items-center justify-between px-4 h-12 border-b border-outline-variant/40">
+      <div class="flex items-center gap-2 text-on-surface">
+        <span class="material-symbols-outlined text-primary" style="font-size:20px">functions</span>
+        <p class="text-label-md font-bold">Math Formula Sheet</p>
+      </div>
+      <div class="flex items-center gap-1">
+        <a href="/math-formula-sheet.pdf" target="_blank" rel="noopener"
+           class="h-8 px-3 rounded-lg text-label-md font-bold text-on-surface-variant hover:bg-surface-container-low inline-flex items-center gap-1.5"
+           title="Open in new tab">
+          <span class="material-symbols-outlined" style="font-size:16px">open_in_new</span>
+        </a>
+        <button id="formulaCloseBtn" type="button"
+                class="w-8 h-8 rounded-lg hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant" aria-label="Close">
+          <span class="material-symbols-outlined" style="font-size:20px">close</span>
+        </button>
+      </div>
+    </header>
+    <iframe id="formulaFrame" src="" title="GED Math Formula Sheet" class="flex-1 w-full border-0 bg-white"></iframe>
+  </aside>
+
+  <!-- Mobile fallback: full-screen overlay since there's no room to dock -->
+  <div id="formulaModalMobile" class="hidden md:hidden fixed inset-0 z-50 bg-surface-container-lowest flex flex-col">
+    <header class="shrink-0 flex items-center justify-between px-4 h-12 border-b border-outline-variant/40">
+      <div class="flex items-center gap-2 text-on-surface">
+        <span class="material-symbols-outlined text-primary" style="font-size:20px">functions</span>
+        <p class="text-label-md font-bold">Math Formula Sheet</p>
+      </div>
+      <button id="formulaCloseBtnMobile" type="button"
+              class="w-8 h-8 rounded-lg hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant" aria-label="Close">
+        <span class="material-symbols-outlined" style="font-size:20px">close</span>
+      </button>
+    </header>
+    <iframe id="formulaFrameMobile" src="" title="GED Math Formula Sheet" class="flex-1 w-full border-0 bg-white"></iframe>
   </div>
+
+  <style>
+    /* When the formula panel is open, slide it in and reserve right
+       padding on the session container so the question card centres
+       within the remaining space instead of being hidden behind the
+       panel. */
+    body.ged-formula-open #formulaPanel { transform: translateX(0); }
+    @media (min-width: 768px) {
+      body.ged-formula-open #session { padding-right: 460px; transition: padding 0.2s ease-out; }
+      body.ged-formula-open #sessionBar { right: 440px; transition: right 0.2s ease-out; }
+    }
+  </style>
 
   <main class="md:pl-64 pt-16 md:pt-0 pb-20 md:pb-0">
     <!-- Pre-session topic chooser -->
@@ -1134,24 +1166,44 @@
   });
   $('retryBtn').addEventListener('click', () => startSession());
 
-  // ---- Formula Sheet modal ----
-  // Loads the PDF lazily (first open) so we don't pay the cost for users
-  // who never need it. Closing keeps the iframe alive — reopening is instant.
-  const formulaModal = document.getElementById('formulaModal');
-  $('formulaBtn').addEventListener('click', () => {
-    const frame = document.getElementById('formulaFrame');
-    if (!frame.src) frame.src = '/math-formula-sheet.pdf#view=FitH';
-    formulaModal.classList.remove('hidden');
-    formulaModal.classList.add('flex');
-  });
-  function closeFormula() {
-    formulaModal.classList.add('hidden');
-    formulaModal.classList.remove('flex');
+  // ---- Formula Sheet ----
+  // Desktop: docked right-side panel that pushes the question card left.
+  // Mobile: full-screen overlay (no room to dock). PDF iframe loads
+  // lazily on first open so we don't pay the cost up front.
+  const isDesktop  = () => window.matchMedia('(min-width: 768px)').matches;
+  const formulaBtnLabel = document.getElementById('formulaBtnLabel');
+  const formulaMobile   = document.getElementById('formulaModalMobile');
+
+  function openFormula() {
+    if (isDesktop()) {
+      const frame = document.getElementById('formulaFrame');
+      if (!frame.src) frame.src = '/math-formula-sheet.pdf#view=FitH';
+      document.body.classList.add('ged-formula-open');
+    } else {
+      const frame = document.getElementById('formulaFrameMobile');
+      if (!frame.src) frame.src = '/math-formula-sheet.pdf#view=FitH';
+      formulaMobile.classList.remove('hidden');
+      formulaMobile.classList.add('flex');
+    }
+    if (formulaBtnLabel) formulaBtnLabel.textContent = 'Hide Formula Sheet';
   }
+  function closeFormula() {
+    document.body.classList.remove('ged-formula-open');
+    formulaMobile.classList.add('hidden');
+    formulaMobile.classList.remove('flex');
+    if (formulaBtnLabel) formulaBtnLabel.textContent = 'Show Formula Sheet';
+  }
+  function isFormulaOpen() {
+    return document.body.classList.contains('ged-formula-open')
+        || !formulaMobile.classList.contains('hidden');
+  }
+  $('formulaBtn').addEventListener('click', () => {
+    isFormulaOpen() ? closeFormula() : openFormula();
+  });
   document.getElementById('formulaCloseBtn').addEventListener('click', closeFormula);
-  formulaModal.addEventListener('click', (e) => { if (e.target === formulaModal) closeFormula(); });
+  document.getElementById('formulaCloseBtnMobile').addEventListener('click', closeFormula);
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !formulaModal.classList.contains('hidden')) closeFormula();
+    if (e.key === 'Escape' && isFormulaOpen()) closeFormula();
   });
 
   // If we have a deep link (subject + topic) we still show the chooser so the
