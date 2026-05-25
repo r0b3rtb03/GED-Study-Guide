@@ -119,6 +119,28 @@
     html, body, *, *::before, *::after {
       transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
     }
+
+    /* Glass surface — frosted translucent panel that adapts to either
+       theme without a hard outline. Used in place of the old
+       border-outline-variant/40 hairline cards. */
+    .ged-glass {
+      background: rgba(255, 255, 255, 0.55);
+      backdrop-filter: blur(12px) saturate(140%);
+      -webkit-backdrop-filter: blur(12px) saturate(140%);
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.6) inset,
+        0 1px 2px rgba(15, 23, 42, 0.04),
+        0 8px 24px rgba(15, 23, 42, 0.06);
+    }
+    html.dark .ged-glass {
+      background: rgba(29, 38, 64, 0.55);
+      backdrop-filter: blur(12px) saturate(160%);
+      -webkit-backdrop-filter: blur(12px) saturate(160%);
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.06) inset,
+        0 1px 2px rgba(0, 0, 0, 0.4),
+        0 8px 24px rgba(0, 0, 0, 0.35);
+    }
   `;
   document.head.appendChild(style);
 
