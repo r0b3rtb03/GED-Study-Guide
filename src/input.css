@@ -36,15 +36,15 @@
    existing markup doesn't break. */
 .ged-loader__overlay { display: none; }
 
-/* Each gear is a coloured div with an SVG mask applied. The mask is a
-   12-tooth gear silhouette with a centre hole punched out (evenodd fill
-   rule). Animating transform: rotate spins the whole gear cleanly. */
+/* Each gear is an inline <svg> sized + positioned absolutely inside the
+   gear cluster. We rotate the whole <svg>; fill of the inner <path>
+   uses currentColor so each gear's tint is just a CSS color rule. */
 .ged-loader__gear {
   position: absolute;
-  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path fill-rule='evenodd' d='M44.06 12.47 L45.82 2.18 A48 48 0 0 1 54.18 2.18 L55.94 12.47 A38 38 0 0 1 63.62 14.52 L70.29 6.5 A48 48 0 0 1 77.53 10.68 L73.91 20.47 A38 38 0 0 1 79.53 26.09 L89.32 22.47 A48 48 0 0 1 93.5 29.71 L85.48 36.38 A38 38 0 0 1 87.53 44.06 L97.82 45.82 A48 48 0 0 1 97.82 54.18 L87.53 55.94 A38 38 0 0 1 85.48 63.62 L93.5 70.29 A48 48 0 0 1 89.32 77.53 L79.53 73.91 A38 38 0 0 1 73.91 79.53 L77.53 89.32 A48 48 0 0 1 70.29 93.5 L63.62 85.48 A38 38 0 0 1 55.94 87.53 L54.18 97.82 A48 48 0 0 1 45.82 97.82 L44.06 87.53 A38 38 0 0 1 36.38 85.48 L29.71 93.5 A48 48 0 0 1 22.47 89.32 L26.09 79.53 A38 38 0 0 1 20.47 73.91 L10.68 77.53 A48 48 0 0 1 6.5 70.29 L14.52 63.62 A38 38 0 0 1 12.47 55.94 L2.18 54.18 A48 48 0 0 1 2.18 45.82 L12.47 44.06 A38 38 0 0 1 14.52 36.38 L6.5 29.71 A48 48 0 0 1 10.68 22.47 L20.47 26.09 A38 38 0 0 1 26.09 20.47 L22.47 10.68 A48 48 0 0 1 29.71 6.5 L36.38 14.52 Z M32 50 A18 18 0 1 0 68 50 A18 18 0 1 0 32 50 Z' fill='black'/></svg>") center/contain no-repeat;
-          mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path fill-rule='evenodd' d='M44.06 12.47 L45.82 2.18 A48 48 0 0 1 54.18 2.18 L55.94 12.47 A38 38 0 0 1 63.62 14.52 L70.29 6.5 A48 48 0 0 1 77.53 10.68 L73.91 20.47 A38 38 0 0 1 79.53 26.09 L89.32 22.47 A48 48 0 0 1 93.5 29.71 L85.48 36.38 A38 38 0 0 1 87.53 44.06 L97.82 45.82 A48 48 0 0 1 97.82 54.18 L87.53 55.94 A38 38 0 0 1 85.48 63.62 L93.5 70.29 A48 48 0 0 1 89.32 77.53 L79.53 73.91 A38 38 0 0 1 73.91 79.53 L77.53 89.32 A48 48 0 0 1 70.29 93.5 L63.62 85.48 A38 38 0 0 1 55.94 87.53 L54.18 97.82 A48 48 0 0 1 45.82 97.82 L44.06 87.53 A38 38 0 0 1 36.38 85.48 L29.71 93.5 A48 48 0 0 1 22.47 89.32 L26.09 79.53 A38 38 0 0 1 20.47 73.91 L10.68 77.53 A48 48 0 0 1 6.5 70.29 L14.52 63.62 A38 38 0 0 1 12.47 55.94 L2.18 54.18 A48 48 0 0 1 2.18 45.82 L12.47 44.06 A38 38 0 0 1 14.52 36.38 L6.5 29.71 A48 48 0 0 1 10.68 22.47 L20.47 26.09 A38 38 0 0 1 26.09 20.47 L22.47 10.68 A48 48 0 0 1 29.71 6.5 L36.38 14.52 Z M32 50 A18 18 0 1 0 68 50 A18 18 0 1 0 32 50 Z' fill='black'/></svg>") center/contain no-repeat;
   transform-origin: center;
+  overflow: visible;
 }
+.ged-loader__gear path { fill: currentColor; }
 
 /* Triangle layout — large blue gear on top, medium green bottom-left,
    small orange bottom-right. Centre-to-centre distances chosen so the
@@ -53,25 +53,25 @@
 .ged-loader__gear--top {
   width: 110px; height: 110px;
   top: 0; left: 85px;              /* center (140, 55) */
-  background: #5a8de8;
+  color: #5a8de8;
   animation: ged-cog-rotate 9s infinite linear;
 }
 .ged-loader__gear--left {
   width: 90px; height: 90px;
   top: 120px; left: 0;             /* center (45, 165), gap ~45px from top */
-  background: #6dc6c6;
+  color: #6dc6c6;
   animation: ged-cog-rotate-rev 8s infinite linear;
 }
 .ged-loader__gear--right {
   width: 70px; height: 70px;
   top: 135px; left: 190px;         /* center (225, 170), gap ~50px from top */
-  background: #f2b66a;
+  color: #f2b66a;
   animation: ged-cog-rotate-rev 6s infinite linear;
 }
 
-html.dark .ged-loader__gear--top   { background: #8ab4ff; }
-html.dark .ged-loader__gear--left  { background: #9bdc8f; }
-html.dark .ged-loader__gear--right { background: #f5b76b; }
+html.dark .ged-loader__gear--top   { color: #8ab4ff; }
+html.dark .ged-loader__gear--left  { color: #9bdc8f; }
+html.dark .ged-loader__gear--right { color: #f5b76b; }
 
 .ged-loader__label {
   /* Pushed below the bottom of the gear triangle. Large gap so the
