@@ -5,70 +5,232 @@
 <meta content="width=device-width, initial-scale=1.0" name="viewport" />
 <link rel="icon" type="image/png" href="/favicon.png" />
 <link rel="apple-touch-icon" href="/favicon.png" />
-<title>GED Study Guide</title>
+<title>GED Study Guide — Empowering Your Academic Journey</title>
 <link href="https://fonts.googleapis.com" rel="preconnect" />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap" rel="stylesheet" />
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0&display=swap" rel="stylesheet" />
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <script src="/js/theme.js"></script>
 <script src="/js/theme-toggle-floating.js" defer></script>
-<style>body{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}</style>
+<style>
+  body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+  .font-serif { font-family: 'Source Serif 4', Georgia, serif; }
+  .material-symbols-outlined { font-variation-settings: 'FILL' 1; }
+</style>
 </head>
-<body class="bg-background text-on-surface min-h-screen flex items-center justify-center p-margin-mobile md:p-margin-desktop relative overflow-hidden">
-  <div class="absolute inset-0 pointer-events-none opacity-30">
-    <div class="w-[800px] h-[800px] rounded-full bg-gradient-to-tr from-primary-fixed-dim/30 to-transparent blur-3xl absolute -top-[200px] -left-[200px]"></div>
-    <div class="w-[600px] h-[600px] rounded-full bg-gradient-to-bl from-secondary-container/40 to-transparent blur-3xl absolute -bottom-[100px] -right-[100px]"></div>
-  </div>
+<body class="bg-background text-on-surface min-h-screen">
 
-  <main class="w-full max-w-[480px] bg-surface-container-lowest rounded-xl shadow-lg p-8 md:p-10 relative z-10">
-    <div class="text-center mb-8">
-      <div class="inline-flex items-center justify-center w-20 h-20 rounded-xl overflow-hidden mb-4">
-        <img src="/logo.png" alt="GED Study Guide" class="w-full h-full object-contain"
-             onerror="this.outerHTML='<span class=&quot;material-symbols-outlined text-primary&quot; style=&quot;font-size:32px&quot;>menu_book</span>'">
-      </div>
-      <h1 class="text-headline-lg font-headline-lg text-primary mb-2">GED Study Guide</h1>
-      <p class="text-body-md text-on-surface-variant">AI-powered GED Mathematical Reasoning practice, grounded in the official study guide.</p>
-    </div>
-
-    <div class="space-y-3">
-      <button onclick="window.location.href='/login'"
-              class="w-full h-12 bg-primary text-on-primary rounded-lg font-bold text-label-md flex items-center justify-center gap-2 hover:opacity-90">
-        Sign In
-        <span class="material-symbols-outlined" style="font-size:20px">arrow_forward</span>
-      </button>
-
-      <button onclick="window.location.href='/create_account'"
-              class="w-full h-12 bg-surface-container-low text-on-surface rounded-lg font-bold text-label-md hover:bg-surface-container">
-        Create Account
-      </button>
-
-      <div class="flex items-center gap-3 my-2">
-        <div class="flex-1 h-px bg-outline-variant"></div>
-        <span class="text-label-md text-on-surface-variant">or</span>
-        <div class="flex-1 h-px bg-outline-variant"></div>
-      </div>
-
-      <button id="guestBtn"
-              class="w-full h-12 border border-outline-variant text-on-surface-variant rounded-lg font-bold text-label-md hover:bg-surface-container-low flex items-center justify-center gap-2">
-        <span class="material-symbols-outlined" style="font-size:20px">play_arrow</span>
-        Try as Guest
-      </button>
-      <p class="text-[12px] text-on-surface-variant text-center">Guests get 20 practice questions/hour. No progress saved.</p>
-
-      <a href="/study-guide.pdf" target="_blank" rel="noopener"
-         class="mt-4 w-full h-12 rounded-lg flex items-center justify-center gap-2 text-primary hover:bg-primary-container/10 font-bold text-label-md">
-        <span class="material-symbols-outlined" style="font-size:20px">auto_stories</span>
-        Browse the GED Study Guide
+  <!-- ===== Top nav ===== -->
+  <nav class="fixed top-0 inset-x-0 z-50 bg-background/90 backdrop-blur border-b border-outline-variant">
+    <div class="max-w-[1280px] mx-auto flex items-center justify-between h-16 px-margin-mobile md:px-10">
+      <a href="/" class="flex items-center gap-2">
+        <img src="/logo.png" alt="GED Study Guide" class="w-9 h-9 rounded-lg object-contain"
+             onerror="this.outerHTML='<span class=&quot;material-symbols-outlined text-primary&quot; style=&quot;font-size:28px&quot;>menu_book</span>'">
+        <span class="font-serif font-bold text-headline-sm text-primary">GED Study Guide</span>
       </a>
+
+      <div class="hidden md:flex items-center gap-7 text-body-md">
+        <a href="/"               class="text-primary font-bold border-b-2 border-primary pb-1">Home</a>
+        <a href="#mission"        class="text-on-surface-variant hover:text-primary transition-colors">About</a>
+        <a id="navDashboard"   href="/dashboard"   class="text-on-surface-variant hover:text-primary transition-colors">Dashboard</a>
+        <a id="navStudyGuide"  href="/study_guide" class="text-on-surface-variant hover:text-primary transition-colors">Study Guides</a>
+      </div>
+
+      <!-- Auth area: filled in below based on session state -->
+      <div id="navAuth" class="flex items-center gap-2"></div>
     </div>
+  </nav>
+
+  <main class="pt-16">
+
+    <!-- ===== Hero ===== -->
+    <section class="relative overflow-hidden text-white min-h-[80vh] flex items-center"
+             style="background: linear-gradient(140deg, #0d1320 0%, #1d2640 60%, #2c3656 100%);">
+      <div class="absolute inset-0 pointer-events-none opacity-25">
+        <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3aLxZWiA-Qa3Ru2dYZztSnRb27dpK_68JUS-1JA4v3CpfvmY3PhauYPlPq3_qRpv9g3CNf8uuNRog9OrFDXhI6xeBatLPljQ0WFxv6iBUou_jlOzyFoOQ5T56aDwW-VgJ3ZsALb593ITFF0sdr6KJ297xdxuzliUy7cLaD5Rkau8WKLtFJ1NW4GIVs_EV5UZLWFAE-_Bs1AGtTVupYtBNSD6nxvn3xq0yTn2O_BGcQDobMJiet-20EdykMBmCMprY-2GWbMI-FPtp"
+             alt="" class="w-full h-full object-cover" />
+        <div class="absolute inset-0" style="background: linear-gradient(90deg, #0d1320 0%, rgba(13,19,32,0.85) 60%, transparent 100%);"></div>
+      </div>
+
+      <div class="relative max-w-[1280px] mx-auto w-full px-margin-mobile md:px-10 grid md:grid-cols-2 gap-gutter items-center">
+        <div class="space-y-6">
+          <h1 class="font-serif font-bold text-[44px] md:text-[56px] leading-[1.05] tracking-tight">Empowering Your Academic Journey</h1>
+          <p class="text-body-lg text-white/80 max-w-lg">A focused GED prep workspace with AI-generated practice grounded in the official study guides — for Math, Social Studies, English, and Science.</p>
+          <div class="pt-2 flex flex-wrap gap-3">
+            <a href="/login" class="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-lg bg-[#8ab4ff] text-[#0a1530] font-bold text-label-md hover:opacity-90 transition">
+              Start Learning
+              <span class="material-symbols-outlined" style="font-size:18px">arrow_forward</span>
+            </a>
+            <a id="exploreGuides" href="/study_guide" class="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-lg border border-white/30 text-white font-bold text-label-md hover:bg-white/10 transition">
+              Explore Official Study Guides
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Mission & Vision ===== -->
+    <section id="mission" class="py-20 px-margin-mobile md:px-10 bg-surface">
+      <div class="max-w-[1280px] mx-auto grid md:grid-cols-2 gap-8">
+        <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/40 p-8 md:p-10 shadow-sm">
+          <div class="w-12 h-12 rounded-full bg-[#d3e4fe] text-[#1f477b] flex items-center justify-center mb-5">
+            <span class="material-symbols-outlined">account_balance</span>
+          </div>
+          <h2 class="font-serif text-[28px] font-bold text-primary mb-3">Our Mission</h2>
+          <p class="text-body-md text-on-surface-variant leading-relaxed">
+            To make rigorous GED prep accessible to every learner. We bridge the gap between curiosity and credential with structured, AI-assisted study that meets you where you are.
+          </p>
+        </div>
+
+        <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/40 p-8 md:p-10 shadow-sm">
+          <div class="w-12 h-12 rounded-full bg-[#cde7e7] text-[#003a3a] flex items-center justify-center mb-5">
+            <span class="material-symbols-outlined">visibility</span>
+          </div>
+          <h2 class="font-serif text-[28px] font-bold text-primary mb-3">Our Vision</h2>
+          <p class="text-body-md text-on-surface-variant leading-relaxed">
+            A world where every determined student has a clear, structured path to higher education and professional success — unhindered by past academic setbacks.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Pillars ===== -->
+    <section class="py-20 px-margin-mobile md:px-10 bg-surface-container-low">
+      <div class="max-w-[1280px] mx-auto">
+        <div class="text-center mb-12">
+          <h2 class="font-serif text-[32px] md:text-[36px] font-bold text-primary mb-3">Pillars of Excellence</h2>
+          <p class="text-body-lg text-on-surface-variant max-w-2xl mx-auto">The foundations that shape our curriculum and how we support every learner.</p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-6">
+          <article class="bg-surface-container-lowest rounded-xl border border-outline-variant/40 p-8 shadow-sm hover:shadow-md transition-shadow">
+            <div class="mb-5 flex justify-center">
+              <div class="w-16 h-16 rounded-full bg-surface-container border border-outline-variant flex items-center justify-center">
+                <span class="material-symbols-outlined text-primary" style="font-size:30px">school</span>
+              </div>
+            </div>
+            <h3 class="font-serif text-[22px] font-bold text-primary text-center mb-2">Academic Excellence</h3>
+            <p class="text-body-md text-on-surface-variant text-center">A rigorous curriculum that exceeds GED requirements — preparing you for the test and what comes after.</p>
+          </article>
+
+          <article class="bg-surface-container-lowest rounded-xl border border-outline-variant/40 p-8 shadow-sm hover:shadow-md transition-shadow">
+            <div class="mb-5 flex justify-center">
+              <div class="w-16 h-16 rounded-full bg-surface-container border border-outline-variant flex items-center justify-center">
+                <span class="material-symbols-outlined text-primary" style="font-size:30px">emoji_events</span>
+              </div>
+            </div>
+            <h3 class="font-serif text-[22px] font-bold text-primary text-center mb-2">Student Success</h3>
+            <p class="text-body-md text-on-surface-variant text-center">Structured study plans, regular check-ins, and per-topic mastery tracking so you always know what to work on next.</p>
+          </article>
+
+          <article class="bg-surface-container-lowest rounded-xl border border-outline-variant/40 p-8 shadow-sm hover:shadow-md transition-shadow">
+            <div class="mb-5 flex justify-center">
+              <div class="w-16 h-16 rounded-full bg-surface-container border border-outline-variant flex items-center justify-center">
+                <span class="material-symbols-outlined text-primary" style="font-size:30px">lightbulb</span>
+              </div>
+            </div>
+            <h3 class="font-serif text-[22px] font-bold text-primary text-center mb-2">Innovative Learning</h3>
+            <p class="text-body-md text-on-surface-variant text-center">AI-generated questions, instant explanations, and a guided tour that gets you productive on day one.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Foundation for the Future ===== -->
+    <section class="py-20 px-margin-mobile md:px-10 bg-surface">
+      <div class="max-w-[1280px] mx-auto grid md:grid-cols-12 gap-8 items-center">
+        <div class="md:col-span-5 space-y-5">
+          <h2 class="font-serif text-[32px] md:text-[36px] font-bold text-primary">A Foundation for the Future</h2>
+          <p class="text-body-md text-on-surface-variant leading-relaxed">
+            We treat GED prep with the same care as university coursework — clear modules, high-fidelity study materials, and progress you can actually measure.
+          </p>
+          <ul class="space-y-3 pt-2">
+            <li class="flex items-center gap-3"><span class="material-symbols-outlined text-[#16a34a]">check_circle</span><span class="text-body-md text-on-surface">Structured study modules per subject</span></li>
+            <li class="flex items-center gap-3"><span class="material-symbols-outlined text-[#16a34a]">check_circle</span><span class="text-body-md text-on-surface">AI-graded practice with step-by-step solutions</span></li>
+            <li class="flex items-center gap-3"><span class="material-symbols-outlined text-[#16a34a]">check_circle</span><span class="text-body-md text-on-surface">Data-driven progress tracking and Priority Review</span></li>
+          </ul>
+        </div>
+        <div class="md:col-span-7 grid grid-cols-2 gap-4">
+          <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBR5fFGFMex-VbOIiWSXvNVe7-gYENSwVxuliHHAS1ux6e3l3HBm8InUEyngpd7y0Ch4LpmZ7Pkau82pZtufBFYroPHD4Kh-Cpyur3vk97PVghs2t_4X0N3mDMuS6LVItqzo0iJU5YWdS4gMWF94QXgNAp-AC2QaLCQL1C07JX-25MfFlEnLmxFrMVVkHZOr0LmUxZ9Jp0Dfmagjo6cxjQnqUySm_tUQhOwkr2UpfJnbuN7PL014xN-I9cRfNx91eoah_KtysZymATI"
+               alt="Study materials" class="w-full h-64 object-cover rounded-xl border border-outline-variant/40 shadow-sm" />
+          <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCoqYzVTErXbj5JUvvSCr1U-2CU0f6Tv3EKzc9VkBgQwIOtT6SxKRYpEhhkNZTJiFWbi1oHVKJTEzxFEw2c296hU3SeqGVUetIYmHsFMIa4vf_Kdg1YRzUwdIslcTjOjtYlBENjVts9sE2SgdTyUWzPLhLihaIZew_8JUdDJOOe88XhR80t67q7_tG-EzXg5F9mPlQ7iB2Yva9Iws1bPTxLUblsO7OGRla5sVs7k0Xuv1O3o6qdOfYWXnG-2ZnegcQ7ZjzA8w2VCa82"
+               alt="University architecture" class="w-full h-64 object-cover rounded-xl border border-outline-variant/40 shadow-sm mt-8" />
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Final CTA ===== -->
+    <section id="cta" class="py-20 px-margin-mobile md:px-10 text-white" style="background: linear-gradient(140deg, #0d1320 0%, #1d2640 100%);">
+      <div class="max-w-[1280px] mx-auto text-center space-y-7">
+        <h2 class="font-serif text-[36px] md:text-[44px] font-bold">Begin Your Scholarly Pursuit</h2>
+        <p class="text-body-lg text-white/70 max-w-xl mx-auto">Start studying today. Sign up free, or jump in as a guest to try a practice session.</p>
+        <div class="flex flex-wrap justify-center gap-3 pt-2">
+          <a href="/create_account" class="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-lg bg-white text-primary font-bold text-label-md hover:bg-white/90 transition">
+            Sign Up for Free
+          </a>
+          <button id="guestBtn" class="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-lg border border-white/40 text-white font-bold text-label-md hover:bg-white/10 transition">
+            <span class="material-symbols-outlined" style="font-size:18px">person_outline</span>
+            Continue as Guest
+          </button>
+        </div>
+        <p class="text-[12px] text-white/50 pt-1">Guests get 20 practice questions per hour. No progress is saved.</p>
+      </div>
+    </section>
   </main>
 
-<script>
+  <!-- ===== Footer ===== -->
+  <footer class="bg-surface-container-high border-t border-outline-variant py-10 px-margin-mobile md:px-10">
+    <div class="max-w-[1280px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-gutter">
+      <div>
+        <p class="font-serif font-bold text-headline-sm text-primary mb-2">GED Study Guide</p>
+        <p class="text-[12px] text-on-surface-variant">© 2026 GED Study Guide. Empowering students through academic excellence.</p>
+      </div>
+      <div class="flex flex-col gap-2 text-[13px]">
+        <a class="text-on-surface-variant hover:text-primary" href="/privacy">Privacy Policy</a>
+        <a class="text-on-surface-variant hover:text-primary" href="/terms">Terms of Service</a>
+      </div>
+      <div class="flex flex-col gap-2 text-[13px]">
+        <a class="text-on-surface-variant hover:text-primary" href="/login">Sign In</a>
+        <a class="text-on-surface-variant hover:text-primary" href="/create_account">Create Account</a>
+      </div>
+      <div class="flex flex-col gap-2 text-[13px]">
+        <a class="text-on-surface-variant hover:text-primary" href="/study_guide">Study Guides</a>
+        <a class="text-on-surface-variant hover:text-primary" href="/dashboard">Dashboard</a>
+      </div>
+    </div>
+  </footer>
+
+<script type="module">
+  // Render the right-hand nav slot based on session state. Logged-out users
+  // see "Log In" + "Sign Up"; logged-in users get a profile chip linking to
+  // the dashboard. We do NOT auto-redirect to /dashboard anymore — the
+  // homepage is now the canonical landing page.
+  import { getAccessToken, getUser } from '/js/auth.js';
+  const navAuth = document.getElementById('navAuth');
+  if (getAccessToken()) {
+    const user = getUser() || { firstName: 'Student', lastName: '' };
+    const initials = ((user.firstName?.[0] || 'S') + (user.lastName?.[0] || '')).toUpperCase();
+    navAuth.innerHTML = `
+      <a href="/dashboard" class="hidden sm:inline-flex items-center h-9 px-4 rounded-lg text-label-md font-bold text-on-surface-variant hover:bg-surface-container-low">Go to dashboard</a>
+      <a href="/dashboard" class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-label-md" title="${(user.firstName || '') + ' ' + (user.lastName || '')}">${initials}</a>
+    `;
+  } else {
+    navAuth.innerHTML = `
+      <a href="/login"          class="inline-flex items-center h-9 px-4 rounded-lg text-label-md font-bold text-on-surface-variant hover:bg-surface-container-low">Log in</a>
+      <a href="/create_account" class="inline-flex items-center h-9 px-4 rounded-lg text-label-md font-bold bg-primary text-on-primary hover:opacity-90">Sign up</a>
+    `;
+    // Without an account, nav links and "Explore guides" route through login.
+    // Authenticated users can deep-link straight into the gated pages.
+    for (const id of ['navDashboard', 'navStudyGuide', 'exploreGuides']) {
+      document.getElementById(id)?.setAttribute('href', '/login');
+    }
+  }
+
   document.getElementById('guestBtn').addEventListener('click', () => {
     sessionStorage.setItem('ged_guest', 'true');
     window.location.href = '/practice_session';
   });
-  if (localStorage.getItem('ged_access_token')) window.location.href = '/dashboard';
 </script>
 </body>
 </html>

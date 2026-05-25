@@ -10,7 +10,10 @@
 import { getUser, logout, requireLogin } from './auth.js';
 
 const NAV_ITEMS = [
-  { href: '/dashboard',        label: 'Dashboard',         icon: 'dashboard',     mobile: 'Home',     mobileIcon: 'home' },
+  // Home links back out to the public landing page. Sits at the top so the
+  // user can always get to the marketing/about view without signing out.
+  { href: '/',                 label: 'Home',              icon: 'home',          mobile: 'Home',     mobileIcon: 'home' },
+  { href: '/dashboard',        label: 'Dashboard',         icon: 'dashboard',     mobile: 'Stats',    mobileIcon: 'dashboard' },
   { href: '/study_notes',      label: 'Study Notes',       icon: 'menu_book',     mobile: 'Notes',    mobileIcon: 'menu_book' },
   { href: '/study_guide',      label: 'Study Guide',       icon: 'auto_stories',  mobile: 'Guide',    mobileIcon: 'auto_stories' },
   { href: '/practice_session', label: 'Practice Sessions', icon: 'edit_square',   mobile: 'Practice', mobileIcon: 'edit_square' },
