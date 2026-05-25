@@ -40,19 +40,20 @@ app.use(helmet({
     directives: {
       defaultSrc:    ["'self'"],
       scriptSrc:     ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net'],
+      scriptSrcAttr: ["'unsafe-inline'"],
       styleSrc:      ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://cdn.jsdelivr.net'],
       fontSrc:       ["'self'", 'https://fonts.gstatic.com', 'https://cdn.jsdelivr.net', 'data:'],
       imgSrc:        ["'self'", 'data:', 'https://lh3.googleusercontent.com'],
       connectSrc:    ["'self'"],
       frameSrc:      ["'self'"],
-      frameAncestors: ["'none'"],
+      frameAncestors: ["'self'"],
       objectSrc:     ["'none'"],
       baseUri:       ["'self'"],
       formAction:    ["'self'"]
     }
   },
   crossOriginEmbedderPolicy: false,
-  frameguard: { action: 'deny' }
+  frameguard: { action: 'sameorigin' }
 }));
 
 // CORS: require an explicit allow-list in production. Falling back to

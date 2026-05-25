@@ -395,7 +395,7 @@ async function callClaude({ prompt, maxTokens = 1500 }) {
   }
 }
 
-async function callGemini({ prompt, maxTokens = 2048 }) {
+async function callGemini({ prompt, maxTokens = 4096 }) {
   const c = getGemini();
   if (!c) throw new Error('GEMINI_API_KEY not configured');
   let text = '';
@@ -439,9 +439,19 @@ export async function generateQuestion({ subject = 'math', topic, difficulty, pr
   const prompt = buildGenerationPrompt({ subject, topic, difficulty, previousQuestions, primer });
 
   let question;
-  if (getGemini())      question = await callGemini({ prompt });
-  else if (getClaude()) question = await callClaude({ prompt });
-  else                  return shuffleOptions(mockQuestion(subject, topic));
+  if (getGemini()) {
+    try {
+      question = await callGemini({ prompt });
+    } catch (err) {
+      console.warn('[generateQuestion] Gemini failed, falling back:', err.message);
+      if (getClaude())      question = await callClaude({ prompt });
+      else                  return shuffleOptions(mockQuestion(subject, topic));
+    }
+  } else if (getClaude()) {
+    question = await callClaude({ prompt });
+  } else {
+    return shuffleOptions(mockQuestion(subject, topic));
+  }
 
   return shuffleOptions(question);
 }
