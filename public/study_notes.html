@@ -17,6 +17,15 @@
   .crumb-sep::before { content: '›'; padding: 0 8px; color: var(--ged-outline); }
   /* Numbered section heading (1., 2., etc.) — Inter, bold, larger */
   .note-section-num { font-feature-settings: "tnum"; }
+  /* Custom scrollbar for the catalog so it's visible but unobtrusive. */
+  .ged-catalog-scroll::-webkit-scrollbar { width: 8px; }
+  .ged-catalog-scroll::-webkit-scrollbar-track { background: transparent; }
+  .ged-catalog-scroll::-webkit-scrollbar-thumb {
+    background: var(--ged-outline-variant);
+    border-radius: 9999px;
+  }
+  .ged-catalog-scroll::-webkit-scrollbar-thumb:hover { background: var(--ged-outline); }
+  .ged-catalog-scroll { scrollbar-width: thin; scrollbar-color: var(--ged-outline-variant) transparent; }
 </style>
 </head>
 <body class="bg-background text-on-surface min-h-screen">
@@ -25,7 +34,7 @@
 
       <div class="grid md:grid-cols-[280px_1fr] gap-gutter items-start">
         <!-- ===== Subject Catalog sidebar ===== -->
-        <aside class="md:sticky md:top-20 space-y-5">
+        <aside class="md:sticky md:top-20 md:max-h-[calc(100vh-6rem)] md:overflow-y-auto md:pr-2 space-y-5 ged-catalog-scroll">
           <h1 class="text-headline-md font-bold text-on-surface px-1">Subject Catalog</h1>
 
           <div id="topicTabs" class="space-y-5"></div>

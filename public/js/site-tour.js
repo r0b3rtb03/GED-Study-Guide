@@ -140,71 +140,187 @@ function removeDemoCard() {
 // ---------- Tour steps ----------
 
 const TOUR_STEPS = [
-  // --- Orientation ---
+  // ===== Orientation (sidebar + top bar) =====
   {
     selector: '.sidebar-brand',
     title: 'Welcome to GED Study Guide',
-    body: "This is your prep workspace for the GED exam — Math and Social Studies, with AI-generated practice grounded in the official study guides. Let's walk through how everything works.",
-    phase: 'sidebar'
+    body: "Your prep workspace for all four GED subjects — Math, Social Studies, English, and Science. Practice is AI-generated and grounded in the official study guides. Let's walk through the app one section at a time.",
+    phase: 'sidebar',
+    section: 'orientation', sectionLabel: 'Dashboard tour'
   },
   {
     selector: 'a[href="/dashboard"]',
     title: 'Dashboard',
-    body: 'Your home base. See per-subject and per-topic progress, your streak, and Priority Review cards for the topics you should work on next.',
-    phase: 'sidebar'
+    body: 'Your home base. Shows your overall score, current streak, per-subject progress, and Priority Review cards for the topics you most need to work on.',
+    phase: 'sidebar', section: 'orientation', sectionLabel: 'Dashboard tour'
+  },
+  {
+    selector: 'a[href="/study_notes"]',
+    title: 'Study Notes',
+    body: 'Hand-written notes for every topic — concise sections with key formulas and tips. Faster than reading the PDF when you just want a refresher.',
+    phase: 'sidebar', section: 'orientation', sectionLabel: 'Dashboard tour'
   },
   {
     selector: 'a[href="/study_guide"]',
     title: 'Study Guide',
-    body: 'The official GED PDFs, embedded in the app with subject tabs. After a wrong answer, the "Review Study Guide" button deep-links to the exact page that covers the concept.',
-    phase: 'sidebar'
+    body: 'The official GED PDFs, embedded with subject tabs. After a wrong answer, the "Review Study Guide" button deep-links to the exact page that covers the concept.',
+    phase: 'sidebar', section: 'orientation', sectionLabel: 'Dashboard tour'
   },
   {
     selector: 'a[href="/practice_session"]',
     title: 'Practice Sessions',
-    body: "The core of the app. Click here, pick a subject → difficulty → topic, and you'll get 10 AI-generated questions in that exact mold. Let me show you what one looks like…",
-    phase: 'sidebar'
+    body: "The core of the app. Pick subject → difficulty → topic and get 10 AI-generated questions tailored to that combination. I'll show you what one looks like in a minute.",
+    phase: 'sidebar', section: 'orientation', sectionLabel: 'Dashboard tour'
+  },
+  {
+    selector: 'a[href="/growth_history"]',
+    title: 'History',
+    body: 'Performance trend chart (Week/Month), Subject Mastery overview, and a filterable list of every session you\'ve completed.',
+    phase: 'sidebar', section: 'orientation', sectionLabel: 'Dashboard tour'
+  },
+  {
+    selector: '#ged-topbar-search',
+    title: 'Top bar search',
+    body: 'Quickly jump to a topic by typing its name. The profile chip on the right opens a panel with your account info and sign-out.',
+    phase: 'sidebar', section: 'orientation', sectionLabel: 'Dashboard tour'
   },
 
-  // --- Practice demo ---
+  // ===== Dashboard page (only fires if you're ON the dashboard) =====
+  {
+    selector: '#statsGrid',
+    title: 'Your stats at a glance',
+    body: 'Four numbers that summarize your prep: overall coverage score, total study time, completed sessions, and your daily streak. Click "All Stats" for a deeper breakdown.',
+    section: 'dashboard', sectionLabel: 'Study Notes tour'
+  },
+  {
+    selector: '#recommendedReviewSection',
+    title: 'Priority Review',
+    body: "Topics you've scored below 80% on. <strong>Red badge</strong> means &lt;60% (Needs attention), <strong>orange</strong> means 60–79% (Needs a refresher). Each card has buttons for Study Notes, Study Guide, and a fresh Practice set on that exact topic + difficulty.",
+    section: 'dashboard', sectionLabel: 'Study Notes tour'
+  },
+  {
+    selector: '#prFilters',
+    title: 'Filter and sort',
+    body: 'Sort the list by lowest score, highest score, difficulty, or subject. The pill rows narrow by priority band, difficulty, or subject — combine them to find exactly what you want to drill.',
+    section: 'dashboard', sectionLabel: 'Study Notes tour'
+  },
+  {
+    selector: '#quickStart',
+    title: 'Quick Start',
+    body: 'One-click into the most recent subject. Each tile shows your overall percent and links straight into a practice session.',
+    section: 'dashboard', sectionLabel: 'Study Notes tour'
+  },
+  {
+    selector: '#topicProgress',
+    title: 'Detailed Progress',
+    body: 'Per-topic mastery, broken out by difficulty. "Easy 7/10" means you got 7 of 10 Easy questions correct across all your sessions on that topic. Difficulties you haven\'t tried show "not attempted".',
+    section: 'dashboard', sectionLabel: 'Study Notes tour'
+  },
+
+  // ===== Study Notes page =====
+  {
+    selector: '.ged-catalog-scroll',
+    title: 'Subject Catalog',
+    body: 'Every topic, grouped by subject. Topics with a "Needs Review" badge are ones your recent scores say you should revisit. The catalog scrolls on its own so it stays put while you read the notes on the right.',
+    section: 'study_notes', sectionLabel: 'Study Guide tour'
+  },
+  {
+    selector: '#topicHero',
+    title: 'Topic header',
+    body: 'The big heading, a one-line description of the topic, and your current mastery chip — green if you\'ve mastered it, orange/red if it still needs work.',
+    section: 'study_notes', sectionLabel: 'Study Guide tour'
+  },
+  {
+    selector: '#notesBody',
+    title: 'The notes themselves',
+    body: 'Numbered sections cover the must-know concepts. Each one ends with a Key Formulas box (when applicable) and a bullet list of tips that apply directly to GED-style questions.',
+    section: 'study_notes', sectionLabel: 'Study Guide tour'
+  },
+  {
+    selector: '#practiceCta',
+    title: 'Generate Practice Problems',
+    body: 'When you\'re done reading, this button starts a 10-question practice set on this exact topic.',
+    section: 'study_notes', sectionLabel: 'Study Guide tour'
+  },
+  {
+    selector: '#markCompleteBtn',
+    title: 'Mark as Complete',
+    body: 'Toggle this when you\'ve finished a topic\'s notes. Completed topics get a green checkmark in the catalog so you can track which you\'ve already covered.',
+    section: 'study_notes', sectionLabel: 'Study Guide tour'
+  },
+
+  // ===== Study Guide page =====
+  {
+    selector: '#subjectTabs',
+    title: 'Subject tabs',
+    body: 'Switch between the four official GED study guide PDFs. Your last selection is remembered between visits.',
+    section: 'study_guide', sectionLabel: 'Practice tour'
+  },
+  {
+    selector: '#downloadLink',
+    title: 'Download for offline study',
+    body: 'Save a copy of the PDF locally if you want to study without internet.',
+    section: 'study_guide', sectionLabel: 'Practice tour'
+  },
+
+  // ===== Practice page (real session picker, not the demo) =====
+  {
+    selector: '#subjectStep',
+    title: 'Pick a subject',
+    body: 'Step 1 of starting a practice session. Choose the subject you want to drill — the rest of the page changes to match.',
+    section: 'practice_picker', sectionLabel: 'Live demo'
+  },
+  {
+    selector: '#difficultyStep',
+    title: 'Pick a difficulty',
+    body: 'Easy / Medium / Hard. Your topic-mastery score weights each difficulty differently (Hard counts the most), so spend time on what you actually need.',
+    section: 'practice_picker', sectionLabel: 'Live demo'
+  },
+  {
+    selector: '#topicStep',
+    title: 'Pick a topic',
+    body: 'Each subject has 5 topics. Once you pick one, the right-hand "Ready to begin" card lights up — hit Start practice and the AI starts generating your first question.',
+    section: 'practice_picker', sectionLabel: 'Live demo'
+  },
+
+  // ===== Practice demo (synthetic question card) =====
   {
     selector: '#demoBar',
     title: 'Inside a practice session',
-    body: "This is what a practice session looks like. The top bar shows your topic, timer, difficulty, and progress through the 10 questions.",
-    phase: 'demo'
+    body: "This is what a practice session looks like once you start. The top bar shows your topic, timer, difficulty, and progress through the 10 questions.",
+    phase: 'demo', section: 'practice_demo', sectionLabel: 'History tour'
   },
   {
     selector: '#demoQuestion',
     title: 'The question',
-    body: "Each question is generated to test a specific GED concept. Social Studies questions like this one include a short passage you read, then a question about it.",
-    phase: 'demo'
+    body: "Each question is generated to test a specific GED concept. Social Studies and English questions often include a short passage you read first.",
+    phase: 'demo', section: 'practice_demo', sectionLabel: 'History tour'
   },
   {
     selector: '#demoOptions',
     title: 'Multiple choice',
     body: "Pick the option you think is right. The order is shuffled server-side, so the correct answer is never always 'B'.",
-    phase: 'demo'
+    phase: 'demo', section: 'practice_demo', sectionLabel: 'History tour'
   },
   {
     selector: '#demoHintBtn',
     title: 'Stuck? Get a hint',
-    body: "If you don't know where to start, click Hint for a nudge in the right direction — without giving away the answer.",
-    phase: 'demo',
+    body: "Click Hint for a nudge in the right direction — without giving away the answer.",
+    phase: 'demo', section: 'practice_demo', sectionLabel: 'History tour',
     onBeforeStep: () => { document.getElementById('demoHint').style.display = 'block'; }
   },
   {
     selector: '#demoRevealBtn',
     title: 'Show Answer',
     body: "Need to see the worked solution before you guess? Click Show Answer. The question is marked incorrect in your score, but you get the full step-by-step explanation immediately.",
-    phase: 'demo'
+    phase: 'demo', section: 'practice_demo', sectionLabel: 'History tour'
   },
   {
     selector: '#demoSubmitBtn',
     title: 'Submit your answer',
     body: "When you're ready, Submit. Claude grades it and gives you instant feedback — correct or not, with an explanation.",
-    phase: 'demo',
+    phase: 'demo', section: 'practice_demo', sectionLabel: 'History tour',
     onBeforeStep: () => {
-      // Highlight option B as the chosen answer + reveal feedback
       const opt = document.querySelector('.demo-option[data-letter="B"]');
       if (opt) {
         opt.style.background = '#ecfdf5';
@@ -220,21 +336,41 @@ const TOUR_STEPS = [
     selector: '#demoSteps',
     title: 'Step-by-step solution',
     body: "Every question — right OR wrong — gets a step-by-step breakdown. This is how you learn the reasoning, not just the answer.",
-    phase: 'demo'
+    phase: 'demo', section: 'practice_demo', sectionLabel: 'History tour'
   },
   {
     selector: '#demoProgress',
     title: 'Track your progress',
     body: "The bar fills as you work through the 10 questions. Your accuracy weighted by difficulty (Easy=1, Medium=2, Hard=3) becomes your topic mastery score on the dashboard.",
-    phase: 'demo'
+    phase: 'demo', section: 'practice_demo', sectionLabel: 'History tour'
   },
 
-  // --- Outro ---
+  // ===== History page =====
   {
-    selector: '#ged-help-btn',
-    title: "That's the flow",
-    body: "Re-run this tour any time from the Help button. When you're ready, hit Practice Sessions to start your first real one. Good luck!",
-    phase: 'sidebar'
+    selector: '#performanceChart',
+    title: 'Performance Trend',
+    body: 'Your average score per day plotted over the last week or month. Toggle the range with the Week/Month switch above the chart.',
+    section: 'history', sectionLabel: 'Wrap up'
+  },
+  {
+    selector: '#masteryList',
+    title: 'Subject Mastery',
+    body: 'A bar for each subject showing your overall coverage. Use the "Review Weak Topics" button below the list to jump straight into a session on the weakest area.',
+    section: 'history', sectionLabel: 'Wrap up'
+  },
+  {
+    selector: '#topicPills',
+    title: 'Session History',
+    body: "Filter your past sessions by topic. The table below shows the date, topic, score, and time spent on every session you've completed.",
+    section: 'history', sectionLabel: 'Wrap up'
+  },
+
+  // ===== Outro =====
+  {
+    selector: '#ged-topbar-help',
+    title: "That's the tour",
+    body: "Re-run this tour any time from the Help button up here. Tip: each section of the tour can be skipped individually using the 'Skip section' button. Good luck on the GED!",
+    section: 'outro', sectionLabel: 'Done'
   }
 ];
 

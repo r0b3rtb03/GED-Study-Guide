@@ -77,6 +77,20 @@
     this._render();
   };
 
+  // Skip past every step in the current section. A section is a contiguous
+  // run of steps sharing the same `section` value. If the current step has
+  // no section, this is identical to next().
+  SiteTour.prototype.skipSection = function () {
+    const current = this._filteredSteps[this._idx];
+    const section = current && current.section;
+    if (!section) { this.next(); return; }
+    let i = this._idx + 1;
+    while (i < this._filteredSteps.length && this._filteredSteps[i].section === section) i++;
+    if (i >= this._filteredSteps.length) { this.end(); return; }
+    this._idx = i;
+    this._render();
+  };
+
   SiteTour.prototype.back = function () {
     if (this._idx <= 0) return;
     this._idx--;
@@ -110,6 +124,23 @@
     this._els.popover.querySelector(".tour-btn-back").disabled = this._idx === 0;
     this._els.popover.querySelector(".tour-btn-next").textContent =
       this._idx >= this._filteredSteps.length - 1 ? "Finish" : "Next";
+
+    // Show "Skip Section" only when the current section has another step
+    // after this one — no point offering it on the last step of a section.
+    const skipSectionBtn = this._els.popover.querySelector(".tour-btn-skip-section");
+    if (skipSectionBtn) {
+      const nextStep = this._filteredSteps[this._idx + 1];
+      const hasMoreInSection = !!step.section && !!nextStep && nextStep.section === step.section;
+      skipSectionBtn.style.display = hasMoreInSection ? '' : 'none';
+      // Label it with the destination so the user knows where they're jumping to.
+      // Find the first step after this section ends.
+      if (hasMoreInSection) {
+        let i = this._idx + 1;
+        while (i < this._filteredSteps.length && this._filteredSteps[i].section === step.section) i++;
+        const dest = this._filteredSteps[i];
+        skipSectionBtn.textContent = dest ? "Skip to " + (dest.sectionLabel || "next section") : "Skip section";
+      }
+    }
 
     // If a target was specified but is hidden, skip the step gracefully.
     if (step.selector && (!target || (target.offsetParent === null && target !== document.body))) {
@@ -147,7 +178,10 @@
       '<div class="tour-popover-title"></div>' +
       '<div class="tour-popover-body"></div>' +
       '<div class="tour-popover-footer">' +
-        '<button type="button" class="tour-btn tour-btn-skip">Skip Tour</button>' +
+        '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
+          '<button type="button" class="tour-btn tour-btn-skip">Skip Tour</button>' +
+          '<button type="button" class="tour-btn tour-btn-skip-section">Skip section</button>' +
+        '</div>' +
         '<div style="display:flex;gap:6px;">' +
           '<button type="button" class="tour-btn tour-btn-back">Back</button>' +
           '<button type="button" class="tour-btn tour-btn-next">Next</button>' +
@@ -155,6 +189,7 @@
       '</div>';
     document.body.appendChild(popover);
     popover.querySelector(".tour-btn-skip").addEventListener("click", function () { self.end(); });
+    popover.querySelector(".tour-btn-skip-section").addEventListener("click", function () { self.skipSection(); });
     popover.querySelector(".tour-btn-back").addEventListener("click", function () { self.back(); });
     popover.querySelector(".tour-btn-next").addEventListener("click", function () { self.next(); });
 
