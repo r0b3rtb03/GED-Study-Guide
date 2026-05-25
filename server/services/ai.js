@@ -21,41 +21,17 @@ const SYSTEM_PROMPT = `You are an expert GED Mathematical Reasoning tutor. Your 
 4. Use plain language accessible to adult learners who may have been out of school for years.
 5. Always format your JSON responses exactly as specified — no extra text outside the JSON.
 
-MATH FORMATTING — the frontend renders LaTeX with KaTeX. Use these
-ESCAPE-FREE delimiters (designed to be safe inside JSON strings — no
-backslash escaping needed):
-- Inline math:    [m] ... [/m]
-- Display math:   [M] ... [/M]   (own line, centered)
-
-Examples:
-- Inline fraction:        "Find the value for [m] x [/m] that makes [m] \\\\frac{12x}{5 + x} [/m] undefined."
-- Square root:            "Evaluate [m] \\\\sqrt{16} [/m]."
-- Equation:               "Solve [m] x^2 + 5x = 14 [/m]."
-- Fraction division:      "[m] \\\\frac{7}{8} \\\\div \\\\frac{9}{5} = ? [/m]"
-
-Inside the delimiters, write standard LaTeX: \\\\frac{a}{b}, \\\\sqrt{x},
-^ for exponents, _ for subscripts, \\\\div, \\\\times, \\\\pi, \\\\cdot,
-\\\\le, \\\\ge, \\\\ne, \\\\pm. Use \\\\frac whenever a visible numerator
-sits above a visible denominator.
-
-Outside the delimiters, plain prose is fine. Use × ÷ ² ³ √ π for trivial
-inline arithmetic that doesn't need stacking. NEVER write raw LaTeX
-commands (\\\\frac, \\\\sqrt) outside [m]...[/m] — they will not render
-and look broken.
-
-Multiple-choice option strings follow the same rule — wrap the math part
-of each option: "[m] \\\\frac{7}{40} [/m]", "[m] \\\\sqrt{16} [/m]".
-
-ALWAYS put a single space BEFORE [m] and AFTER [/m] when prose surrounds
-the math. The math block renders as a tight inline element with no
-inherent whitespace — without a space the prose reads as one squashed
-token ("formula[m]C=...[/m]where[m]C[/m]is..." → "formulaC=...whereCis").
-Correct: "...using the formula [m] C = 0.12k + 18 [/m], where [m] C [/m]
-is the total cost and [m] k [/m] is the number of..."
-
-NEVER write the same variable both inline (as plain text) and as math.
-Pick one. Variables that need fractions/roots/exponents go in [m]...[/m];
-single-letter labels in flowing prose can stay as plain "C" or "k".`;
+MATH OPERATOR FORMATTING — ABSOLUTELY MANDATORY in every string field:
+- Multiplication: use × (Unicode U+00D7).  NEVER use *, \\times, \\cdot, or "x".
+- Division:       use ÷ (Unicode U+00F7).  NEVER use /, \\div, or "over".
+- Subtraction:    use - (plain ASCII hyphen-minus).  NEVER use \\minus or − (en-dash).
+- Addition:       use + (plain plus).
+- Exponents:      write as "x²" or "x^2", but prefer ²/³ Unicode when the exponent is 2 or 3.
+- Square root:    use √. NEVER use \\sqrt.
+- Pi:             use π. NEVER use \\pi.
+- Do NOT use LaTeX, MathJax, KaTeX, or HTML entities anywhere.
+- Fractions like "3/4" or "1/2" may keep the slash (they read as fractions).
+- A standalone division in arithmetic (e.g. "12 ÷ 4") MUST use ÷ with spaces around it.`;
 
 // ---------- Provider clients ----------
 
