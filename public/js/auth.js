@@ -1,38 +1,44 @@
 // Shared frontend auth + API helper. Imported as <script type="module">.
+//
+// Refresh token lives in an HttpOnly, SameSite=Strict cookie set by the
+// server — JS can't read or send it, so XSS can't exfiltrate it. We just
+// have to remember to send `credentials: 'include'` on any /api/auth call
+// that needs it (login, refresh, logout). Everything else continues to use
+// the Authorization: Bearer <access> header.
 
 const TOKEN_KEY = 'ged_access_token';
-const REFRESH_KEY = 'ged_refresh_token';
-const USER_KEY = 'ged_user';
+const USER_KEY  = 'ged_user';
+// Legacy: we used to keep the refresh token in localStorage. Old sessions
+// may still have one — we clear it on the next logout/expiry below so
+// nothing reads from it after this rollout.
+const LEGACY_REFRESH_KEY = 'ged_refresh_token';
 
 export function getAccessToken() { return localStorage.getItem(TOKEN_KEY); }
 export function isGuest() { return sessionStorage.getItem('ged_guest') === 'true'; }
 export function clearGuest() { sessionStorage.removeItem('ged_guest'); }
-export function getRefreshToken() { return localStorage.getItem(REFRESH_KEY); }
 export function getUser() {
   try { return JSON.parse(localStorage.getItem(USER_KEY) || 'null'); } catch { return null; }
 }
-export function setSession({ accessToken, refreshToken, user }) {
+export function setSession({ accessToken, user }) {
   if (accessToken) localStorage.setItem(TOKEN_KEY, accessToken);
-  if (refreshToken) localStorage.setItem(REFRESH_KEY, refreshToken);
   if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
+  // Wipe the legacy refresh token if a login still produces one in storage.
+  localStorage.removeItem(LEGACY_REFRESH_KEY);
 }
 export function logout({ expired = false } = {}) {
-  const refreshToken = getRefreshToken();
-  if (refreshToken) {
-    fetch('/api/auth/logout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken })
-    }).catch(() => {});
-  }
+  // Server clears the cookie + revokes the refresh token row. We don't
+  // need to send anything in the body — the cookie travels automatically.
+  fetch('/api/auth/logout', {
+    method: 'POST',
+    credentials: 'include'
+  }).catch(() => {});
   localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(REFRESH_KEY);
   localStorage.removeItem(USER_KEY);
+  localStorage.removeItem(LEGACY_REFRESH_KEY);
   window.location.href = expired ? '/login?expired=1' : '/login';
 }
 
 export function requireLogin() {
-  // Guests are not allowed on authenticated pages — push them back to landing.
   if (isGuest() && !getAccessToken()) {
     window.location.href = '/index';
     return false;
@@ -63,22 +69,17 @@ export async function apiFetch(url, options = {}) {
   let res = await rawFetch(url, options);
   if (res.status !== 401) return res;
 
-  const refreshToken = getRefreshToken();
-  if (!refreshToken) { logout({ expired: true }); return NEVER; }
-
+  // 401 → try to refresh. The HttpOnly cookie travels with this request;
+  // we don't need to send anything in the body.
   const refreshRes = await fetch('/api/auth/refresh', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ refreshToken })
+    credentials: 'include'
   });
   if (!refreshRes.ok) { logout({ expired: true }); return NEVER; }
 
   const { accessToken } = await refreshRes.json();
   localStorage.setItem(TOKEN_KEY, accessToken);
-  // Retry the original request once with the fresh token.
   const retry = await rawFetch(url, options);
-  // If the retry STILL comes back unauthorized, something's actually
-  // wrong with our session — bounce cleanly.
   if (retry.status === 401) { logout({ expired: true }); return NEVER; }
   return retry;
 }

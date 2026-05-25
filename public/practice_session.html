@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com" rel="preconnect" />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap" rel="stylesheet" />
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link rel="stylesheet" href="/styles.css" />
 <script src="/js/theme.js"></script>
 <!-- KaTeX renders inline LaTeX in question text, option strings, hints,
      explanations, and step-by-step solutions. The AI prompt is instructed
@@ -347,9 +347,9 @@
   </main>
 
 <script type="module">
-  import { renderShell } from '/js/layout.js';
-  import { apiJson, apiFetch, isGuest, getAccessToken } from '/js/auth.js';
-  import { formatMathDeep, stripEmbeddedOptions } from '/js/math-format.js';
+  import { renderShell } from '/js/dist/layout.js';
+  import { apiJson, apiFetch, isGuest, getAccessToken } from '/js/dist/auth.js';
+  import { formatMathDeep, stripEmbeddedOptions } from '/js/dist/math-format.js';
   import { randomEncouragement } from '/js/encouragement.js';
 
   const guest = isGuest() && !getAccessToken();

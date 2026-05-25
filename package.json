@@ -8,14 +8,18 @@
     "node": ">=22.5.0"
   },
   "scripts": {
+    "build:css": "tailwindcss -i ./src/input.css -o ./public/styles.css --minify",
+    "build:js": "esbuild public/js/auth.js public/js/layout.js public/js/math-format.js --bundle --format=esm --minify --outdir=public/js/dist --entry-names=[name]",
+    "build": "npm run build:css && npm run build:js",
+    "prestart": "npm run build",
     "start": "node --experimental-sqlite server/index.js",
-    "dev": "node --watch --experimental-sqlite server/index.js"
+    "dev": "npm run build && node --watch --experimental-sqlite server/index.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.30.1",
     "@google/generative-ai": "^0.21.0",
-    "resend": "^4.0.0",
     "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
@@ -24,6 +28,12 @@
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.9.16",
-    "pdf-parse": "^1.1.1"
+    "pdf-parse": "^1.1.1",
+    "resend": "^4.0.0",
+    "@tailwindcss/container-queries": "^0.1.1",
+    "@tailwindcss/forms": "^0.5.11",
+    "autoprefixer": "^10.5.0",
+    "esbuild": "^0.24.2",
+    "tailwindcss": "^3.4.14"
   }
 }

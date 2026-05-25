@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com" rel="preconnect" />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap" rel="stylesheet" />
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link rel="stylesheet" href="/styles.css" />
 <script src="/js/theme.js"></script>
 <style>
   body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
@@ -106,8 +106,8 @@
   </main>
 
 <script type="module">
-  import { renderShell } from '/js/layout.js';
-  import { apiJson, apiFetch } from '/js/auth.js';
+  import { renderShell } from '/js/dist/layout.js';
+  import { apiJson, apiFetch } from '/js/dist/auth.js';
   renderShell({ active: 'study_notes' });
 
   const TOPICS = [

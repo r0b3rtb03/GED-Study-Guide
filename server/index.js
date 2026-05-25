@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadAllStudyGuides } from './services/studyGuideLoader.js';
@@ -25,13 +26,64 @@ const publicDir = path.resolve(__dirname, '../public');
 const app = express();
 app.set('trust proxy', 1); // for Railway / proxy-aware rate limiting
 
-// Helmet — CSP relaxed because we use Tailwind/Material CDNs and inline scripts.
+// Helmet
+// - CSP allow-list: own origin for scripts/styles/images, plus the KaTeX
+//   CDN and Google Fonts. 'unsafe-inline' is still on script/style-src
+//   because the HTML pages contain a lot of inline <script type="module">
+//   blocks and inline event handlers; replacing all of those with nonces
+//   is a separate refactor. The CSP still meaningfully restricts WHERE
+//   scripts/styles can come from.
+// - frame-ancestors 'none' is the modern X-Frame-Options.
+// - crossOriginEmbedderPolicy off so the PDFs/iframes embed cleanly.
 app.use(helmet({
-  contentSecurityPolicy: false,
-  crossOriginEmbedderPolicy: false
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc:    ["'self'"],
+      scriptSrc:     ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net'],
+      styleSrc:      ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://cdn.jsdelivr.net'],
+      fontSrc:       ["'self'", 'https://fonts.gstatic.com', 'https://cdn.jsdelivr.net', 'data:'],
+      imgSrc:        ["'self'", 'data:', 'https://lh3.googleusercontent.com'],
+      connectSrc:    ["'self'"],
+      frameSrc:      ["'self'"],
+      frameAncestors: ["'none'"],
+      objectSrc:     ["'none'"],
+      baseUri:       ["'self'"],
+      formAction:    ["'self'"]
+    }
+  },
+  crossOriginEmbedderPolicy: false,
+  frameguard: { action: 'deny' }
 }));
-app.use(cors({ origin: process.env.CORS_ORIGIN || true, credentials: true }));
+
+// CORS: require an explicit allow-list in production. Falling back to
+// `origin: true` (reflect any caller) defeats the purpose of CORS, so we
+// refuse to boot if CORS_ORIGIN isn't set in NODE_ENV=production.
+const corsOrigins = (process.env.CORS_ORIGIN || '').split(',').map(s => s.trim()).filter(Boolean);
+if (process.env.NODE_ENV === 'production' && corsOrigins.length === 0) {
+  console.error('[security] CORS_ORIGIN must be set in production (comma-separated list of allowed origins).');
+  process.exit(1);
+}
+app.use(cors({
+  origin: corsOrigins.length ? corsOrigins : true,
+  credentials: true
+}));
+
+// Cookie parser is needed so /api/auth/refresh can read the HttpOnly cookie.
+app.use(cookieParser());
 app.use(express.json({ limit: '2mb' }));
+
+// Cache-Control middleware: long cache for fingerprint-able-by-deploy
+// static assets (PDFs, logo, favicon). HTML stays uncached because it
+// holds references to other assets and we want deploys to ship instantly.
+app.use((req, res, next) => {
+  if (/\.(pdf|png|jpg|jpeg|svg|webp|ico)$/i.test(req.path)) {
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+  } else if (req.path.endsWith('.css') || req.path.endsWith('.js')) {
+    // Until we add content hashes to filenames, cache CSS/JS for an hour.
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+  }
+  next();
+});
 
 app.use('/api/auth', authRoutes);
 app.use('/api/practice', practiceRoutes);

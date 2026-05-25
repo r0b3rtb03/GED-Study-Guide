@@ -10,7 +10,7 @@
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap" rel="stylesheet" />
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link rel="stylesheet" href="/styles.css" />
 <script src="/js/theme.js"></script>
 <script src="/js/theme-toggle-floating.js" defer></script>
 <style>
@@ -104,7 +104,7 @@
   </main>
 
 <script type="module">
-  import { setSession, getAccessToken } from '/js/auth.js';
+  import { setSession, getAccessToken } from '/js/dist/auth.js';
   if (getAccessToken()) window.location.href = '/dashboard';
 
   // Show "session expired" banner if we got here from an auth bounce.
@@ -164,6 +164,7 @@
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });

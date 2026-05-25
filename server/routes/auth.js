@@ -24,6 +24,30 @@ const resendLimiter = rateLimit({
   message: { message: 'Too many resend attempts. Try again in an hour.' }
 });
 
+// Refresh-token endpoint gets its own (generous) limiter — a compromised
+// refresh token shouldn't be usable to spin out hundreds of access tokens
+// per minute, but legitimate clients legitimately hit /refresh every time
+// the access token ages out. 60 per 15 min is comfortable headroom.
+const refreshLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Too many refresh attempts. Try again in a few minutes.' }
+});
+
+// Login limiter is additionally keyed by email so an attacker can't burn
+// the IP quota across many victims — or many attackers behind a shared NAT
+// can't lock each other out.
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => `${req.ip}|${(req.body?.email || '').toLowerCase().trim()}`,
+  message: { message: 'Too many login attempts. Try again in a few minutes.' }
+});
+
 const ACCESS_TTL = '15m';
 const REFRESH_TTL = '7d';
 const REFRESH_EXPIRES_MS = 7 * 24 * 60 * 60 * 1000;
@@ -42,6 +66,28 @@ function storeRefresh(userId, token) {
   const expiresAt = new Date(Date.now() + REFRESH_EXPIRES_MS).toISOString();
   db.prepare('INSERT INTO refresh_tokens (id, user_id, token, expires_at) VALUES (?, ?, ?, ?)')
     .run(newId(), userId, token, expiresAt);
+}
+
+// HttpOnly refresh-token cookie. Inaccessible to JS so XSS can't exfiltrate
+// it. SameSite=Strict prevents CSRF on /refresh. Secure in production only
+// (cookies over http get dropped silently with Secure=true on localhost).
+const REFRESH_COOKIE = 'ged_refresh';
+function setRefreshCookie(res, token) {
+  res.cookie(REFRESH_COOKIE, token, {
+    httpOnly: true,
+    secure:   process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge:   REFRESH_EXPIRES_MS,
+    path:     '/api/auth' // only sent to auth endpoints
+  });
+}
+function clearRefreshCookie(res) {
+  res.clearCookie(REFRESH_COOKIE, { path: '/api/auth' });
+}
+// Read the refresh token from the cookie OR the JSON body (legacy fallback
+// while older sessions still keep one in localStorage). Cookie wins.
+function readRefreshToken(req) {
+  return req.cookies?.[REFRESH_COOKIE] || req.body?.refreshToken || null;
 }
 
 function generateVerificationCode() {
@@ -212,7 +258,7 @@ router.post('/reset-password', authLimiter, async (req, res) => {
   res.json({ message: 'Password updated. Please sign in with your new password.' });
 });
 
-router.post('/login', authLimiter, async (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
   const { email, password } = req.body || {};
   if (!email || !password) return res.status(400).json({ message: 'Email and password are required.' });
 
@@ -233,18 +279,23 @@ router.post('/login', authLimiter, async (req, res) => {
   const user = rowToUser(row);
   const { accessToken, refreshToken } = signTokens(user);
   storeRefresh(user.id, refreshToken);
+  setRefreshCookie(res, refreshToken);
 
-  res.json({ accessToken, refreshToken, user });
+  // refreshToken is intentionally NOT returned in the body anymore — it
+  // lives in an HttpOnly cookie. Older clients that still expect it in
+  // the response continue to work because they ignore unknown fields.
+  res.json({ accessToken, user });
 });
 
-router.post('/refresh', (req, res) => {
-  const { refreshToken } = req.body || {};
+router.post('/refresh', refreshLimiter, (req, res) => {
+  const refreshToken = readRefreshToken(req);
   if (!refreshToken) return res.status(400).json({ message: 'Missing refresh token.' });
 
   const stored = db.prepare('SELECT * FROM refresh_tokens WHERE token = ?').get(refreshToken);
-  if (!stored) return res.status(401).json({ message: 'Refresh token revoked.' });
+  if (!stored) { clearRefreshCookie(res); return res.status(401).json({ message: 'Refresh token revoked.' }); }
   if (new Date(stored.expires_at).getTime() < Date.now()) {
     db.prepare('DELETE FROM refresh_tokens WHERE id = ?').run(stored.id);
+    clearRefreshCookie(res);
     return res.status(401).json({ message: 'Refresh token expired.' });
   }
 
@@ -252,6 +303,7 @@ router.post('/refresh', (req, res) => {
   try {
     payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
   } catch {
+    clearRefreshCookie(res);
     return res.status(401).json({ message: 'Invalid refresh token.' });
   }
 
@@ -260,8 +312,9 @@ router.post('/refresh', (req, res) => {
 });
 
 router.post('/logout', (req, res) => {
-  const { refreshToken } = req.body || {};
+  const refreshToken = readRefreshToken(req);
   if (refreshToken) db.prepare('DELETE FROM refresh_tokens WHERE token = ?').run(refreshToken);
+  clearRefreshCookie(res);
   res.json({ ok: true });
 });
 

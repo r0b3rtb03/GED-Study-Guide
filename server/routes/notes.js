@@ -2,9 +2,8 @@ import { Router } from 'express';
 import multer from 'multer';
 import rateLimit from 'express-rate-limit';
 import { requireAuth } from '../middleware/requireAuth.js';
-import { getStudyGuide } from '../services/studyGuideLoader.js';
-import { structureNotes, isAiEnabled } from '../services/ai.js';
-import { GED_TOPIC_GUIDES, TOPICS_BY_SUBJECT } from '../data/gedTopicGuides.js';
+import { structureNotes } from '../services/ai.js';
+import { TOPICS_BY_SUBJECT } from '../data/gedTopicGuides.js';
 import { STATIC_NOTES } from '../data/staticNotes.js';
 import { createRequire } from 'node:module';
 
@@ -47,63 +46,24 @@ const uploadLimiter = rateLimit({
   message: { message: 'Upload limit reached. Try again in an hour.' }
 });
 
-const notesCache = new Map();
-
-router.get('/:topic', async (req, res) => {
+router.get('/:topic', (req, res) => {
   const topic = req.params.topic;
   const subject = resolveSubject(topic);
   if (!subject) return res.status(404).json({ message: 'Topic not found.' });
 
-  // Static notes are pre-written and served instantly — no AI call.
+  // Every topic has hand-written static notes now — no AI call needed at
+  // serve time. The structureNotes() path is kept ONLY for /upload (user
+  // uploads their own PDF/text), it's no longer reachable from this route.
   const staticNote = STATIC_NOTES[subject]?.[topic];
   if (staticNote) return res.json(staticNote);
 
-  // Math-only legacy path: only Math topics have raw study-guide text on disk.
-  if (subject !== 'math') {
-    const t = TOPICS_BY_SUBJECT[subject][topic];
-    return res.json({
-      title: t.name,
-      sections: [{ heading: 'Topic Scope', content: t.scope.trim(), keyFormulas: [], tips: [] }]
-    });
-  }
-
-  if (notesCache.has(topic)) return res.json(notesCache.get(topic));
-
-  const raw = getStudyGuide(topic);
-  const topicName = GED_TOPIC_GUIDES[topic].name;
-
-  if (!raw) {
-    const fallback = {
-      title: topicName,
-      sections: [{
-        heading: 'Topic Scope',
-        content: GED_TOPIC_GUIDES[topic].scope.trim(),
-        keyFormulas: [],
-        tips: ['Drop a study-guide file in server/data/studyGuides/ to enrich this page.']
-      }]
-    };
-    notesCache.set(topic, fallback);
-    return res.json(fallback);
-  }
-
-  if (!isAiEnabled()) {
-    const data = {
-      title: topicName,
-      sections: [{ heading: topicName, content: raw, keyFormulas: [], tips: [] }]
-    };
-    notesCache.set(topic, data);
-    return res.json(data);
-  }
-
-  try {
-    const structured = await structureNotes(raw);
-    if (!structured.title) structured.title = topicName;
-    notesCache.set(topic, structured);
-    res.json(structured);
-  } catch (err) {
-    console.error('[notes/:topic]', err);
-    res.status(502).json({ message: 'Failed to format notes.', detail: err.message });
-  }
+  // Safety net: a topic that's registered in TOPICS_BY_SUBJECT but missing
+  // from STATIC_NOTES still returns its scope, never a 500.
+  const t = TOPICS_BY_SUBJECT[subject][topic];
+  return res.json({
+    title: t.name,
+    sections: [{ heading: 'Topic Scope', content: t.scope.trim(), keyFormulas: [], tips: [] }]
+  });
 });
 
 router.post('/upload', requireAuth, uploadLimiter, upload.single('file'), async (req, res) => {

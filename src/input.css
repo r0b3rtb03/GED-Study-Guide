@@ -1,0 +1,6 @@
+/* Tailwind layers. The `content` glob in tailwind.config.cjs scans every
+   HTML file under public/ + every JS module so utility classes used in
+   template literals are kept. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
