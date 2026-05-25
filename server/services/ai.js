@@ -44,7 +44,18 @@ commands (\\\\frac, \\\\sqrt) outside [m]...[/m] — they will not render
 and look broken.
 
 Multiple-choice option strings follow the same rule — wrap the math part
-of each option: "[m] \\\\frac{7}{40} [/m]", "[m] \\\\sqrt{16} [/m]".`;
+of each option: "[m] \\\\frac{7}{40} [/m]", "[m] \\\\sqrt{16} [/m]".
+
+ALWAYS put a single space BEFORE [m] and AFTER [/m] when prose surrounds
+the math. The math block renders as a tight inline element with no
+inherent whitespace — without a space the prose reads as one squashed
+token ("formula[m]C=...[/m]where[m]C[/m]is..." → "formulaC=...whereCis").
+Correct: "...using the formula [m] C = 0.12k + 18 [/m], where [m] C [/m]
+is the total cost and [m] k [/m] is the number of..."
+
+NEVER write the same variable both inline (as plain text) and as math.
+Pick one. Variables that need fractions/roots/exponents go in [m]...[/m];
+single-letter labels in flowing prose can stay as plain "C" or "k".`;
 
 // ---------- Provider clients ----------
 

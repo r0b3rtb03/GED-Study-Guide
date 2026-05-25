@@ -51,6 +51,13 @@ function normalizeSpaces(s) {
   return s.replace(/[ \t]+/g, ' ').replace(/ ?([×÷+−])  ?/g, ' $1 ').trim();
 }
 
+// Ensure a single space follows a multiple-choice prefix like "A)" or "(A)".
+// AI responses occasionally come back as "A)Foo" or "(A)Foo" — that reads
+// as one squashed token in the UI.
+function spaceAfterOptionPrefix(s) {
+  return s.replace(/^(\(?[A-D]\))(?!\s)/, '$1 ');
+}
+
 // Split a string on KaTeX math segments — \( ... \), \[ ... \], $$ ... $$ —
 // so we can sanitize the prose around them without touching the LaTeX inside.
 // Returns an array of { math: boolean, text: string } chunks in order.
@@ -72,12 +79,29 @@ export function formatMath(text) {
   // Only sanitize prose segments — leave LaTeX inside \( \), \[ \], $$ $$ alone
   // so KaTeX still has \frac, \sqrt, \times, etc. to render.
   const parts = splitMath(text);
-  const out = parts.map(p => {
-    if (p.math) return p.text;
-    let s = p.text;
+  // First sanitize each non-math chunk. Keep math chunks verbatim.
+  for (let i = 0; i < parts.length; i++) {
+    if (parts[i].math) continue;
+    let s = parts[i].text;
     for (const [re, rep] of REPLACEMENTS) s = s.replace(re, rep);
-    return normalizeSpaces(s);
-  }).join('');
+    parts[i].text = normalizeSpaces(s);
+  }
+  // Reinstate spaces around math when adjacent prose ends/starts with a
+  // word character. AI responses often emit "formula[m]...[/m]" or
+  // "[/m]is the total cost" which renders as "formulaC=..." — the math
+  // block has no inherent whitespace.
+  for (let i = 0; i < parts.length; i++) {
+    if (!parts[i].math) continue;
+    const prev = parts[i - 1];
+    const next = parts[i + 1];
+    if (prev && !prev.math && /[A-Za-z0-9\)]$/.test(prev.text)) prev.text += ' ';
+    if (next && !next.math && /^[A-Za-z0-9\(]/.test(next.text)) next.text = ' ' + next.text;
+  }
+  let out = parts.map(p => p.text).join('');
+  // Run AFTER reassembly so a "A)" prefix that sits OUTSIDE the math block
+  // still gets the trailing space, even when the rest of the option is
+  // wrapped in [m]...[/m].
+  out = spaceAfterOptionPrefix(out);
   return out;
 }
 
