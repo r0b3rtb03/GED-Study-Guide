@@ -74,11 +74,9 @@
         </button>
       </div>
     </header>
-    <!-- Explicit min-h-0 so flex-1 actually shrinks the iframe to fit the
-         remaining height; otherwise flexbox can refuse to size it down. -->
-    <iframe id="formulaFrame" src="" title="GED Math Formula Sheet"
-            class="flex-1 min-h-0 w-full border-0 bg-white"
-            style="background:#fff"></iframe>
+    <!-- Native HTML formula sheet — much more legible than embedding the
+         PDF. Populated on first open. -->
+    <div id="formulaSheetBody" class="ged-formula-sheet flex-1 min-h-0 overflow-y-auto px-5 py-4"></div>
   </aside>
 
   <!-- Mobile fallback: full-screen overlay since there's no room to dock -->
@@ -93,7 +91,7 @@
         <span class="material-symbols-outlined" style="font-size:20px">close</span>
       </button>
     </header>
-    <iframe id="formulaFrameMobile" src="" title="GED Math Formula Sheet" class="flex-1 w-full border-0 bg-white"></iframe>
+    <div id="formulaSheetBodyMobile" class="ged-formula-sheet flex-1 min-h-0 overflow-y-auto px-5 py-4"></div>
   </div>
 
   <style>
@@ -132,6 +130,38 @@
     }
     /* Make sure nested text picks up the contrast color */
     .option-graded-correct *, .option-graded-wrong * { color: inherit; }
+
+    /* ===== Native formula sheet ===== */
+    .ged-formula-sheet { font-size: 16px; line-height: 1.5; }
+    .ged-formula-sheet h2 {
+      font-size: 22px; font-weight: 700; margin: 18px 0 8px;
+      color: var(--ged-primary);
+      border-bottom: 2px solid var(--ged-outline-variant);
+      padding-bottom: 4px;
+    }
+    .ged-formula-sheet h2:first-child { margin-top: 0; }
+    .ged-formula-sheet table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+    .ged-formula-sheet td {
+      padding: 6px 8px;
+      border-bottom: 1px solid var(--ged-outline-variant);
+      vertical-align: top;
+    }
+    .ged-formula-sheet td:first-child {
+      color: var(--ged-on-surface-variant);
+      width: 50%;
+      font-weight: 500;
+    }
+    .ged-formula-sheet td:last-child {
+      font-family: 'Cambria Math', 'STIX Two Math', Georgia, serif;
+      font-size: 18px;
+      color: var(--ged-on-surface);
+    }
+    .ged-formula-sheet .note {
+      font-size: 13px;
+      color: var(--ged-on-surface-variant);
+      margin-top: 6px;
+    }
+    .ged-formula-sheet .katex { font-size: 1.05em; }
   </style>
 
   <main class="md:pl-64 pt-16 md:pt-0 pb-20 md:pb-0">
@@ -1209,21 +1239,77 @@
   const formulaBtnLabel = document.getElementById('formulaBtnInlineLabel');
   const formulaMobile   = document.getElementById('formulaModalMobile');
 
-  // Iframe.src reads back as the current page URL when unset (browsers
-  // resolve "" against location), so we can't use it as a "has loaded?"
-  // signal. Track with a data attribute instead.
-  const FORMULA_PDF = '/math-formula-sheet.pdf#view=FitH';
-  function ensureFormulaSrc(frame) {
-    if (frame.dataset.loaded === '1') return;
-    frame.src = FORMULA_PDF;
-    frame.dataset.loaded = '1';
+  // Native formula sheet — rendered once, reused on every open. KaTeX
+  // typesets the LaTeX expressions for typeset fractions, square roots,
+  // and exponents instead of forcing the user to read a tiny PDF.
+  // Math wrapped in \( ... \) — typesetMath() already includes those as
+  // delimiters in the KaTeX auto-render config.
+  const M = (latex) => `\\(${latex}\\)`;
+  const FORMULA_HTML = `
+    <h2>Area of</h2>
+    <table>
+      <tr><td>square</td>          <td>${M('A = s^2')}</td></tr>
+      <tr><td>rectangle</td>       <td>${M('A = lw')}</td></tr>
+      <tr><td>parallelogram</td>   <td>${M('A = bh')}</td></tr>
+      <tr><td>triangle</td>        <td>${M('A = \\tfrac{1}{2}bh')}</td></tr>
+      <tr><td>trapezoid</td>       <td>${M('A = \\tfrac{1}{2}h(b_1 + b_2)')}</td></tr>
+      <tr><td>circle</td>          <td>${M('A = \\pi r^2')}</td></tr>
+    </table>
+
+    <h2>Perimeter of</h2>
+    <table>
+      <tr><td>square</td>          <td>${M('P = 4s')}</td></tr>
+      <tr><td>rectangle</td>       <td>${M('P = 2l + 2w')}</td></tr>
+      <tr><td>triangle</td>        <td>${M('P = a + b + c')}</td></tr>
+      <tr><td>circumference of a circle</td>
+                                   <td>${M('C = 2\\pi r')} or ${M('\\pi d')}</td></tr>
+    </table>
+    <p class="note">${M('\\pi \\approx 3.14')}</p>
+
+    <h2>Surface area &amp; volume</h2>
+    <table>
+      <tr><td>rectangular prism</td><td>${M('SA = 2lw + 2lh + 2wh')} &nbsp;&nbsp; ${M('V = lwh')}</td></tr>
+      <tr><td>right prism</td>     <td>${M('SA = ph + 2B')} &nbsp;&nbsp; ${M('V = Bh')}</td></tr>
+      <tr><td>cylinder</td>        <td>${M('SA = 2\\pi rh + 2\\pi r^2')} &nbsp;&nbsp; ${M('V = \\pi r^2 h')}</td></tr>
+      <tr><td>pyramid</td>         <td>${M('SA = \\tfrac{1}{2}ps + B')} &nbsp;&nbsp; ${M('V = \\tfrac{1}{3}Bh')}</td></tr>
+      <tr><td>cone</td>            <td>${M('SA = \\pi rs + \\pi r^2')} &nbsp;&nbsp; ${M('V = \\tfrac{1}{3}\\pi r^2 h')}</td></tr>
+      <tr><td>sphere</td>          <td>${M('SA = 4\\pi r^2')} &nbsp;&nbsp; ${M('V = \\tfrac{4}{3}\\pi r^3')}</td></tr>
+    </table>
+    <p class="note">${M('p')} = perimeter of base with area ${M('B')}.</p>
+
+    <h2>Data</h2>
+    <table>
+      <tr><td>mean</td>            <td>sum of values ÷ number of values</td></tr>
+      <tr><td>median</td>          <td>middle value of an ordered set (or the mean of the two middle values when the count is even)</td></tr>
+    </table>
+
+    <h2>Algebra</h2>
+    <table>
+      <tr><td>slope of a line</td>            <td>${M('m = \\dfrac{y_2 - y_1}{x_2 - x_1}')}</td></tr>
+      <tr><td>slope-intercept form</td>       <td>${M('y = mx + b')}</td></tr>
+      <tr><td>point-slope form</td>           <td>${M('y - y_1 = m(x - x_1)')}</td></tr>
+      <tr><td>standard form of a quadratic</td><td>${M('y = ax^2 + bx + c')}</td></tr>
+      <tr><td>quadratic formula</td>          <td>${M('x = \\dfrac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}')}</td></tr>
+      <tr><td>Pythagorean theorem</td>        <td>${M('a^2 + b^2 = c^2')}</td></tr>
+      <tr><td>simple interest</td>            <td>${M('I = Prt')} &nbsp;<span class="note">(${M('P')} = principal, ${M('r')} = rate, ${M('t')} = time)</span></td></tr>
+      <tr><td>distance formula</td>           <td>${M('d = rt')}</td></tr>
+      <tr><td>total cost</td>                 <td>total cost = (number of units) × (price per unit)</td></tr>
+    </table>
+  `;
+  function ensureFormulaContent(container) {
+    if (container.dataset.loaded === '1') return;
+    container.innerHTML = FORMULA_HTML;
+    container.dataset.loaded = '1';
+    // Render KaTeX. The auto-render script supports $...$ delimiters when
+    // configured — we already wire that up in typesetMath. Reuse it here.
+    typesetMath(container);
   }
   function openFormula() {
     if (isDesktop()) {
-      ensureFormulaSrc(document.getElementById('formulaFrame'));
+      ensureFormulaContent(document.getElementById('formulaSheetBody'));
       document.body.classList.add('ged-formula-open');
     } else {
-      ensureFormulaSrc(document.getElementById('formulaFrameMobile'));
+      ensureFormulaContent(document.getElementById('formulaSheetBodyMobile'));
       formulaMobile.classList.remove('hidden');
       formulaMobile.classList.add('flex');
     }
