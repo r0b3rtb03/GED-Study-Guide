@@ -488,7 +488,14 @@
 
   // Prefetch holder: a promise for the NEXT question that's generated in the background
   // while the user is reading the current one.
-  let prefetchPromise = null;
+  // We keep a small queue of in-flight prefetched generations instead of
+  // one. By the time the user finishes Q1 the next 2–3 questions are
+  // usually already cached locally, so the rest of the session feels
+  // instant. Parallel prefetches send the same `previousQuestions`
+  // snapshot — the AI's per-request UUID primer + the server-side
+  // content_hash cache dedupe duplicates after the fact.
+  const PREFETCH_WINDOW = 3;
+  let prefetchQueue = [];                          // array of pending promises
 
   // Idle timeout: route back to chooser after 5 min of no interaction.
   const IDLE_MS = 5 * 60 * 1000;
@@ -500,7 +507,7 @@
   function stopIdle() { clearTimeout(idleTimer); idleTimer = null; }
   function handleIdleTimeout() {
     clearInterval(timerInterval);
-    prefetchPromise = null;
+    prefetchQueue = [];
     showToast('Session timed out due to 5 minutes of inactivity.');
     showChooser();
   }
@@ -757,7 +764,7 @@
   document.addEventListener('click', (e) => {
     if (!e.target.closest('#readyStartBtn')) return;
     if (!session.subject || !session.difficulty || !session.topic) return;
-    prefetchPromise = null;
+    prefetchQueue = [];
     session.questions = [];
     startPrefetch();
     // Skip the intro screen since the sidebar already showed objectives
@@ -786,7 +793,7 @@
 
   $('introBackBtn').addEventListener('click', () => {
     $('intro').classList.add('hidden');
-    prefetchPromise = null;          // cancel the in-flight prefetch if the user backs out
+    prefetchQueue = [];          // cancel the in-flight prefetch if the user backs out
     showChooser();
   });
   $('introStartBtn').addEventListener('click', () => {
@@ -804,7 +811,7 @@
 
   function startSession() {
     Object.assign(session, { questions: [], answers: [], currentIndex: 0, score: 0, startTime: Date.now() });
-    prefetchPromise = null;
+    prefetchQueue = [];
     $('chooser').classList.add('hidden');
     $('results').classList.add('hidden');
     $('session').classList.remove('hidden');
@@ -823,19 +830,31 @@
     loadNextQuestion();
   }
 
-  // Fire-and-store: kick off generation for the NEXT question while user reads current.
+  // Top off the prefetch queue up to PREFETCH_WINDOW, without exceeding
+  // the number of questions remaining in the session. Each call here
+  // fires ONE new background generation; loadNextQuestion shifts from
+  // the queue and then re-fills.
   function startPrefetch() {
-    if (prefetchPromise) return;
-    const endpoint = guest ? '/api/practice/generate-guest' : '/api/practice/generate';
-    prefetchPromise = callApi(endpoint, {
-      method: 'POST',
-      body: JSON.stringify({
-        subject: session.subject,
-        topic: session.topic,
-        difficulty: session.difficulty,
-        previousQuestions: session.questions.map(q => q.question)
-      })
-    }).catch(err => { console.warn('[prefetch] failed:', err.message); prefetchPromise = null; throw err; });
+    const remainingAfterCurrent = QUESTIONS_PER_SESSION - session.currentIndex - 1;
+    const want = Math.min(PREFETCH_WINDOW, remainingAfterCurrent);
+    while (prefetchQueue.length < want) {
+      const endpoint = guest ? '/api/practice/generate-guest' : '/api/practice/generate';
+      const p = callApi(endpoint, {
+        method: 'POST',
+        body: JSON.stringify({
+          subject: session.subject,
+          topic: session.topic,
+          difficulty: session.difficulty,
+          previousQuestions: session.questions.map(q => q.question)
+        })
+      }).catch(err => {
+        console.warn('[prefetch] failed:', err.message);
+        // Remove this failed promise so the queue can refill on the next pass.
+        prefetchQueue = prefetchQueue.filter(x => x !== p);
+        throw err;
+      });
+      prefetchQueue.push(p);
+    }
   }
 
   function renderDifficulty() {
@@ -901,30 +920,37 @@
 
     try {
       let data;
-      if (prefetchPromise) {
-        // Use the question that was generated in the background while user was reading prev one.
-        data = await prefetchPromise;
-        prefetchPromise = null;
+      if (prefetchQueue.length > 0) {
+        // Use a question that was generated in the background while the
+        // user was reading the previous one. The queue stays full as we
+        // refill via startPrefetch() below.
+        data = await prefetchQueue.shift();
       } else {
         const endpoint = guest ? '/api/practice/generate-guest' : '/api/practice/generate';
         data = await callApi(endpoint, {
           method: 'POST',
           body: JSON.stringify({
             subject: session.subject,
-        topic: session.topic,
+            topic: session.topic,
             difficulty: session.difficulty,
             previousQuestions: session.questions.map(q => q.question)
           })
         });
       }
       const q = formatMathDeep(data.question);
+      // The server tells us whether this question came from the recycle
+      // cache. Cached questions skip the Claude check on submission —
+      // their steps + correctAnswer were already validated when first
+      // generated, so we can synthesize feedback locally for instant
+      // grading.
+      q._fromCache = data.fromCache === true;
       // Defensive: strip A/B/C/D options if the AI inlined them in the stem.
-      // The "options" array still drives the radio buttons below.
       if (q?.question) q.question = stripEmbeddedOptions(q.question);
       session.questions.push(q);
       renderQuestion(q);
 
-      // Kick off prefetch for the question AFTER this one, unless we're on the last.
+      // Top off the prefetch queue so the next 2–3 questions are ready
+      // by the time the user submits this one.
       if (session.currentIndex + 1 < QUESTIONS_PER_SESSION) startPrefetch();
     } catch (e) {
       $('questionArea').innerHTML = `<p class="text-error">${e.message}</p>`;
@@ -1101,6 +1127,31 @@
     answered = true;
     $('submitBtn').disabled = true;
     $('feedback').classList.remove('hidden');
+
+    // Cache hit short-circuit: the question came from the recycle cache,
+    // so its correctAnswer + steps were already validated when it was
+    // first generated. Synthesize feedback locally instead of paying for
+    // another Claude round-trip — instant grading on every recycled
+    // question. Fresh questions still go through the checker for the
+    // nicer prose explanation.
+    if (q._fromCache) {
+      const norm = v => String(v ?? '').toUpperCase().trim();
+      const isCorrect = norm(userAnswer) === norm(q.correctAnswer);
+      const synthesized = {
+        isCorrect,
+        explanation: isCorrect
+          ? "Correct! Walk through the steps below to lock in the reasoning."
+          : `Not quite. The correct answer is ${q.correctAnswer}. Walk through the steps below to see how it's solved.`,
+        steps: q.steps,
+        encouragement: isCorrect ? "Nice work — keep that momentum going!" : "Every miss is a learning opportunity."
+      };
+      const cleaned = formatMathDeep(synthesized);
+      session.answers.push({ userAnswer, isCorrect: cleaned.isCorrect, ...cleaned });
+      if (cleaned.isCorrect) session.score++;
+      renderFeedback(q, userAnswer, cleaned);
+      return;
+    }
+
     $('feedback').innerHTML = loaderHtml('Checking your answer…');
 
     try {
@@ -1112,7 +1163,13 @@
           correctAnswer: q.correctAnswer,
           userAnswer,
           subject: session.subject,
-          topic: session.topic
+          topic: session.topic,
+          // Echo the explanation back so the server can skip Claude and
+          // return instantly. New generations include these; legacy
+          // cached questions that don't will fall through to Claude.
+          explanation: q.explanation,
+          steps: q.steps,
+          encouragement: q.encouragement
         })
       });
       const cleaned = formatMathDeep(result);
@@ -1212,7 +1269,7 @@
   function finishSession() {
     clearInterval(timerInterval);
     stopIdle();
-    prefetchPromise = null;
+    prefetchQueue = [];
     $('session').classList.add('hidden');
     $('sessionBar').classList.add('hidden');
     setGuestBar(true);

@@ -47,10 +47,27 @@ guestPracticeRouter.post('/generate-guest', guestLimiter, async (req, res) => {
 });
 
 guestPracticeRouter.post('/check-guest', guestLimiter, async (req, res) => {
-  const { question, correctAnswer, userAnswer, subject = 'math', topic } = req.body || {};
+  const {
+    question, correctAnswer, userAnswer, subject = 'math', topic,
+    explanation, steps, encouragement
+  } = req.body || {};
   if (!question || correctAnswer === undefined || userAnswer === undefined) {
     return res.status(400).json({ message: 'Missing fields.' });
   }
+
+  const norm = v => String(v ?? '').trim().toUpperCase();
+  const isCorrect = norm(userAnswer) === norm(correctAnswer);
+
+  if (explanation && Array.isArray(steps) && steps.length) {
+    return res.json({
+      isCorrect,
+      explanation,
+      steps,
+      encouragement: encouragement || (isCorrect ? 'Nice work!' : 'Every miss is a step toward mastery.'),
+      fromCache: true
+    });
+  }
+
   try {
     const result = await checkAnswer({ question, correctAnswer, userAnswer, subject, topic });
     res.json(result);
@@ -96,10 +113,34 @@ router.post('/generate', requireAuth, async (req, res) => {
 });
 
 router.post('/check', requireAuth, async (req, res) => {
-  const { question, correctAnswer, userAnswer, subject = 'math', topic } = req.body || {};
+  const {
+    question, correctAnswer, userAnswer,
+    subject = 'math', topic,
+    // The question generator now emits a reader-facing explanation +
+    // steps + encouragement up front. When the client echoes them back
+    // we skip the Claude grading round-trip entirely and just compare
+    // the user's letter to the cached answer — feedback feels instant.
+    explanation, steps, encouragement
+  } = req.body || {};
   if (!question || correctAnswer === undefined || userAnswer === undefined) {
     return res.status(400).json({ message: 'Missing fields.' });
   }
+
+  const norm = v => String(v ?? '').trim().toUpperCase();
+  const isCorrect = norm(userAnswer) === norm(correctAnswer);
+
+  if (explanation && Array.isArray(steps) && steps.length) {
+    return res.json({
+      isCorrect,
+      explanation,
+      steps,
+      encouragement: encouragement || (isCorrect ? 'Nice work — keep that momentum going.' : 'Every miss is a step toward mastery.'),
+      fromCache: true
+    });
+  }
+
+  // Legacy path: old clients (or sessions issued before this rollout)
+  // didn't send the pre-generated explanation. Fall back to Claude.
   try {
     const result = await checkAnswer({ question, correctAnswer, userAnswer, subject, topic });
     res.json(result);

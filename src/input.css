@@ -6,11 +6,12 @@
 @tailwind utilities;
 
 /* ============================================================
-   Cog loader — shown anywhere we wait on the AI / network. Three
-   spinning gears tuned to the GED palette so it feels on-brand
-   instead of a generic spinner. Adapted from the pure-CSS cog
-   loader by Janko Cingel, re-themed for our colors and converted
-   to plain CSS (no Sass).
+   Cog loader — three meshing gears in the GED palette. Layout is
+   a triangle: a big primary gear on top, a medium gear bottom-
+   left and a smaller gear bottom-right, each rotating in the
+   opposite direction of its neighbour so they "look like" they
+   drive each other. Label sits well below the gears so it
+   never collides with the rotating teeth.
    ============================================================ */
 .ged-loader {
   position: relative;
@@ -19,36 +20,21 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: 240px;
-  padding: 24px 0;
+  min-height: 280px;
+  padding: 32px 0;
   text-align: center;
 }
+/* Fixed-size container that bounds the gear triangle. Big enough that
+   no individual gear escapes it. */
 .ged-loader__cogs {
   position: relative;
-  width: 100px;
-  height: 100px;
-}
-.ged-loader__overlay {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 150px;
+  width: 200px;
   height: 150px;
-  border-radius: 50%;
-  background: transparent;
-  box-shadow:
-    0 0 0 1000px rgba(255, 255, 255, 0);
-  pointer-events: none;
 }
-html.dark .ged-loader__overlay {
-  box-shadow: 0 0 0 1000px rgba(13, 19, 32, 0);
-}
-
-/* Three gears: top (large, primary), left (medium, teal accent),
-   bottom (small, warm gold). Each gear is a stack of three squares
-   rotated by 30°/60°/90° so the outline becomes a star/cog shape,
-   with a circular "hole" punched in the centre. */
+/* The overlay used to be a white halo behind the gears — looked muddy
+   against our dark navy backgrounds. Removed visually; class kept so
+   existing markup doesn't break. */
+.ged-loader__overlay { display: none; }
 
 .ged-loader__top,
 .ged-loader__left,
@@ -56,29 +42,36 @@ html.dark .ged-loader__overlay {
   position: absolute;
   border-radius: 50%;
 }
+/* Triangle layout — top centered, left and right anchored to the bottom
+   of the box. Centers chosen so neighbours touch without burying each
+   other. */
 .ged-loader__top {
   width: 100px;
   height: 100px;
-  transform-origin: 50px 50px;
-  animation: ged-cog-rotate 10s infinite linear;
   top: 0;
-  left: 0;
+  left: 50px;                   /* (200 - 100) / 2 — centered horizontally */
+  transform-origin: 50px 50px;
+  animation: ged-cog-rotate 9s infinite linear;
 }
+/* Medium and small gears are placed so their pitch radii touch the top
+   gear's edge — centres on a 60° arc from the top gear's centre — and
+   they spin in the OPPOSITE direction so they read as being driven by
+   the top gear. */
 .ged-loader__left {
   width: 80px;
   height: 80px;
+  top: 62px;     /* center y = 102. top-gear centre = (100, 50). distance = ~85, near pitch sum 90 */
+  left: 12px;    /* center x = 52 */
   transform-origin: 40px 40px;
-  animation: ged-cog-rotate-left 10s 0.1s infinite reverse linear;
-  bottom: -24px;
-  left: -28px;
+  animation: ged-cog-rotate-rev 8s infinite linear;
 }
 .ged-loader__bottom {
   width: 60px;
   height: 60px;
+  top: 70px;     /* center y = 100 */
+  left: 122px;   /* center x = 152. distance from top = ~73, near pitch sum 80 */
   transform-origin: 30px 30px;
-  animation: ged-cog-rotate-right 10.2s 0.4s infinite linear;
-  bottom: -10px;
-  right: -24px;
+  animation: ged-cog-rotate-rev 6s infinite linear;
 }
 
 /* The four "teeth" plates for each gear. Three rotated squares plus
@@ -109,8 +102,9 @@ html.dark .ged-loader__bottom-part { background: #f5b76b; }
 .ged-loader__left div:nth-of-type(3),
 .ged-loader__bottom div:nth-of-type(3) { transform: rotate(90deg); }
 
-/* The centre hole on each gear — uses the page background so it
-   reads as a punched-through circle in both themes. */
+/* The centre hole on each gear — uses the card surface so it reads as
+   a punched-through circle no matter what container the loader sits in.
+   Callers can override via --ged-loader-hole on the loader element. */
 .ged-loader__top-hole,
 .ged-loader__left-hole,
 .ged-loader__bottom-hole {
@@ -119,14 +113,16 @@ html.dark .ged-loader__bottom-part { background: #f5b76b; }
   top: 50%;
   transform: translate(-50%, -50%);
   border-radius: 50%;
-  background: var(--ged-background);
+  background: var(--ged-loader-hole, var(--ged-surface-container-lowest));
 }
 .ged-loader__top-hole    { width: 50px; height: 50px; }
 .ged-loader__left-hole   { width: 40px; height: 40px; }
 .ged-loader__bottom-hole { width: 30px; height: 30px; }
 
 .ged-loader__label {
-  margin-top: 24px;
+  /* Pushed below the bottom of the gear triangle. Large gap so the
+     spinning teeth never visually clip into the text. */
+  margin-top: 36px;
   font-size: 14px;
   font-weight: 500;
   letter-spacing: 0.04em;
@@ -137,11 +133,9 @@ html.dark .ged-loader__bottom-part { background: #f5b76b; }
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
-@keyframes ged-cog-rotate-left {
-  from { transform: rotate(16deg); }
-  to   { transform: rotate(376deg); }
-}
-@keyframes ged-cog-rotate-right {
-  from { transform: rotate(4deg); }
-  to   { transform: rotate(364deg); }
+/* Same magnitude, opposite direction — used by both meshing gears so
+   they appear to be driven by the top gear's CW motion. */
+@keyframes ged-cog-rotate-rev {
+  from { transform: rotate(360deg); }
+  to   { transform: rotate(0deg); }
 }

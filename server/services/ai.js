@@ -309,7 +309,13 @@ ${varietyBlock}${mathOpsBlock}
 
 CRITICAL: Your JSON response MUST include ALL of these fields:
   question, type, options (if multiple_choice), correctAnswer,
-  ${mathOnlyFields}studyGuideReference, studyGuidePage (integer), hint, explanation, steps.
+  ${mathOnlyFields}studyGuideReference, studyGuidePage (integer),
+  hint, explanation, steps, encouragement.
+
+The explanation + steps + encouragement will be shown to the student
+DIRECTLY when they submit an answer — there is no separate grading
+pass. Write them as if you are talking to the student after they
+answered, regardless of right or wrong.
 
 ${studyGuideBlock}
 
@@ -337,8 +343,9 @@ Return ONLY valid JSON (no markdown). EXAMPLE shape — note "question" ends at 
   ` : ''}"studyGuideReference": "<Concept name> — Page <N>",
   "studyGuidePage": <N>,
   "hint": "Short hint without giving away the answer.",
-  "explanation": "What concept this tests.",
-  "steps": ["Step 1: ...", "Step 2: ...", "Step 3: ..."]
+  "explanation": "The correct answer is <letter> because <2-3 sentence reader-facing explanation of why that option is right and what concept it tests>. Always begin with 'The correct answer is <letter> because' so the UI can highlight the lead-in.",
+  "steps": ["Step 1: ...", "Step 2: ...", "Step 3: ..."],
+  "encouragement": "Short one-sentence note that works whether the student got it right or wrong (e.g. 'Nice work — keep practicing this skill' or 'Every miss is a step toward mastery')."
 }`;
 }
 
