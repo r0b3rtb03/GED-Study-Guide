@@ -39,11 +39,11 @@
         <span id="topicBadge" class="inline-flex items-center gap-1 px-3 h-8 rounded-full bg-primary-container/10 text-primary text-label-md font-bold whitespace-nowrap"></span>
         <span id="timer" class="text-label-md text-on-surface-variant tabular-nums">0:00</span>
       </div>
-      <div id="difficultyGroup" class="hidden sm:inline-flex rounded-full bg-surface-container p-1 text-label-md">
-        <button data-diff="easy"   class="h-7 px-3 rounded-full">Easy</button>
-        <button data-diff="medium" class="h-7 px-3 rounded-full">Medium</button>
-        <button data-diff="hard"   class="h-7 px-3 rounded-full">Hard</button>
-      </div>
+      <!-- Read-only difficulty badge: the chosen difficulty for this
+           session is fixed at start, so the in-session bar only needs
+           to display it (the picker is on the chooser screen). -->
+      <span id="difficultyBadge"
+            class="hidden sm:inline-flex items-center h-7 px-3 rounded-full bg-surface-container text-on-surface text-label-md font-bold capitalize">Medium</span>
       <p id="qCounter" class="text-label-md text-on-surface-variant whitespace-nowrap">Question 1 of 10</p>
     </div>
   </header>
@@ -807,7 +807,11 @@
   }
 
   function renderDifficulty() {
-    document.querySelectorAll('#difficultyGroup button, #difficultyMobile button').forEach(b => {
+    // Highlight the mobile-chooser pills and the desktop step's three
+    // big buttons. The in-session bar shows the chosen difficulty as a
+    // read-only badge — it's NOT a toggle anymore (locked once the
+    // session starts).
+    document.querySelectorAll('#difficultyMobile button').forEach(b => {
       const a = b.dataset.diff === session.difficulty;
       b.className = `h-7 px-3 rounded-full text-label-md transition ${a ? 'bg-primary text-on-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container-high'}`;
     });
@@ -816,11 +820,13 @@
       const borders = b.dataset.diff === 'hard' ? '' : 'border-r border-outline-variant';
       b.className = `h-11 text-label-md font-bold transition ${borders} ${a ? 'bg-primary text-on-primary' : 'text-on-surface-variant hover:bg-surface-container-low'}`;
     });
+    const badge = document.getElementById('difficultyBadge');
+    if (badge && session.difficulty) badge.textContent = session.difficulty;
     const hint = document.getElementById('difficultyHint');
     if (hint) hint.classList.toggle('hidden', !!session.difficulty);
   }
   document.addEventListener('click', (e) => {
-    const b = e.target.closest('#difficultyGroup button, #difficultyMobile button, #difficultyChooser button');
+    const b = e.target.closest('#difficultyMobile button, #difficultyChooser button');
     if (!b) return;
     session.difficulty = b.dataset.diff;
     renderDifficulty();
