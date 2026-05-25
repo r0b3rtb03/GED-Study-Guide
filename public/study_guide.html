@@ -116,7 +116,7 @@
     currentSlug = slug;
     sessionStorage.setItem('ged_last_study_guide_subject', slug);
     document.title = `${s.name} Study Guide — GED`;
-    $('pdfFrame').src      = `${s.pdfPath}#toolbar=1&navpanes=1&view=FitH`;
+    $('pdfFrame').src      = `${s.pdfPath}?v=2#toolbar=1&navpanes=1&view=FitH`;
     $('downloadLink').href = s.pdfPath;
     $('openTabLink').href  = s.pdfPath;
     renderTabs(slug);
