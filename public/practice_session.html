@@ -55,9 +55,9 @@
        own `hidden md:flex` — phones still get the modal-style overlay
        behaviour because there's no room to dock. -->
   <aside id="formulaPanel"
-         class="fixed top-14 right-0 bottom-0 w-[440px] z-40 bg-surface-container-lowest border-l border-outline-variant flex-col overflow-hidden shadow-2xl
+         class="fixed top-0 right-0 bottom-0 w-[440px] z-[55] bg-surface-container-lowest border-l border-outline-variant flex-col overflow-hidden shadow-2xl
                 transform translate-x-full transition-transform duration-200 ease-out hidden md:flex">
-    <header class="shrink-0 flex items-center justify-between px-4 h-12 border-b border-outline-variant/40">
+    <header class="shrink-0 flex items-center justify-between px-4 h-12 border-b border-outline-variant/40 bg-surface-container-lowest">
       <div class="flex items-center gap-2 text-on-surface">
         <span class="material-symbols-outlined text-primary" style="font-size:20px">functions</span>
         <p class="text-label-md font-bold">Math Formula Sheet</p>
@@ -74,7 +74,11 @@
         </button>
       </div>
     </header>
-    <iframe id="formulaFrame" src="" title="GED Math Formula Sheet" class="flex-1 w-full border-0 bg-white"></iframe>
+    <!-- Explicit min-h-0 so flex-1 actually shrinks the iframe to fit the
+         remaining height; otherwise flexbox can refuse to size it down. -->
+    <iframe id="formulaFrame" src="" title="GED Math Formula Sheet"
+            class="flex-1 min-h-0 w-full border-0 bg-white"
+            style="background:#fff"></iframe>
   </aside>
 
   <!-- Mobile fallback: full-screen overlay since there's no room to dock -->
