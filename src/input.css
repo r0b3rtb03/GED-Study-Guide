@@ -4,3 +4,144 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ============================================================
+   Cog loader — shown anywhere we wait on the AI / network. Three
+   spinning gears tuned to the GED palette so it feels on-brand
+   instead of a generic spinner. Adapted from the pure-CSS cog
+   loader by Janko Cingel, re-themed for our colors and converted
+   to plain CSS (no Sass).
+   ============================================================ */
+.ged-loader {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 240px;
+  padding: 24px 0;
+  text-align: center;
+}
+.ged-loader__cogs {
+  position: relative;
+  width: 100px;
+  height: 100px;
+}
+.ged-loader__overlay {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow:
+    0 0 0 1000px rgba(255, 255, 255, 0);
+  pointer-events: none;
+}
+html.dark .ged-loader__overlay {
+  box-shadow: 0 0 0 1000px rgba(13, 19, 32, 0);
+}
+
+/* Three gears: top (large, primary), left (medium, teal accent),
+   bottom (small, warm gold). Each gear is a stack of three squares
+   rotated by 30°/60°/90° so the outline becomes a star/cog shape,
+   with a circular "hole" punched in the centre. */
+
+.ged-loader__top,
+.ged-loader__left,
+.ged-loader__bottom {
+  position: absolute;
+  border-radius: 50%;
+}
+.ged-loader__top {
+  width: 100px;
+  height: 100px;
+  transform-origin: 50px 50px;
+  animation: ged-cog-rotate 10s infinite linear;
+  top: 0;
+  left: 0;
+}
+.ged-loader__left {
+  width: 80px;
+  height: 80px;
+  transform-origin: 40px 40px;
+  animation: ged-cog-rotate-left 10s 0.1s infinite reverse linear;
+  bottom: -24px;
+  left: -28px;
+}
+.ged-loader__bottom {
+  width: 60px;
+  height: 60px;
+  transform-origin: 30px 30px;
+  animation: ged-cog-rotate-right 10.2s 0.4s infinite linear;
+  bottom: -10px;
+  right: -24px;
+}
+
+/* The four "teeth" plates for each gear. Three rotated squares plus
+   a circular hole in the middle. */
+.ged-loader__top-part,
+.ged-loader__left-part,
+.ged-loader__bottom-part {
+  position: absolute;
+  inset: 0;
+}
+.ged-loader__top-part   { background: #5a8de8; border-radius: 10px; }
+.ged-loader__left-part  { background: #6dc6c6; border-radius: 6px;  }
+.ged-loader__bottom-part{ background: #f2b66a; border-radius: 5px;  }
+
+html.dark .ged-loader__top-part    { background: #8ab4ff; }
+html.dark .ged-loader__left-part   { background: #9bdc8f; }
+html.dark .ged-loader__bottom-part { background: #f5b76b; }
+
+/* Stagger the rotation of the 3 teeth plates per gear so they form
+   a 12-pointed cog silhouette. */
+.ged-loader__top div:nth-of-type(1),
+.ged-loader__left div:nth-of-type(1),
+.ged-loader__bottom div:nth-of-type(1) { transform: rotate(30deg); }
+.ged-loader__top div:nth-of-type(2),
+.ged-loader__left div:nth-of-type(2),
+.ged-loader__bottom div:nth-of-type(2) { transform: rotate(60deg); }
+.ged-loader__top div:nth-of-type(3),
+.ged-loader__left div:nth-of-type(3),
+.ged-loader__bottom div:nth-of-type(3) { transform: rotate(90deg); }
+
+/* The centre hole on each gear — uses the page background so it
+   reads as a punched-through circle in both themes. */
+.ged-loader__top-hole,
+.ged-loader__left-hole,
+.ged-loader__bottom-hole {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: var(--ged-background);
+}
+.ged-loader__top-hole    { width: 50px; height: 50px; }
+.ged-loader__left-hole   { width: 40px; height: 40px; }
+.ged-loader__bottom-hole { width: 30px; height: 30px; }
+
+.ged-loader__label {
+  margin-top: 24px;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--ged-on-surface-variant);
+}
+
+@keyframes ged-cog-rotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes ged-cog-rotate-left {
+  from { transform: rotate(16deg); }
+  to   { transform: rotate(376deg); }
+}
+@keyframes ged-cog-rotate-right {
+  from { transform: rotate(4deg); }
+  to   { transform: rotate(364deg); }
+}

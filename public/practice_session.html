@@ -279,11 +279,29 @@
       <div class="w-full max-w-2xl mx-auto">
       <div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm p-6 md:p-8">
         <div id="questionArea" class="space-y-5">
-          <div id="skeleton" class="animate-pulse space-y-3">
-            <div class="h-5 w-2/3 bg-surface-container rounded"></div>
-            <div class="h-4 w-full bg-surface-container rounded"></div>
-            <div class="h-10 w-full bg-surface-container rounded"></div>
-            <div class="h-10 w-full bg-surface-container rounded"></div>
+          <div class="ged-loader" role="status" aria-live="polite">
+            <div class="ged-loader__overlay"></div>
+            <div class="ged-loader__cogs">
+              <div class="ged-loader__top">
+                <div class="ged-loader__top-part"></div>
+                <div class="ged-loader__top-part"></div>
+                <div class="ged-loader__top-part"></div>
+                <div class="ged-loader__top-hole"></div>
+              </div>
+              <div class="ged-loader__left">
+                <div class="ged-loader__left-part"></div>
+                <div class="ged-loader__left-part"></div>
+                <div class="ged-loader__left-part"></div>
+                <div class="ged-loader__left-hole"></div>
+              </div>
+              <div class="ged-loader__bottom">
+                <div class="ged-loader__bottom-part"></div>
+                <div class="ged-loader__bottom-part"></div>
+                <div class="ged-loader__bottom-part"></div>
+                <div class="ged-loader__bottom-hole"></div>
+              </div>
+            </div>
+            <p class="ged-loader__label">Generating your question…</p>
           </div>
         </div>
 
@@ -398,6 +416,20 @@
   function setGuestBar(visible) {
     if (!guestBar) return;
     guestBar.classList.toggle('hidden', !visible);
+  }
+
+  // Cog loader HTML — used wherever we're waiting on the AI or network.
+  // Pass a label to provide user context (e.g. "Grading…").
+  function loaderHtml(label = 'Loading') {
+    return `<div class="ged-loader" role="status" aria-live="polite">
+      <div class="ged-loader__overlay"></div>
+      <div class="ged-loader__cogs">
+        <div class="ged-loader__top"><div class="ged-loader__top-part"></div><div class="ged-loader__top-part"></div><div class="ged-loader__top-part"></div><div class="ged-loader__top-hole"></div></div>
+        <div class="ged-loader__left"><div class="ged-loader__left-part"></div><div class="ged-loader__left-part"></div><div class="ged-loader__left-part"></div><div class="ged-loader__left-hole"></div></div>
+        <div class="ged-loader__bottom"><div class="ged-loader__bottom-part"></div><div class="ged-loader__bottom-part"></div><div class="ged-loader__bottom-part"></div><div class="ged-loader__bottom-hole"></div></div>
+      </div>
+      <p class="ged-loader__label">${label}</p>
+    </div>`;
   }
 
   // Static fallback used for the topic icon. The full topic list comes from
@@ -865,12 +897,7 @@
     $('revealBtn').classList.remove('hidden');
     $('qCounter').textContent = `Question ${session.currentIndex + 1} of ${QUESTIONS_PER_SESSION}`;
     updateProgress();
-    $('questionArea').innerHTML = `<div id="skeleton" class="animate-pulse space-y-3">
-      <div class="h-5 w-2/3 bg-surface-container rounded"></div>
-      <div class="h-4 w-full bg-surface-container rounded"></div>
-      <div class="h-10 w-full bg-surface-container rounded"></div>
-      <div class="h-10 w-full bg-surface-container rounded"></div>
-    </div>`;
+    $('questionArea').innerHTML = loaderHtml('Generating your question…');
 
     try {
       let data;
@@ -1074,7 +1101,7 @@
     answered = true;
     $('submitBtn').disabled = true;
     $('feedback').classList.remove('hidden');
-    $('feedback').innerHTML = `<div class="animate-pulse text-on-surface-variant">Checking your answer...</div>`;
+    $('feedback').innerHTML = loaderHtml('Checking your answer…');
 
     try {
       const checkEndpoint = guest ? '/api/practice/check-guest' : '/api/practice/check';
