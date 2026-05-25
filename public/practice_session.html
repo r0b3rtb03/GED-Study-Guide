@@ -282,24 +282,9 @@
           <div class="ged-loader" role="status" aria-live="polite">
             <div class="ged-loader__overlay"></div>
             <div class="ged-loader__cogs">
-              <div class="ged-loader__top">
-                <div class="ged-loader__top-part"></div>
-                <div class="ged-loader__top-part"></div>
-                <div class="ged-loader__top-part"></div>
-                <div class="ged-loader__top-hole"></div>
-              </div>
-              <div class="ged-loader__left">
-                <div class="ged-loader__left-part"></div>
-                <div class="ged-loader__left-part"></div>
-                <div class="ged-loader__left-part"></div>
-                <div class="ged-loader__left-hole"></div>
-              </div>
-              <div class="ged-loader__bottom">
-                <div class="ged-loader__bottom-part"></div>
-                <div class="ged-loader__bottom-part"></div>
-                <div class="ged-loader__bottom-part"></div>
-                <div class="ged-loader__bottom-hole"></div>
-              </div>
+              <div class="ged-loader__gear ged-loader__gear--top"></div>
+              <div class="ged-loader__gear ged-loader__gear--left"></div>
+              <div class="ged-loader__gear ged-loader__gear--right"></div>
             </div>
             <p class="ged-loader__label">Generating your question…</p>
           </div>
@@ -424,9 +409,9 @@
     return `<div class="ged-loader" role="status" aria-live="polite">
       <div class="ged-loader__overlay"></div>
       <div class="ged-loader__cogs">
-        <div class="ged-loader__top"><div class="ged-loader__top-part"></div><div class="ged-loader__top-part"></div><div class="ged-loader__top-part"></div><div class="ged-loader__top-hole"></div></div>
-        <div class="ged-loader__left"><div class="ged-loader__left-part"></div><div class="ged-loader__left-part"></div><div class="ged-loader__left-part"></div><div class="ged-loader__left-hole"></div></div>
-        <div class="ged-loader__bottom"><div class="ged-loader__bottom-part"></div><div class="ged-loader__bottom-part"></div><div class="ged-loader__bottom-part"></div><div class="ged-loader__bottom-hole"></div></div>
+        <div class="ged-loader__gear ged-loader__gear--top"></div>
+        <div class="ged-loader__gear ged-loader__gear--left"></div>
+        <div class="ged-loader__gear ged-loader__gear--right"></div>
       </div>
       <p class="ged-loader__label">${label}</p>
     </div>`;

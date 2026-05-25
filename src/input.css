@@ -24,100 +24,54 @@
   padding: 32px 0;
   text-align: center;
 }
-/* Fixed-size container that bounds the gear triangle. Big enough that
-   no individual gear escapes it. */
+/* Fixed-size container that bounds the gear triangle. Sized so the
+   three gears form a clear triangle with daylight between them. */
 .ged-loader__cogs {
   position: relative;
-  width: 260px;
-  height: 200px;
+  width: 280px;
+  height: 240px;
 }
 /* The overlay used to be a white halo behind the gears — looked muddy
    against our dark navy backgrounds. Removed visually; class kept so
    existing markup doesn't break. */
 .ged-loader__overlay { display: none; }
 
-.ged-loader__top,
-.ged-loader__left,
-.ged-loader__bottom {
+/* Each gear is a coloured div with an SVG mask applied. The mask is a
+   12-tooth gear silhouette with a centre hole punched out (evenodd fill
+   rule). Animating transform: rotate spins the whole gear cleanly. */
+.ged-loader__gear {
   position: absolute;
-  border-radius: 50%;
+  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path fill-rule='evenodd' d='M44.06 12.47 L45.82 2.18 A48 48 0 0 1 54.18 2.18 L55.94 12.47 A38 38 0 0 1 63.62 14.52 L70.29 6.5 A48 48 0 0 1 77.53 10.68 L73.91 20.47 A38 38 0 0 1 79.53 26.09 L89.32 22.47 A48 48 0 0 1 93.5 29.71 L85.48 36.38 A38 38 0 0 1 87.53 44.06 L97.82 45.82 A48 48 0 0 1 97.82 54.18 L87.53 55.94 A38 38 0 0 1 85.48 63.62 L93.5 70.29 A48 48 0 0 1 89.32 77.53 L79.53 73.91 A38 38 0 0 1 73.91 79.53 L77.53 89.32 A48 48 0 0 1 70.29 93.5 L63.62 85.48 A38 38 0 0 1 55.94 87.53 L54.18 97.82 A48 48 0 0 1 45.82 97.82 L44.06 87.53 A38 38 0 0 1 36.38 85.48 L29.71 93.5 A48 48 0 0 1 22.47 89.32 L26.09 79.53 A38 38 0 0 1 20.47 73.91 L10.68 77.53 A48 48 0 0 1 6.5 70.29 L14.52 63.62 A38 38 0 0 1 12.47 55.94 L2.18 54.18 A48 48 0 0 1 2.18 45.82 L12.47 44.06 A38 38 0 0 1 14.52 36.38 L6.5 29.71 A48 48 0 0 1 10.68 22.47 L20.47 26.09 A38 38 0 0 1 26.09 20.47 L22.47 10.68 A48 48 0 0 1 29.71 6.5 L36.38 14.52 Z M32 50 A18 18 0 1 0 68 50 A18 18 0 1 0 32 50 Z' fill='black'/></svg>") center/contain no-repeat;
+          mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path fill-rule='evenodd' d='M44.06 12.47 L45.82 2.18 A48 48 0 0 1 54.18 2.18 L55.94 12.47 A38 38 0 0 1 63.62 14.52 L70.29 6.5 A48 48 0 0 1 77.53 10.68 L73.91 20.47 A38 38 0 0 1 79.53 26.09 L89.32 22.47 A48 48 0 0 1 93.5 29.71 L85.48 36.38 A38 38 0 0 1 87.53 44.06 L97.82 45.82 A48 48 0 0 1 97.82 54.18 L87.53 55.94 A38 38 0 0 1 85.48 63.62 L93.5 70.29 A48 48 0 0 1 89.32 77.53 L79.53 73.91 A38 38 0 0 1 73.91 79.53 L77.53 89.32 A48 48 0 0 1 70.29 93.5 L63.62 85.48 A38 38 0 0 1 55.94 87.53 L54.18 97.82 A48 48 0 0 1 45.82 97.82 L44.06 87.53 A38 38 0 0 1 36.38 85.48 L29.71 93.5 A48 48 0 0 1 22.47 89.32 L26.09 79.53 A38 38 0 0 1 20.47 73.91 L10.68 77.53 A48 48 0 0 1 6.5 70.29 L14.52 63.62 A38 38 0 0 1 12.47 55.94 L2.18 54.18 A48 48 0 0 1 2.18 45.82 L12.47 44.06 A38 38 0 0 1 14.52 36.38 L6.5 29.71 A48 48 0 0 1 10.68 22.47 L20.47 26.09 A38 38 0 0 1 26.09 20.47 L22.47 10.68 A48 48 0 0 1 29.71 6.5 L36.38 14.52 Z M32 50 A18 18 0 1 0 68 50 A18 18 0 1 0 32 50 Z' fill='black'/></svg>") center/contain no-repeat;
+  transform-origin: center;
 }
-/* Triangle layout — top centered, left and right anchored to the bottom
-   of the box. Centers chosen so neighbours touch without burying each
-   other. */
-.ged-loader__top {
-  width: 100px;
-  height: 100px;
-  top: 0;
-  left: 80px;                   /* center x = 130 — horizontally centered in 260-wide box */
-  transform-origin: 50px 50px;
+
+/* Triangle layout — large blue gear on top, medium green bottom-left,
+   small orange bottom-right. Centre-to-centre distances chosen so the
+   gear edges sit ~45-50px (≈1.2-1.3cm) apart, making them read as
+   separate gears. Opposite spin direction still implies coupling. */
+.ged-loader__gear--top {
+  width: 110px; height: 110px;
+  top: 0; left: 85px;              /* center (140, 55) */
+  background: #5a8de8;
   animation: ged-cog-rotate 9s infinite linear;
 }
-/* Medium and small gears sit below the top gear with a visible gap —
-   centre-to-centre distance comfortably exceeds the sum of radii so the
-   three gears read as a triangular cluster of *separate* gears rather
-   than meshing teeth. Opposite spin direction still implies coupling. */
-.ged-loader__left {
-  width: 80px;
-  height: 80px;
-  top: 100px;    /* center y = 140. distance to top centre ≈ 136, gap ≈ 46px */
-  left: 10px;    /* center x = 50 */
-  transform-origin: 40px 40px;
+.ged-loader__gear--left {
+  width: 90px; height: 90px;
+  top: 120px; left: 0;             /* center (45, 165), gap ~45px from top */
+  background: #6dc6c6;
   animation: ged-cog-rotate-rev 8s infinite linear;
 }
-.ged-loader__bottom {
-  width: 60px;
-  height: 60px;
-  top: 110px;    /* center y = 140. distance to top centre ≈ 136, gap ≈ 56px */
-  left: 180px;   /* center x = 210 */
-  transform-origin: 30px 30px;
+.ged-loader__gear--right {
+  width: 70px; height: 70px;
+  top: 135px; left: 190px;         /* center (225, 170), gap ~50px from top */
+  background: #f2b66a;
   animation: ged-cog-rotate-rev 6s infinite linear;
 }
 
-/* The four "teeth" plates for each gear. Three rotated squares plus
-   a circular hole in the middle. */
-.ged-loader__top-part,
-.ged-loader__left-part,
-.ged-loader__bottom-part {
-  position: absolute;
-  inset: 0;
-}
-.ged-loader__top-part   { background: #5a8de8; border-radius: 10px; }
-.ged-loader__left-part  { background: #6dc6c6; border-radius: 6px;  }
-.ged-loader__bottom-part{ background: #f2b66a; border-radius: 5px;  }
-
-html.dark .ged-loader__top-part    { background: #8ab4ff; }
-html.dark .ged-loader__left-part   { background: #9bdc8f; }
-html.dark .ged-loader__bottom-part { background: #f5b76b; }
-
-/* Stagger the rotation of the 3 teeth plates per gear so they form
-   a 12-pointed cog silhouette. */
-.ged-loader__top div:nth-of-type(1),
-.ged-loader__left div:nth-of-type(1),
-.ged-loader__bottom div:nth-of-type(1) { transform: rotate(30deg); }
-.ged-loader__top div:nth-of-type(2),
-.ged-loader__left div:nth-of-type(2),
-.ged-loader__bottom div:nth-of-type(2) { transform: rotate(60deg); }
-.ged-loader__top div:nth-of-type(3),
-.ged-loader__left div:nth-of-type(3),
-.ged-loader__bottom div:nth-of-type(3) { transform: rotate(90deg); }
-
-/* The centre hole on each gear — uses the card surface so it reads as
-   a punched-through circle no matter what container the loader sits in.
-   Callers can override via --ged-loader-hole on the loader element. */
-.ged-loader__top-hole,
-.ged-loader__left-hole,
-.ged-loader__bottom-hole {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  background: var(--ged-loader-hole, var(--ged-surface-container-lowest));
-}
-.ged-loader__top-hole    { width: 50px; height: 50px; }
-.ged-loader__left-hole   { width: 40px; height: 40px; }
-.ged-loader__bottom-hole { width: 30px; height: 30px; }
+html.dark .ged-loader__gear--top   { background: #8ab4ff; }
+html.dark .ged-loader__gear--left  { background: #9bdc8f; }
+html.dark .ged-loader__gear--right { background: #f5b76b; }
 
 .ged-loader__label {
   /* Pushed below the bottom of the gear triangle. Large gap so the
@@ -138,4 +92,29 @@ html.dark .ged-loader__bottom-part { background: #f5b76b; }
 @keyframes ged-cog-rotate-rev {
   from { transform: rotate(360deg); }
   to   { transform: rotate(0deg); }
+}
+
+/* ============================================================
+   Themed slim scrollbar. Default OS scrollbars on horizontal
+   overflow rows (topic pills, etc.) are visually heavy and clash
+   with the dark UI. Apply this class to any overflow container
+   that should still show a scrollbar but in our theme.
+   ============================================================ */
+.ged-scroll-themed {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(138, 180, 255, 0.4) transparent;
+}
+.ged-scroll-themed::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+.ged-scroll-themed::-webkit-scrollbar-track {
+  background: transparent;
+}
+.ged-scroll-themed::-webkit-scrollbar-thumb {
+  background: rgba(138, 180, 255, 0.35);
+  border-radius: 999px;
+}
+.ged-scroll-themed::-webkit-scrollbar-thumb:hover {
+  background: rgba(138, 180, 255, 0.6);
 }
