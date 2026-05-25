@@ -28,8 +28,8 @@
    no individual gear escapes it. */
 .ged-loader__cogs {
   position: relative;
-  width: 200px;
-  height: 150px;
+  width: 260px;
+  height: 200px;
 }
 /* The overlay used to be a white halo behind the gears — looked muddy
    against our dark navy backgrounds. Removed visually; class kept so
@@ -49,27 +49,27 @@
   width: 100px;
   height: 100px;
   top: 0;
-  left: 50px;                   /* (200 - 100) / 2 — centered horizontally */
+  left: 80px;                   /* center x = 130 — horizontally centered in 260-wide box */
   transform-origin: 50px 50px;
   animation: ged-cog-rotate 9s infinite linear;
 }
-/* Medium and small gears are placed so their pitch radii touch the top
-   gear's edge — centres on a 60° arc from the top gear's centre — and
-   they spin in the OPPOSITE direction so they read as being driven by
-   the top gear. */
+/* Medium and small gears sit below the top gear with a visible gap —
+   centre-to-centre distance comfortably exceeds the sum of radii so the
+   three gears read as a triangular cluster of *separate* gears rather
+   than meshing teeth. Opposite spin direction still implies coupling. */
 .ged-loader__left {
   width: 80px;
   height: 80px;
-  top: 62px;     /* center y = 102. top-gear centre = (100, 50). distance = ~85, near pitch sum 90 */
-  left: 12px;    /* center x = 52 */
+  top: 100px;    /* center y = 140. distance to top centre ≈ 136, gap ≈ 46px */
+  left: 10px;    /* center x = 50 */
   transform-origin: 40px 40px;
   animation: ged-cog-rotate-rev 8s infinite linear;
 }
 .ged-loader__bottom {
   width: 60px;
   height: 60px;
-  top: 70px;     /* center y = 100 */
-  left: 122px;   /* center x = 152. distance from top = ~73, near pitch sum 80 */
+  top: 110px;    /* center y = 140. distance to top centre ≈ 136, gap ≈ 56px */
+  left: 180px;   /* center x = 210 */
   transform-origin: 30px 30px;
   animation: ged-cog-rotate-rev 6s infinite linear;
 }
