@@ -23,7 +23,21 @@ function validateSubjectAndTopic(req, res) {
 // ---- Guest-mode router ----
 export const guestPracticeRouter = Router();
 
-const guestLimiter = rateLimit({
+// Per-IP cap on guest generations. 5 questions / hour is enough to feel the
+// product but tight enough that "open incognito to bypass" doesn't trivially
+// work (incognito reuses the same IP). VPN / hotspot users can still rotate,
+// which is expected — the goal is friction-to-convert, not perfect lockout.
+const guestGenerateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Free preview limit reached. Create a free account to keep practicing.', gated: true }
+});
+
+// /check-guest is still rate-limited but more generously — it's the answer
+// validator, called once per question, and shouldn't be the gating signal.
+const guestCheckLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 20,
   standardHeaders: true,
@@ -31,7 +45,7 @@ const guestLimiter = rateLimit({
   message: { message: 'Guest limit reached. Create a free account to keep practicing.' }
 });
 
-guestPracticeRouter.post('/generate-guest', guestLimiter, async (req, res) => {
+guestPracticeRouter.post('/generate-guest', guestGenerateLimiter, async (req, res) => {
   const v = validateSubjectAndTopic(req, res); if (!v) return;
   const { difficulty = 'medium', previousQuestions = [] } = req.body || {};
   try {
@@ -46,7 +60,7 @@ guestPracticeRouter.post('/generate-guest', guestLimiter, async (req, res) => {
   }
 });
 
-guestPracticeRouter.post('/check-guest', guestLimiter, async (req, res) => {
+guestPracticeRouter.post('/check-guest', guestCheckLimiter, async (req, res) => {
   const {
     question, correctAnswer, userAnswer, subject = 'math', topic,
     explanation, steps, encouragement

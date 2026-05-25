@@ -536,10 +536,37 @@
         headers: { 'Content-Type': 'application/json', ...(options.headers || {}) }
       });
       const data = await res.json().catch(() => ({}));
+      if (res.status === 429 || data.gated) {
+        showGuestGate(data.message || 'Create a free account to keep practicing.');
+        const err = new Error(data.message || 'Guest limit reached');
+        err.gated = true;
+        throw err;
+      }
       if (!res.ok) throw new Error(data.message || `Request failed (${res.status})`);
       return data;
     }
     return apiJson(url, options);
+  }
+
+  function showGuestGate(message) {
+    if (document.getElementById('guestGate')) return;
+    const overlay = document.createElement('div');
+    overlay.id = 'guestGate';
+    overlay.className = 'fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4';
+    overlay.innerHTML = `
+      <div class="max-w-md w-full bg-surface-container-lowest rounded-2xl p-6 text-center shadow-xl">
+        <div class="w-14 h-14 mx-auto mb-3 rounded-full bg-primary/15 flex items-center justify-center">
+          <span class="material-symbols-outlined text-primary" style="font-size:32px">lock</span>
+        </div>
+        <h2 class="text-headline-sm font-headline-sm mb-2">You've used your free preview</h2>
+        <p class="text-body-md text-on-surface-variant mb-5">${message}</p>
+        <div class="flex flex-col gap-2">
+          <a href="/create_account" class="h-11 inline-flex items-center justify-center rounded-lg bg-primary text-on-primary font-bold text-label-md hover:opacity-90">Create free account</a>
+          <a href="/login" class="h-11 inline-flex items-center justify-center rounded-lg text-on-surface-variant font-bold text-label-md hover:bg-surface-container-low">I already have an account</a>
+          <a href="/" class="text-label-md text-on-surface-variant hover:text-on-surface mt-1">Back to home</a>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
   }
 
   function showGuestNudge() {
