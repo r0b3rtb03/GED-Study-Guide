@@ -64,23 +64,30 @@ router.post('/generate', requireAuth, async (req, res) => {
   const v = validateSubjectAndTopic(req, res); if (!v) return;
   const { difficulty = 'medium', previousQuestions = [] } = req.body || {};
   const userId = req.user?.sub;
-  try {
-    // Maybe recycle: probability depends on the user's current mastery
-    // band for this exact (subject, topic, difficulty) bucket. Cache miss
-    // falls through to a fresh AI generation, so the user never waits on
-    // a recycled question that doesn't exist yet.
-    const prob = pickRecycleProbability(userId, v.subject, v.topic, difficulty);
-    if (Math.random() < prob) {
+
+  // Cache helpers are wrapped individually — a DB hiccup must NEVER block
+  // the actual AI call. If any cache call throws, log it and continue.
+  let prob = 0;
+  try { prob = pickRecycleProbability(userId, v.subject, v.topic, difficulty); }
+  catch (e) { console.warn('[practice/generate] pickRecycleProbability failed:', e.message); }
+
+  if (Math.random() < prob) {
+    try {
       const cached = pickCachedQuestion({ userId, ...v, difficulty });
       if (cached) {
-        markSeen(userId, cached.id);
+        try { markSeen(userId, cached.id); } catch (e) { console.warn('[practice/generate] markSeen failed:', e.message); }
         return res.json({ question: cached.question, fromCache: true });
       }
-    }
+    } catch (e) { console.warn('[practice/generate] pickCachedQuestion failed:', e.message); }
+  }
 
+  // Falls through to fresh generation if we don't recycle (or the cache miss).
+  try {
     const question = await generateQuestion({ ...v, difficulty, previousQuestions });
-    const id = rememberQuestion({ ...v, difficulty, question });
-    if (id) markSeen(userId, id);
+    try {
+      const id = rememberQuestion({ ...v, difficulty, question });
+      if (id) markSeen(userId, id);
+    } catch (e) { console.warn('[practice/generate] rememberQuestion failed:', e.message); }
     res.json({ question });
   } catch (err) {
     console.error('[practice/generate]', err);
